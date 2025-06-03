@@ -1,118 +1,150 @@
-<DOCTYPE html>
-<html lang="ar" dir="rtl">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>📚 PromptBase AR - لوحة تحكم</title>
-  <style>
-    body {
-      background: #111;
-      color: #f0f0f0;
-      font-family: 'Segoe UI', sans-serif;
-      padding: 2rem;
-      max-width: 700px;
-      margin: auto;
-    }
-    h1, h2 { color: #00ffd5; }
-    textarea {
-      width: 100%;
-      padding: 1rem;
-      border-radius: 10px;
-      margin-top: 1rem;
-      background: #1a1a1a;
-      color: #f0f0f0;
-      border: 1px solid #333;
-      font-size: 1rem;
-    }
-    button {
-      margin-top: 0.5rem;
-      padding: 0.7rem 1.2rem;
-      border: none;
-      border-radius: 8px;
-      background: #00ffd5;
-      color: #000;
-      font-weight: bold;
-      cursor: pointer;
-    }
-    ul { list-style: none; padding: 0; }
-    li {
-      background: #222;
-      margin-top: 1rem;
-      padding: 0.7rem;
-      border-radius: 8px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-    .delete-btn {
-      background: #ff4b4b;
-      color: white;
-      border: none;
-      padding: 0.4rem 0.8rem;
-      border-radius: 5px;
-      cursor: pointer;
-    }
-    footer {
-      margin-top: 3rem;
-      font-size: 0.9rem;
-      color: #777;
-    }
-  </style>
-</head>
-<body>
-  <h1>📚 PromptBase AR</h1>
-  <h2>لوحة تحكم البرومبتات</h2>
+<DOCTYPE html><html lang="ar" dir="rtl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PromptBase AR - Mn.Gpt</title>
+    <style>
+      body {
+        font-family: 'Segoe UI', sans-serif;
+        background-color: #f4f8ff;
+        color: #222;
+        margin: 0;
+        padding: 0;
+      }header {
+    background-color: #007bff;
+    color: white;
+    padding: 1rem 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
 
-  <textarea id="newPrompt" placeholder="✍️ اكتب برومبت جديد هنا..."></textarea>
-  <button onclick="addPrompt()">➕ إضافة البرومبت</button>
+  header h1 {
+    margin: 0;
+    font-size: 1.5rem;
+  }
 
-  <ul id="promptList"></ul>
+  .container {
+    padding: 2rem;
+  }
 
-  <button onclick="exportToMarkdown()">📄 تصدير Markdown</button>
+  .prompt-card {
+    background-color: white;
+    border: 1px solid #ccd;
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+  }
 
-  <footer>مشروع Mn.Gpt التجريبي 💡</footer>
+  .prompt-card h3 {
+    margin-top: 0;
+    color: #007bff;
+  }
 
-  <script>
-    const promptList = document.getElementById("promptList");
-    const newPrompt = document.getElementById("newPrompt");
+  .add-btn {
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 0.6rem 1.2rem;
+    cursor: pointer;
+    font-size: 1rem;
+  }
 
-    let prompts = JSON.parse(localStorage.getItem("prompts")) || [];
+  .modal {
+    display: none;
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    justify-content: center;
+    align-items: center;
+  }
 
-    function renderPrompts() {
-      promptList.innerHTML = "";
-      prompts.forEach((prompt, index) => {
-        const li = document.createElement("li");
-        li.innerHTML = `${prompt} <button class="delete-btn" onclick="deletePrompt(${index})">🗑️ حذف</button>`;
-        promptList.appendChild(li);
-      });
-    }
+  .modal-content {
+    background-color: white;
+    padding: 2rem;
+    border-radius: 12px;
+    width: 90%;
+    max-width: 500px;
+  }
 
-    function addPrompt() {
-      if (newPrompt.value.trim() === "") return;
-      prompts.push(newPrompt.value.trim());
-      localStorage.setItem("prompts", JSON.stringify(prompts));
-      newPrompt.value = "";
-      renderPrompts();
-    }
+  .modal-content input, .modal-content select, .modal-content textarea {
+    width: 100%;
+    margin: 0.5rem 0;
+    padding: 0.5rem;
+    border: 1px solid #ccd;
+    border-radius: 6px;
+    font-size: 1rem;
+  }
 
-    function deletePrompt(index) {
-      prompts.splice(index, 1);
-      localStorage.setItem("prompts", JSON.stringify(prompts));
-      renderPrompts();
-    }
+  .footer {
+    text-align: center;
+    padding: 2rem;
+    color: #999;
+  }
 
-    function exportToMarkdown() {
-      let markdown = prompts.map(p => `- ${p}`).join("\n");
-      const blob = new Blob([markdown], { type: "text/markdown" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = "promptbase-ar.md";
-      a.click();
-      URL.revokeObjectURL(url);
-    }
+  .logo {
+    font-weight: bold;
+    font-size: 0.9rem;
+    opacity: 0.8;
+  }
+</style>
 
-    renderPrompts();
-  </script>
-</body>
+  </head>
+  <body>
+    <header>
+      <h1>📘 PromptBase AR</h1>
+      <button class="add-btn" onclick="openModal()">➕ إضافة برومبت</button>
+    </header><div class="container" id="promptContainer">
+  <div class="prompt-card">
+    <h3>برومبت تعليمي</h3>
+    <p>اشرح مفهوم البرمجة الكائنية بأسلوب بسيط وعملي.</p>
+  </div>
+</div>
+
+<div class="modal" id="promptModal">
+  <div class="modal-content">
+    <h2>إضافة برومبت جديد</h2>
+    <input type="text" id="promptTitle" placeholder="عنوان البرومبت" />
+    <select id="promptType">
+      <option value="تعليمي">تعليمي</option>
+      <option value="تطويري">تطويري</option>
+      <option value="إبداعي">إبداعي</option>
+      <option value="عام">عام</option>
+    </select>
+    <textarea id="promptText" rows="4" placeholder="نص البرومبت..."></textarea>
+    <button class="add-btn" onclick="addPrompt()">💾 حفظ</button>
+  </div>
+</div>
+
+<div class="footer">
+  بإشراف Mn.Gpt 💡 | النسخة التجريبية
+</div>
+
+<script>
+  function openModal() {
+    document.getElementById("promptModal").style.display = "flex";
+  }
+
+  function addPrompt() {
+    const title = document.getElementById("promptType").value;
+    const text = document.getElementById("promptText").value;
+
+    if (text.trim() === '') return;
+
+    const container = document.getElementById("promptContainer");
+    const card = document.createElement("div");
+    card.className = "prompt-card";
+    card.innerHTML = `<h3>برومبت ${title}</h3><p>${text}</p>`;
+    container.appendChild(card);
+
+    document.getElementById("promptModal").style.display = "none";
+    document.getElementById("promptText").value = '';
+    document.getElementById("promptTitle").value = '';
+  }
+</script>
+
+  </body>
 </html>
