@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Prompt Manager - MN.gpt</title>
+  <title>Arabic Prompts Manager - MN.gpt</title>
   <script src="https://unpkg.com/react@18/umd/react.development.js"  crossorigin></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"  crossorigin></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script> 
@@ -16,118 +16,67 @@
     }
   </style>
 </head>
-<body class="p-6">
+<body class="p-6 bg-gray-100 min-h-screen">
 <div id="root"></div>
 
 <script type="text/babel">
   const { useState, useEffect } = React;
 
-  function WelcomePage({ onStart }) {
-    const [name, setName] = useState('');
-    const [role, setRole] = useState('طالب');
-    const [language, setLanguage] = useState('عربي');
-
-    const handleStart = () => {
-      if (!name.trim()) {
-        alert("الرجاء إدخال اسمك");
-        return;
-      }
-
-      // حفظ المعلومات في localStorage
-      localStorage.setItem('userInfo', JSON.stringify({ name, role, language }));
-
-      // بدء التطبيق
-      onStart({ name, role, language });
-    };
-
-    return (
-      <div className="max-w-md mx-auto mt-12 p-6 bg-white rounded-xl shadow-lg text-center">
-        <h1 className="text-2xl font-bold mb-4">مرحبًا بك!</h1>
-        <p className="mb-4">من فضلك قدم بعض المعلومات الأساسية:</p>
-
-        <input
-          type="text"
-          placeholder="اسمك"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          className="w-full p-2 border border-gray-300 rounded mb-4"
-        />
-
-        <select
-          value={role}
-          onChange={(e) => setRole(e.target.value)}
-          className="w-full p-2 border border-gray-300 rounded mb-4"
-        >
-          <option value="طالب">طالب</option>
-          <option value="معلم">معلم</option>
-          <option value="مدرب">مدرب</option>
-          <option value="مطور">مطور</option>
-          <option value="غير ذلك">غير ذلك</option>
-        </select>
-
-        <select
-          value={language}
-          onChange={(e) => setLanguage(e.target.value)}
-          className="w-full p-2 border border-gray-300 rounded mb-4"
-        >
-          <option value="عربي">عربي</option>
-          <option value="إنجليزي">إنجليزي</option>
-        </select>
-
-        <button
-          onClick={handleStart}
-          className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded-lg transition duration-200"
-        >
-          ابدأ الآن
-        </button>
-      </div>
-    );
-  }
-
-  function App({ userInfo }) {
-    const [activeTab, setActiveTab] = useState('dashboard');
-    const [prompts, setPrompts] = useState([]);
-    const [categories, setCategories] = useState(['عام', 'تعليمي', 'إبداعي', 'تحليل بيانات', 'برمجة', 'الجرافيك', 'الفيديو']);
-    const [newPrompt, setNewPrompt] = useState({ text: '', category: '', tokens: 0 });
-    const [editingCategory, setEditingCategory] = useState(null);
-    const [editCategoryName, setEditCategoryName] = useState('');
+  function App() {
+    const [categories] = useState(['عام', 'تعليمي', 'إبداعي', 'تحليل بيانات', 'برمجة', 'الجرافيك', 'الفيديو']);
+    const [copiedPromptId, setCopiedPromptId] = useState(null);
 
     // Mock data
+    const promptsByCategory = {
+      'عام': [
+        { id: 1, text: 'اشرح مفهوم الذكاء الاصطناعي بطريقة بسيطة.', tokens: 23 },
+      ],
+      'تعليمي': [
+        { id: 2, text: 'اشرح كيف تعمل خوارزميات التعلم العميق.', tokens: 37 },
+      ],
+      'إبداعي': [
+        { id: 3, text: 'اكتب قصة قصيرة عن رحلة إلى الفضاء.', tokens: 45 },
+      ],
+      'تحليل بيانات': [
+        { id: 4, text: 'ما هو تأثير التكنولوجيا على التعليم؟', tokens: 18 },
+      ],
+      'برمجة': [
+        { id: 5, text: 'اكتب برنامجًا بلغة جافاسكربت لحساب العوامل.', tokens: 41 },
+      ],
+      'الجرافيك': [
+        { id: 6, text: 'صمم غلاف كتاب احترافي باستخدام Canva.', tokens: 30 },
+      ],
+      'الفيديو': [
+        { id: 7, text: 'اخترع فكرة مقطع فيديو تسويقي مدته 30 ثانية.', tokens: 25 },
+      ],
+    };
+
     useEffect(() => {
-      const mockPrompts = [
-        { id: 1, text: 'اشرح مفهوم الذكاء الاصطناعي بطريقة بسيطة.', category: 'تعليمي', tokens: 23 },
-        { id: 2, text: 'اكتب قصة قصيرة عن رحلة إلى الفضاء.', category: 'إبداعي', tokens: 45 },
-        { id: 3, text: 'ما هو تأثير التكنولوجيا على التعليم؟', category: 'تحليل بيانات', tokens: 18 },
-        { id: 4, text: 'اشرح كيف تعمل خوارزميات التعلم العميق.', category: 'تعليمي', tokens: 37 },
-        { id: 5, text: 'اكتب برنامجًا بلغة جافاسكربت لحساب العوامل.', category: 'برمجة', tokens: 41 },
-        { id: 6, text: 'صمم غلاف كتاب احترافي باستخدام Canva.', category: 'الجرافيك', tokens: 30 },
-        { id: 7, text: 'اخترع فكرة مقطع فيديو تسويقي مدته 30 ثانية.', category: 'الفيديو', tokens: 25 },
-      ];
-      setPrompts(mockPrompts);
+      // استرجاع حالة النسخ من localStorage
+      const storedCopies = JSON.parse(localStorage.getItem('copiedPrompts') || '{}');
+      setCopiedPromptId(storedCopies);
     }, []);
 
-    const handleAddPrompt = (e) => {
-      e.preventDefault();
-      if (!newPrompt.text || !newPrompt.category) return;
+    const handleCopyPrompt = (id, promptText) => {
+      if (copiedPromptId[id]) return; // إذا سبق نسخه لا تسمح
 
-      const promptToAdd = {
-        ...newPrompt,
-        id: Date.now()
-      };
-
-      setPrompts([...prompts, promptToAdd]);
-      setNewPrompt({ text: '', category: '', tokens: 0 });
+      navigator.clipboard.writeText(`\`\`\n${promptText}\n\`\``).then(() => {
+        const updatedCopies = { ...copiedPromptId, [id]: true };
+        setCopiedPromptId(updatedCopies);
+        localStorage.setItem('copiedPrompts', JSON.stringify(updatedCopies));
+        alert("تم النسخ بنجاح! لا يمكنك نسخ هذا البرومبت مجددًا.");
+      });
     };
 
     const getCategoryStats = () => {
       const stats = {};
-      categories.forEach(category => {
-        const catPrompts = prompts.filter(p => p.category === category);
-        const total = catPrompts.reduce((sum, p) => sum + p.tokens, 0);
+      Object.keys(promptsByCategory).forEach(category => {
+        const catPrompts = promptsByCategory[category];
+        const totalTokens = catPrompts.reduce((sum, p) => sum + p.tokens, 0);
         stats[category] = {
           count: catPrompts.length,
-          totalTokens: total,
-          averageTokens: catPrompts.length > 0 ? Math.round(total / catPrompts.length) : 0
+          totalTokens,
+          averageTokens: Math.round(totalTokens / catPrompts.length),
         };
       });
       return stats;
@@ -137,135 +86,76 @@
       const stats = getCategoryStats();
 
       return (
-        <div className="space-y-6">
-          <h2 className="text-2xl font-bold text-gray-800">لوحة التحكم</h2>
-          <p className="text-sm text-gray-600">مرحبًا، {userInfo.name} ({userInfo.role})</p>
+        <div className="space-y-8 max-w-4xl mx-auto">
+          <h2 className="text-3xl font-bold text-center text-gray-800">لوحة الإحصاءات</h2>
 
+          {/* Cards */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="bg-white p-6 rounded-xl shadow-md hover:shadow-lg transition-shadow">
               <h3 className="text-lg font-semibold text-gray-700 mb-2">إجمالي البرومبتات</h3>
-              <p className="text-3xl font-bold text-indigo-600">{prompts.length}</p>
+              <p className="text-3xl font-bold text-indigo-600">{Object.values(promptsByCategory).flat().length}</p>
             </div>
             <div className="bg-white p-6 rounded-xl shadow-md hover:shadow-lg transition-shadow">
               <h3 className="text-lg font-semibold text-gray-700 mb-2">إجمالي التوكيانات</h3>
               <p className="text-3xl font-bold text-blue-600">
-                {prompts.reduce((sum, p) => sum + p.tokens, 0)}
+                {Object.values(stats).reduce((sum, s) => sum + s.totalTokens, 0)}
               </p>
             </div>
             <div className="bg-white p-6 rounded-xl shadow-md hover:shadow-lg transition-shadow">
               <h3 className="text-lg font-semibold text-gray-700 mb-2">عدد الأقسام</h3>
-              <p className="text-3xl font-bold text-emerald-600">{categories.length}</p>
+              <p className="text-3xl font-bold text-green-600">{categories.length}</p>
             </div>
           </div>
 
-          <div className="bg-white rounded-xl shadow-md overflow-hidden">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">القسم</th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">عدد البرومبتات</th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">إجمالي التوكيانات</th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">متوسط التوكيانات</th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {Object.entries(stats).map(([category, data]) => (
-                  <tr key={category} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap">{category}</td>
-                    <td className="px-6 py-4 whitespace-nowrap">{data.count}</td>
-                    <td className="px-6 py-4 whitespace-nowrap">{data.totalTokens}</td>
-                    <td className="px-6 py-4 whitespace-nowrap">{data.averageTokens}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          {/* Category Sections */}
+          {categories.map(category => {
+            const categoryPrompts = promptsByCategory[category];
+            const categoryStats = stats[category];
+
+            return (
+              <div key={category} className="bg-white rounded-xl shadow-md overflow-hidden">
+                <div className="bg-gray-100 px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+                  <h3 className="text-xl font-semibold text-gray-800">{category}</h3>
+                  <span className="text-sm text-gray-600">
+                    {categoryStats.count} برومبت — {categoryStats.totalTokens} توكيان
+                  </span>
+                </div>
+                <div className="p-6 space-y-4">
+                  {categoryPrompts.map(prompt => (
+                    <div key={prompt.id} className="border border-gray-200 rounded-lg p-4 relative">
+                      <pre className="whitespace-pre-wrap text-gray-700 font-medium">{prompt.text}</pre>
+                      <button
+                        onClick={() => handleCopyPrompt(prompt.id, prompt.text)}
+                        disabled={copiedPromptId[prompt.id]}
+                        className={`mt-2 px-4 py-2 rounded text-white ${
+                          copiedPromptId[prompt.id]
+                            ? 'bg-gray-400 cursor-not-allowed'
+                            : 'bg-indigo-600 hover:bg-indigo-700'
+                        }`}
+                      >
+                        {copiedPromptId[prompt.id] ? 'تم النسخ' : 'نسخ كـ Markdown'}
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            );
+          })}
         </div>
       );
     };
 
     return (
-      <div className="container mx-auto max-w-5xl">
-        <div className="flex space-x-4 rtl:space-x-reverse mb-6">
-          <button onClick={() => setActiveTab('dashboard')} className={`px-5 py-2 rounded-lg font-medium ${activeTab === 'dashboard' ? 'bg-indigo-600 text-white' : 'bg-gray-200 text-gray-800'} transition hover:bg-indigo-500`}>
-            لوحة التحكم
-          </button>
-          <button onClick={() => setActiveTab('prompts')} className={`px-5 py-2 rounded-lg font-medium ${activeTab === 'prompts' ? 'bg-indigo-600 text-white' : 'bg-gray-200 text-gray-800'} transition hover:bg-indigo-500`}>
-            إدارة البرومبتات
-          </button>
-        </div>
-
-        {activeTab === 'dashboard' && renderDashboard()}
-        {activeTab === 'prompts' && (
-          <div className="space-y-6">
-            <h2 className="text-2xl font-bold text-gray-800">إدارة البرومبتات</h2>
-            <form onSubmit={handleAddPrompt} className="space-y-4 bg-white p-6 rounded-xl shadow-md">
-              <input
-                className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                type="text"
-                placeholder="نص البرومبت"
-                value={newPrompt.text}
-                onChange={(e) => setNewPrompt({ ...newPrompt, text: e.target.value })}
-              />
-              <select
-                className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                value={newPrompt.category}
-                onChange={(e) => setNewPrompt({ ...newPrompt, category: e.target.value })}
-              >
-                <option value="">اختر قسمًا</option>
-                {categories.map((cat, idx) => (
-                  <option key={idx} value={cat}>{cat}</option>
-                ))}
-              </select>
-              <input
-                className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                type="number"
-                placeholder="عدد التوكيانات"
-                value={newPrompt.tokens}
-                onChange={(e) => setNewPrompt({ ...newPrompt, tokens: parseInt(e.target.value) || 0 })}
-              />
-              <div className="flex space-x-2 rtl:space-x-reverse">
-                <button
-                  type="submit"
-                  className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition duration-200 flex items-center justify-center"
-                >
-                  <svg className="w-4 h-4 ml-2" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" /></svg>
-                  إضافة برومبت
-                </button>
-              </div>
-            </form>
-
-            <ul className="space-y-3">
-              {prompts.map(prompt => (
-                <li key={prompt.id} className="bg-white p-4 rounded-xl shadow-sm flex justify-between items-center hover:shadow-md transition">
-                  <span className="text-gray-800">{prompt.text.substring(0, 50)}... — <strong className="text-indigo-600">{prompt.category}</strong> ({prompt.tokens} توكيان)</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
+      <div>
+        {renderDashboard()}
+        <footer className="text-center mt-10 text-sm text-gray-500">
+          جميع الحقوق محفوظة © {new Date().getFullYear()} | موقعك هنا - MN.gpt
+        </footer>
       </div>
     );
   }
 
-  function RootComponent() {
-    const [userInfo, setUserInfo] = useState(null);
-
-    useEffect(() => {
-      const savedInfo = localStorage.getItem('userInfo');
-      if (savedInfo) {
-        setUserInfo(JSON.parse(savedInfo));
-      }
-    }, []);
-
-    if (!userInfo) {
-      return <WelcomePage onStart={setUserInfo} />;
-    }
-
-    return <App userInfo={userInfo} />;
-  }
-
-  ReactDOM.createRoot(document.getElementById('root')).render(<RootComponent />);
+  ReactDOM.createRoot(document.getElementById('root')).render(<App />);
 </script>
 </body>
 </html>
