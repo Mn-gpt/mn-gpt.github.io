@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>📚 PromptBase AR - لوحة تحكم</title>
+  <style>
+    body {
+      background: #111;
+      color: #f0f0f0;
+      font-family: 'Segoe UI', sans-serif;
+      padding: 2rem;
+      max-width: 700px;
+      margin: auto;
+    }
+    h1, h2 { color: #00ffd5; }
+    textarea {
+      width: 100%;
+      padding: 1rem;
+      border-radius: 10px;
+      margin-top: 1rem;
+      background: #1a1a1a;
+      color: #f0f0f0;
+      border: 1px solid #333;
+      font-size: 1rem;
+    }
+    button {
+      margin-top: 0.5rem;
+      padding: 0.7rem 1.2rem;
+      border: none;
+      border-radius: 8px;
+      background: #00ffd5;
+      color: #000;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    ul { list-style: none; padding: 0; }
+    li {
+      background: #222;
+      margin-top: 1rem;
+      padding: 0.7rem;
+      border-radius: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .delete-btn {
+      background: #ff4b4b;
+      color: white;
+      border: none;
+      padding: 0.4rem 0.8rem;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    footer {
+      margin-top: 3rem;
+      font-size: 0.9rem;
+      color: #777;
+    }
+  </style>
+</head>
+<body>
+  <h1>📚 PromptBase AR</h1>
+  <h2>لوحة تحكم البرومبتات</h2>
+
+  <textarea id="newPrompt" placeholder="✍️ اكتب برومبت جديد هنا..."></textarea>
+  <button onclick="addPrompt()">➕ إضافة البرومبت</button>
+
+  <ul id="promptList"></ul>
+
+  <button onclick="exportToMarkdown()">📄 تصدير Markdown</button>
+
+  <footer>مشروع Mn.Gpt التجريبي 💡</footer>
+
+  <script>
+    const promptList = document.getElementById("promptList");
+    const newPrompt = document.getElementById("newPrompt");
+
+    let prompts = JSON.parse(localStorage.getItem("prompts")) || [];
+
+    function renderPrompts() {
+      promptList.innerHTML = "";
+      prompts.forEach((prompt, index) => {
+        const li = document.createElement("li");
+        li.innerHTML = `${prompt} <button class="delete-btn" onclick="deletePrompt(${index})">🗑️ حذف</button>`;
+        promptList.appendChild(li);
+      });
+    }
+
+    function addPrompt() {
+      if (newPrompt.value.trim() === "") return;
+      prompts.push(newPrompt.value.trim());
+      localStorage.setItem("prompts", JSON.stringify(prompts));
+      newPrompt.value = "";
+      renderPrompts();
+    }
+
+    function deletePrompt(index) {
+      prompts.splice(index, 1);
+      localStorage.setItem("prompts", JSON.stringify(prompts));
+      renderPrompts();
+    }
+
+    function exportToMarkdown() {
+      let markdown = prompts.map(p => `- ${p}`).join("\n");
+      const blob = new Blob([markdown], { type: "text/markdown" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "promptbase-ar.md";
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    renderPrompts();
+  </script>
+</body>
+</html>
