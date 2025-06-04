@@ -2,69 +2,237 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8" />
-  <title>PromptBase - MN.gpt</title>
-  <script src="https://cdn.tailwindcss.com"></script> 
-  <link rel="stylesheet" href="assets/style.css" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Prompt Manager - MN.gpt</title>
+  <script src="https://unpkg.com/react@18/umd/react.development.js"  crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"  crossorigin></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script> 
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"  rel="stylesheet" />
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f9fafb;
+      color: #1f2937;
+    }
+    textarea {
+      resize: none;
+    }
+  </style>
 </head>
-<body class="bg-gray-100 min-h-screen p-6">
-  <div class="max-w-4xl mx-auto bg-white shadow rounded-lg p-6">
-    <h1 class="text-3xl font-bold text-center mb-6">PromptBase - العربية</h1>
-    <a href="welcome.html" class="inline-block mb-4 text-indigo-600 hover:underline">دخول المسؤول</a>
+<body class="p-4 bg-gray-100 min-h-screen">
+<div id="root"></div>
 
-    <input type="text" id="searchInput" placeholder="ابحث عن برومبت..." class="w-full p-2 border rounded mb-4" />
+<script type="text/babel">
+  const { useState, useEffect } = React;
 
-    <div id="categoryStats" class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6"></div>
-    <div id="promptList" class="space-y-4"></div>
-  </div>
+  function App() {
+    const [activeTab, setActiveTab] = useState('dashboard');
+    const [prompts, setPrompts] = useState([]);
+    const [categories, setCategories] = useState(['عام', 'تعليمي', 'إبداعي', 'تحليل بيانات', 'برمجة']);
+    const [newPrompt, setNewPrompt] = useState({ text: '', category: '', tokens: 0 });
+    const [editingPrompt, setEditingPrompt] = useState(null);
+    const [searchTerm, setSearchTerm] = useState('');
+    const [showModal, setShowModal] = useState(false);
 
-  <script>
-    const data = [
-      { id: 1, text: "اشرح مفهوم الذكاء الاصطناعي بطريقة بسيطة.", category: "تعليمي", tokens: 23 },
-      { id: 2, text: "صمم غلاف كتاب احترافي باستخدام Canva.", category: "الجرافيك", tokens: 30 },
-      { id: 3, text: "اخترع فكرة مقطع فيديو تسويقي مدته 30 ثانية.", category: "الفيديو", tokens: 25 }
-    ];
+    // Mock Data
+    useEffect(() => {
+      const mockPrompts = [
+        { id: 1, text: 'اشرح مفهوم الذكاء الاصطناعي بطريقة بسيطة.', category: 'تعليمي', tokens: 23 },
+        { id: 2, text: 'اكتب قصة قصيرة عن رحلة إلى الفضاء.', category: 'إبداعي', tokens: 45 },
+        { id: 3, text: 'ما هو تأثير التكنولوجيا على التعليم؟', category: 'تحليل بيانات', tokens: 18 },
+        { id: 4, text: 'اشرح كيف تعمل خوارزميات التعلم العميق.', category: 'تعليمي', tokens: 37 },
+        { id: 5, text: 'اكتب برنامجًا بلغة جافاسكربت لحساب العوامل.', category: 'برمجة', tokens: 41 },
+      ];
+      setPrompts(mockPrompts);
+    }, []);
 
-    function renderStats() {
-      const stats = {};
-      data.forEach(p => {
-        if (!stats[p.category]) stats[p.category] = { count: 0, tokens: 0 };
-        stats[p.category].count++;
-        stats[p.category].tokens += p.tokens;
-      });
+    const handleAddPrompt = (e) => {
+      e.preventDefault();
+      if (!newPrompt.text || !newPrompt.category) return;
+      const promptToAdd = { ...newPrompt, id: Date.now() };
+      setPrompts([...prompts, promptToAdd]);
+      setNewPrompt({ text: '', category: '', tokens: 0 });
+    };
 
-      const container = document.getElementById('categoryStats');
-      Object.entries(stats).forEach(([cat, info]) => {
-        const div = document.createElement('div');
-        div.className = 'bg-indigo-50 p-4 rounded shadow text-center';
-        div.innerHTML = `<h3 class="font-semibold">${cat}</h3><p>عدد البرومبتات: ${info.count}</p><p>توكيانات: ${info.tokens}</p>`;
-        container.appendChild(div);
-      });
-    }
+    const handleDeletePrompt = (id) => {
+      setPrompts(prompts.filter(prompt => prompt.id !== id));
+    };
 
-    function renderPrompts() {
-      const container = document.getElementById('promptList');
-      data.forEach(prompt => {
-        const div = document.createElement('div');
-        div.className = 'bg-white p-4 rounded shadow hover:shadow-md transition';
-        div.innerHTML = `<p>${prompt.text}</p><small class="text-gray-500">القسم: ${prompt.category} | توكيانات: ${prompt.tokens}</small>`;
-        container.appendChild(div);
-      });
-    }
+    const handleEditPrompt = (prompt) => {
+      setEditingPrompt(prompt);
+      setShowModal(true);
+    };
 
-    document.getElementById('searchInput').addEventListener('input', e => {
-      const term = e.target.value.toLowerCase();
-      const filtered = data.filter(p => p.text.toLowerCase().includes(term));
-      document.getElementById('promptList').innerHTML = '';
-      filtered.forEach(prompt => {
-        const div = document.createElement('div');
-        div.className = 'bg-white p-4 rounded shadow';
-        div.innerHTML = `<p>${prompt.text}</p><small class="text-gray-500">القسم: ${prompt.category} | توكيانات: ${prompt.tokens}</small>`;
-        document.getElementById('promptList').appendChild(div);
-      });
-    });
+    const handleUpdatePrompt = () => {
+      if (!editingPrompt.text || !editingPrompt.category) return;
+      setPrompts(prompts.map(p => p.id === editingPrompt.id ? editingPrompt : p));
+      setShowModal(false);
+    };
 
-    renderStats();
-    renderPrompts();
-  </script>
+    const filteredPrompts = prompts.filter(p =>
+      p.text.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
+    return (
+      <div className="container mx-auto max-w-lg">
+        {/* Tabs */}
+        <div className="flex space-x-4 rtl:space-x-reverse mb-6">
+          <button onClick={() => setActiveTab('dashboard')} className={`px-4 py-2 rounded ${activeTab === 'dashboard' ? 'bg-indigo-600 text-white' : 'bg-gray-200 text-gray-800'}`}>
+            لوحة التحكم
+          </button>
+          <button onClick={() => setActiveTab('prompts')} className={`px-4 py-2 rounded ${activeTab === 'prompts' ? 'bg-indigo-600 text-white' : 'bg-gray-200 text-gray-800'}`}>
+            البرومبتات
+          </button>
+        </div>
+
+        {/* Dashboard Tab */}
+        {activeTab === 'dashboard' && (
+          <div className="space-y-6">
+            <h2 className="text-2xl font-bold text-gray-800">لوحة التحكم</h2>
+            <div className="grid grid-cols-1 gap-4">
+              <div className="bg-white p-4 rounded shadow">
+                <h3 className="text-lg font-semibold text-gray-700">إجمالي البرومبتات</h3>
+                <p className="text-2xl font-bold text-indigo-600">{prompts.length}</p>
+              </div>
+              <div className="bg-white p-4 rounded shadow">
+                <h3 className="text-lg font-semibold text-gray-700">إجمالي التوكيانات</h3>
+                <p className="text-2xl font-bold text-blue-600">
+                  {prompts.reduce((sum, p) => sum + p.tokens, 0)}
+                </p>
+              </div>
+              <div className="bg-white p-4 rounded shadow">
+                <h3 className="text-lg font-semibold text-gray-700">عدد الأقسام</h3>
+                <p className="text-2xl font-bold text-green-600">{categories.length}</p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Prompts Tab */}
+        {activeTab === 'prompts' && (
+          <div className="space-y-6">
+            {/* Search Box */}
+            <input
+              type="text"
+              placeholder="ابحث عن برومبت..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            />
+
+            {/* Add Prompt Form */}
+            <form onSubmit={handleAddPrompt} className="bg-white p-4 rounded shadow space-y-3">
+              <input
+                type="text"
+                placeholder="نص البرومبت"
+                value={newPrompt.text}
+                onChange={(e) => setNewPrompt({ ...newPrompt, text: e.target.value })}
+                className="w-full p-2 border rounded"
+              />
+              <select
+                value={newPrompt.category}
+                onChange={(e) => setNewPrompt({ ...newPrompt, category: e.target.value })}
+                className="w-full p-2 border rounded"
+              >
+                <option value="">اختر قسمًا</option>
+                {categories.map((cat, idx) => (
+                  <option key={idx} value={cat}>{cat}</option>
+                ))}
+              </select>
+              <input
+                type="number"
+                placeholder="عدد التوكيانات"
+                value={newPrompt.tokens}
+                onChange={(e) => setNewPrompt({ ...newPrompt, tokens: parseInt(e.target.value) || 0 })}
+                className="w-full p-2 border rounded"
+              />
+              <button
+                type="submit"
+                className="w-full bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition"
+              >
+                إضافة برومبت
+              </button>
+            </form>
+
+            {/* Prompt List */}
+            <ul className="space-y-3">
+              {filteredPrompts.map(prompt => (
+                <li key={prompt.id} className="bg-white p-4 rounded shadow flex flex-col">
+                  <span className="font-medium">{prompt.text.substring(0, 60)}...</span>
+                  <small className="text-sm text-gray-500 mt-1">
+                    القسم: {prompt.category} | توكيانات: {prompt.tokens}
+                  </small>
+                  <div className="flex justify-between mt-2">
+                    <button
+                      onClick={() => handleEditPrompt(prompt)}
+                      className="text-indigo-600 hover:text-indigo-800 text-sm"
+                    >
+                      تعديل
+                    </button>
+                    <button
+                      onClick={() => handleDeletePrompt(prompt.id)}
+                      className="text-red-600 hover:text-red-800 text-sm"
+                    >
+                      حذف
+                    </button>
+                    <button
+                      onClick={() => alert(prompt.text)}
+                      className="text-blue-600 hover:text-blue-800 text-sm"
+                    >
+                      عرض كامل
+                    </button>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        {/* Modal for Editing */}
+        {showModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+            <div className="bg-white rounded w-full max-w-md p-6 relative">
+              <button
+                onClick={() => setShowModal(false)}
+                className="absolute top-2 right-2 text-gray-500 hover:text-gray-800"
+              >
+                &times; إغلاق
+              </button>
+              <h3 className="text-lg font-bold mb-4">تحرير البرومبت</h3>
+              <textarea
+                rows="4"
+                value={editingPrompt?.text || ''}
+                onChange={(e) => setEditingPrompt({ ...editingPrompt, text: e.target.value })}
+                className="w-full p-3 border rounded mb-3"
+              ></textarea>
+              <input
+                type="text"
+                value={editingPrompt?.category || ''}
+                onChange={(e) => setEditingPrompt({ ...editingPrompt, category: e.target.value })}
+                className="w-full p-2 border rounded mb-3"
+                placeholder="القسم"
+              />
+              <input
+                type="number"
+                value={editingPrompt?.tokens || 0}
+                onChange={(e) => setEditingPrompt({ ...editingPrompt, tokens: parseInt(e.target.value) || 0 })}
+                className="w-full p-2 border rounded mb-4"
+                placeholder="عدد التوكيانات"
+              />
+              <button
+                onClick={handleUpdatePrompt}
+                className="w-full bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700"
+              >
+                حفظ التعديلات
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
 </body>
 </html>
