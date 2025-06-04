@@ -27,7 +27,7 @@
   const { useState, useEffect } = React;
 
   function App() {
-    // 🔐 التحقق من تسجيل الدخول
+    // 🔒 التحقق من تسجيل الدخول
     const [userRole, setUserRole] = useState(null);
 
     useEffect(() => {
@@ -39,7 +39,9 @@
       }
     }, []);
 
-    // ⚙️ الحالة الأساسية
+    if (!userRole) return <div>جاري التحقق من تسجيل الدخول...</div>;
+
+    // باقي الحالة
     const [activeTab, setActiveTab] = useState('dashboard');
     const [prompts, setPrompts] = useState([]);
     const [categories, setCategories] = useState([]);
@@ -50,23 +52,18 @@
 
     // 🔽 تحميل البيانات من localStorage
     useEffect(() => {
-      try {
-        const savedPrompts = JSON.parse(localStorage.getItem('prompts')) || [
-          { id: 1, text: 'اشرح مفهوم الذكاء الاصطناعي بطريقة بسيطة.', category: 'تعليمي', tokens: 23 },
-          { id: 2, text: 'اكتب قصة قصيرة عن رحلة إلى الفضاء.', category: 'إبداعي', tokens: 45 },
-          { id: 3, text: 'ما هو تأثير التكنولوجيا على التعليم؟', category: 'تحليل بيانات', tokens: 18 },
-          { id: 4, text: 'اشرح كيف تعمل خوارزميات التعلم العميق.', category: 'تعليمي', tokens: 37 },
-          { id: 5, text: 'اكتب برنامجًا بلغة جافاسكربت لحساب العوامل.', category: 'برمجة', tokens: 41 },
-          { id: 6, text: 'أنشئ وصفًا لصورة فنية مستوحاة من الطبيعة.', category: 'إنشاء صور', tokens: 20 },
-          { id: 7, text: 'وصف مشهد فيديو تعليمي عن الكون.', category: 'إنشاء فيديو', tokens: 30 },
-        ];
-        const savedCategories = JSON.parse(localStorage.getItem('categories')) || ['عام', 'تعليمي', 'إبداعي', 'تحليل بيانات', 'برمجة', 'إنشاء صور', 'إنشاء فيديو'];
-        setPrompts(savedPrompts);
-        setCategories(savedCategories);
-      } catch (error) {
-        console.error("خطأ في تحميل البيانات:", error);
-        alert("حدث خطأ في تحميل البيانات. راجع أدوات المطور للحصول على التفاصيل.");
-      }
+      const savedPrompts = JSON.parse(localStorage.getItem('prompts')) || [
+        { id: 1, text: 'اشرح مفهوم الذكاء الاصطناعي بطريقة بسيطة.', category: 'تعليمي', tokens: 23 },
+        { id: 2, text: 'اكتب قصة قصيرة عن رحلة إلى الفضاء.', category: 'إبداعي', tokens: 45 },
+        { id: 3, text: 'ما هو تأثير التكنولوجيا على التعليم؟', category: 'تحليل بيانات', tokens: 18 },
+        { id: 4, text: 'اشرح كيف تعمل خوارزميات التعلم العميق.', category: 'تعليمي', tokens: 37 },
+        { id: 5, text: 'اكتب برنامجًا بلغة جافاسكربت لحساب العوامل.', category: 'برمجة', tokens: 41 },
+        { id: 6, text: 'أنشئ وصفًا لصورة فنية مستوحاة من الطبيعة.', category: 'إنشاء صور', tokens: 20 },
+        { id: 7, text: 'وصف مشهد فيديو تعليمي عن الكون.', category: 'إنشاء فيديو', tokens: 30 },
+      ];
+      const savedCategories = JSON.parse(localStorage.getItem('categories')) || ['عام', 'تعليمي', 'إبداعي', 'تحليل بيانات', 'برمجة', 'إنشاء صور', 'إنشاء فيديو'];
+      setPrompts(savedPrompts);
+      setCategories(savedCategories);
     }, []);
 
     // 📦 حفظ البيانات في localStorage
@@ -149,6 +146,7 @@
       return stats;
     };
 
+    // عرض لوحة التحكم
     const renderDashboard = () => {
       const stats = getCategoryStats();
 
@@ -216,22 +214,18 @@
         <div className="flex space-x-4 rtl:space-x-reverse border-b border-gray-200 mb-6">
           <button
             onClick={() => setActiveTab('dashboard')}
-            className={`py-2 px-4 font-medium ${activeTab === 'dashboard' 
-              ? 'border-b-2 border-indigo-600 text-indigo-600' 
-              : 'text-gray-600'
-            }`}
+            className={`py-2 px-4 font-medium ${activeTab === 'dashboard' ? 'border-b-2 border-indigo-600 text-indigo-600' : 'text-gray-600'}`}
           >
             لوحة التحكم
           </button>
           <button
-            onClick={() => activeTab === 'prompts' || setUserRole('admin') && setActiveTab('prompts')}
+            onClick={() => setActiveTab('prompts')}
             disabled={userRole !== 'admin'}
-            className={`py-2 px-4 font-medium ${
-              userRole === 'admin' 
-                ? activeTab === 'prompts' 
-                  ? 'border-b-2 border-indigo-600 text-indigo-600' 
-                  : 'text-gray-600'
-                : 'text-gray-400 cursor-not-allowed'
+            className={`py-2 px-4 font-medium ${userRole === 'admin' 
+              ? activeTab === 'prompts' 
+                ? 'border-b-2 border-indigo-600 text-indigo-600' 
+                : 'text-gray-600'
+              : 'text-gray-400 cursor-not-allowed'
             }`}
           >
             إدارة البرومبتات
@@ -376,7 +370,6 @@
     );
   }
 
-  // Render App
   ReactDOM.createRoot(document.getElementById('root')).render(<App />);
 </script>
 </body>
