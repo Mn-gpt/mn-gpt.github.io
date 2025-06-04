@@ -19,3 +19,20 @@ export const prompts = [
     tags: ["live", "interaction", "context"]
   }
 ];
+export const prompts = [
+  {
+    title: "Creative Writer",
+    content: "Write a short story set in a futuristic city.",
+    tags: ["writing", "future", "story"]
+  },
+  {
+    title: "Philosopher AI",
+    content: "What is the meaning of consciousness?",
+    tags: ["philosophy", "AI", "consciousness"]
+  },
+  {
+    title: "Brainstorm Buddy",
+    content: "Generate 10 ideas for a minimalist productivity app.",
+    tags: ["ideas", "app", "productivity"]
+  }
+];
