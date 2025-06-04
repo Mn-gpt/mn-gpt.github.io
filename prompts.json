@@ -1,16 +1,21 @@
-{
-  "prompts": [
-    {
-      "title": "ملخص فكرة",
-      "text": "اكتب ملخصًا لفكرة معقدة بلغة بسيطة موجهة للأطفال."
-    },
-    {
-      "title": "مساعد برمجي",
-      "text": "أريدك أن تعمل كمساعد برمجة بلغة Python وتشرح الأكواد خطوة بخطوة."
-    },
-    {
-      "title": "مترجم مشاعر",
-      "text": "قم بتحليل هذا النص واستخلاص المشاعر الأساسية فيه."
-    }
-  ]
-}
+// prompts.js
+export const prompts = [
+  {
+    id: "p1",
+    title: "Mn.Gpt/Core",
+    content: "Activate Mn.Gpt Core module to initiate creative contextual thinking...",
+    tags: ["core", "creativity", "thinking"]
+  },
+  {
+    id: "p2",
+    title: "Q-Specter",
+    content: "Engage Q-Specter to analyze quantum-spectrum of thoughts...",
+    tags: ["quantum", "analysis", "meta"]
+  },
+  {
+    id: "p3",
+    title: "Tafa3ol+",
+    content: "Enable live interaction mode with time-awareness and continuity tracking...",
+    tags: ["live", "interaction", "context"]
+  }
+];
