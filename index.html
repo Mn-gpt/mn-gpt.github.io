@@ -8,11 +8,7 @@
   <!-- React + ReactDOM -->
   <script src="https://unpkg.com/react@18/umd/react.development.js"  crossorigin></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"  crossorigin></script>
-
-  <!-- Babel for JSX -->
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script> 
-
-  <!-- Tailwind CSS CDN -->
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"  rel="stylesheet">
 
   <style>
@@ -34,7 +30,7 @@
     const [activeTab, setActiveTab] = useState('dashboard');
     const [prompts, setPrompts] = useState([]);
     const [categories, setCategories] = useState([]);
-    const [newPrompt, setNewPrompt] = useState({ text: '', category: '', tokens: 0 });
+    const [newPrompt, setNewPrompt] = useState({ text: '', category: '', tokens: 0, rating: 3 });
     const [editingCategory, setEditingCategory] = useState(null);
     const [editCategoryName, setEditCategoryName] = useState('');
     const [searchTerm, setSearchTerm] = useState('');
@@ -46,13 +42,13 @@
     // تحميل البيانات عند التهيئة
     useEffect(() => {
       const savedPrompts = JSON.parse(localStorage.getItem('prompts')) || [
-        { id: 1, text: 'اشرح مفهوم الذكاء الاصطناعي بطريقة بسيطة.', category: 'تعليمي', tokens: 23 },
-        { id: 2, text: 'اكتب قصة قصيرة عن رحلة إلى الفضاء.', category: 'إبداعي', tokens: 45 },
-        { id: 3, text: 'ما هو تأثير التكنولوجيا على التعليم؟', category: 'تحليل بيانات', tokens: 18 },
-        { id: 4, text: 'اشرح كيف تعمل خوارزميات التعلم العميق.', category: 'تعليمي', tokens: 37 },
-        { id: 5, text: 'اكتب برنامجًا بلغة جافاسكربت لحساب العوامل.', category: 'برمجة', tokens: 41 },
-        { id: 6, text: 'أنشئ وصفًا لصورة فنية مستوحاة من الطبيعة.', category: 'إنشاء صور', tokens: 20 },
-        { id: 7, text: 'وصف مشهد فيديو تعليمي عن الكون.', category: 'إنشاء فيديو', tokens: 30 },
+        { id: 1, text: 'اشرح مفهوم الذكاء الاصطناعي بطريقة بسيطة.', category: 'تعليمي', tokens: 23, rating: 4 },
+        { id: 2, text: 'اكتب قصة قصيرة عن رحلة إلى الفضاء.', category: 'إبداعي', tokens: 45, rating: 5 },
+        { id: 3, text: 'ما هو تأثير التكنولوجيا على التعليم؟', category: 'تحليل بيانات', tokens: 18, rating: 3 },
+        { id: 4, text: 'اشرح كيف تعمل خوارزميات التعلم العميق.', category: 'تعليمي', tokens: 37, rating: 4 },
+        { id: 5, text: 'اكتب برنامجًا بلغة جافاسكربت لحساب العوامل.', category: 'برمجة', tokens: 41, rating: 4 },
+        { id: 6, text: 'أنشئ وصفًا لصورة فنية مستوحاة من الطبيعة.', category: 'إنشاء صور', tokens: 20, rating: 5 },
+        { id: 7, text: 'وصف مشهد فيديو تعليمي عن الكون.', category: 'إنشاء فيديو', tokens: 30, rating: 4 },
       ];
       const savedCategories = JSON.parse(localStorage.getItem('categories')) || ['عام', 'تعليمي', 'إبداعي', 'تحليل بيانات', 'برمجة', 'إنشاء صور', 'إنشاء فيديو'];
       setPrompts(savedPrompts);
@@ -65,17 +61,23 @@
       localStorage.setItem('categories', JSON.stringify(updatedCategories));
     };
 
+    // حساب التوكنات بشكل تقديري
+    const estimateTokens = (text) => {
+      const words = text.trim().split(/\s+/).length;
+      return Math.ceil(words * 1.25); // تقدير: 4 كلمات = 5 توكنات
+    };
+
     // إضافة برومبت جديد
     const handleAddPrompt = (e) => {
       e.preventDefault();
       if (!newPrompt.text || !newPrompt.category) return;
-      const promptToAdd = { ...newPrompt, id: Date.now() };
+      const promptToAdd = { ...newPrompt, id: Date.now(), tokens: estimateTokens(newPrompt.text) };
       const updatedPrompts = [...prompts, promptToAdd];
       const updatedCategories = categories.includes(newPrompt.category) ? categories : [...categories, newPrompt.category];
       setPrompts(updatedPrompts);
       setCategories(updatedCategories);
       saveToLocalStorage(updatedPrompts, updatedCategories);
-      setNewPrompt({ text: '', category: '', tokens: 0 });
+      setNewPrompt({ text: '', category: '', tokens: 0, rating: 3 });
       setIsModalOpen(false);
     };
 
@@ -131,10 +133,12 @@
       categories.forEach(category => {
         const catPrompts = prompts.filter(p => p.category === category);
         const totalTokens = catPrompts.reduce((sum, p) => sum + p.tokens, 0);
+        const totalRating = catPrompts.reduce((sum, p) => sum + p.rating, 0);
         stats[category] = {
           count: catPrompts.length,
           totalTokens: totalTokens,
-          averageTokens: catPrompts.length > 0 ? Math.round(totalTokens / catPrompts.length) : 0
+          averageTokens: catPrompts.length > 0 ? Math.round(totalTokens / catPrompts.length) : 0,
+          averageRating: catPrompts.length > 0 ? (totalRating / catPrompts.length).toFixed(1) : 0
         };
       });
       return stats;
@@ -165,7 +169,7 @@
       return (
         <div className="space-y-8">
           <h2 className="text-2xl font-bold text-gray-800">لوحة التحكم</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
             <div className="bg-white p-6 rounded-lg shadow-md">
               <h3 className="text-lg font-semibold text-gray-700 mb-2">إجمالي البرومبتات</h3>
               <p className="text-3xl font-bold text-indigo-600">{prompts.length}</p>
@@ -180,6 +184,12 @@
               <h3 className="text-lg font-semibold text-gray-700 mb-2">عدد الأقسام</h3>
               <p className="text-3xl font-bold text-green-600">{categories.length}</p>
             </div>
+            <div className="bg-white p-6 rounded-lg shadow-md">
+              <h3 className="text-lg font-semibold text-gray-700 mb-2">التقييم المتوسط</h3>
+              <p className="text-3xl font-bold text-yellow-500">
+                {(prompts.reduce((sum, p) => sum + p.rating, 0) / prompts.length || 0).toFixed(1)} ⭐
+              </p>
+            </div>
           </div>
           <div className="bg-white rounded-lg shadow-md overflow-hidden">
             <table className="min-w-full divide-y divide-gray-200">
@@ -187,8 +197,8 @@
                 <tr>
                   <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">القسم</th>
                   <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">عدد البرومبتات</th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">إجمالي التوكيانات</th>
                   <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">متوسط التوكيانات</th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">متوسط التقييم</th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
@@ -196,8 +206,8 @@
                   <tr key={category} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap">{category}</td>
                     <td className="px-6 py-4 whitespace-nowrap">{data.count}</td>
-                    <td className="px-6 py-4 whitespace-nowrap">{data.totalTokens}</td>
                     <td className="px-6 py-4 whitespace-nowrap">{data.averageTokens}</td>
+                    <td className="px-6 py-4 whitespace-nowrap">{data.averageRating} ⭐</td>
                   </tr>
                 ))}
               </tbody>
@@ -212,11 +222,9 @@
         {/* Header */}
         <header className="flex justify-between items-center pb-4 border-b border-gray-200">
           <h1 className="text-2xl font-bold text-indigo-700">{signature}</h1>
-          <div className="space-x-4 space-x-reverse rtl:space-x-reverse">
-            <button onClick={() => setIsModalOpen(true)} className="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700 transition">
-              إضافة برومبت جديد
-            </button>
-          </div>
+          <button onClick={() => setIsModalOpen(true)} className="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700 transition">
+            إضافة برومبت جديد
+          </button>
         </header>
 
         {/* Tabs Navigation */}
@@ -252,7 +260,7 @@
               />
             </div>
 
-            {/* Table of Prompts with Sorting */}
+            {/* Table of Prompts with Sorting and Ratings */}
             <div className="bg-white rounded-lg shadow-md overflow-hidden">
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
@@ -260,14 +268,15 @@
                     <th onClick={() => toggleSort('id')} className="px-6 py-3 text-right text-sm font-medium text-gray-500 cursor-pointer">
                       ID {sortField === 'id' && (sortOrder === 'asc' ? '↑' : '↓')}
                     </th>
-                    <th onClick={() => toggleSort('text')} className="px-6 py-3 text-right text-sm font-medium text-gray-500 cursor-pointer">
-                      النص {sortField === 'text' && (sortOrder === 'asc' ? '↑' : '↓')}
-                    </th>
+                    <th className="px-6 py-3 text-right text-sm font-medium text-gray-500">النص</th>
                     <th onClick={() => toggleSort('category')} className="px-6 py-3 text-right text-sm font-medium text-gray-500 cursor-pointer">
                       القسم {sortField === 'category' && (sortOrder === 'asc' ? '↑' : '↓')}
                     </th>
                     <th onClick={() => toggleSort('tokens')} className="px-6 py-3 text-right text-sm font-medium text-gray-500 cursor-pointer">
                       التوكيانات {sortField === 'tokens' && (sortOrder === 'asc' ? '↑' : '↓')}
+                    </th>
+                    <th onClick={() => toggleSort('rating')} className="px-6 py-3 text-right text-sm font-medium text-gray-500 cursor-pointer">
+                      التقييم {sortField === 'rating' && (sortOrder === 'asc' ? '↑' : '↓')}
                     </th>
                     <th className="px-6 py-3 text-right text-sm font-medium text-gray-500">الإجراءات</th>
                   </tr>
@@ -279,6 +288,11 @@
                       <td className="px-6 py-4 whitespace-nowrap">{prompt.text}</td>
                       <td className="px-6 py-4 whitespace-nowrap">{prompt.category}</td>
                       <td className="px-6 py-4 whitespace-nowrap">{prompt.tokens}</td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        {[...Array(5)].map((_, i) => (
+                          <span key={i} className={i < prompt.rating ? "text-yellow-500" : "text-gray-300"}>★</span>
+                        ))}
+                      </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <button
                           onClick={() => handleDeletePrompt(prompt.id)}
@@ -358,6 +372,9 @@
                   onChange={(e) => setNewPrompt({...newPrompt, text: e.target.value})}
                   className="w-full p-3 border border-gray-300 rounded mb-4 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 ></textarea>
+                <div className="mb-4 text-sm text-gray-500">
+                  عدد التوكيانات المتوقع: <strong>{estimateTokens(newPrompt.text)}</strong>
+                </div>
                 <select
                   value={newPrompt.category}
                   onChange={(e) => setNewPrompt({...newPrompt, category: e.target.value})}
@@ -368,13 +385,21 @@
                     <option key={idx} value={cat}>{cat}</option>
                   ))}
                 </select>
-                <input
-                  type="number"
-                  placeholder="عدد التوكيانات"
-                  value={newPrompt.tokens}
-                  onChange={(e) => setNewPrompt({...newPrompt, tokens: parseInt(e.target.value) || 0})}
-                  className="w-full p-3 border border-gray-300 rounded mb-4 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                />
+                <div className="mb-4">
+                  <label className="block mb-2">التقييم:</label>
+                  <div className="flex space-x-2 space-x-reverse">
+                    {[1, 2, 3, 4, 5].map(star => (
+                      <button
+                        key={star}
+                        type="button"
+                        onClick={() => setNewPrompt({...newPrompt, rating: star})}
+                        className="focus:outline-none"
+                      >
+                        <span className={star <= newPrompt.rating ? "text-yellow-500 text-2xl" : "text-gray-300 text-2xl"}>★</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
                 <div className="flex justify-end space-x-2 space-x-reverse">
                   <button
                     type="button"
