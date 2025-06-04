@@ -30,7 +30,8 @@
     const [activeTab, setActiveTab] = useState('dashboard');
     const [prompts, setPrompts] = useState([]);
     const [categories, setCategories] = useState([]);
-    const [newPrompt, setNewPrompt] = useState({ text: '', category: '', tokens: 0, rating: 3 });
+    const [newPrompt, setNewPrompt] = useState({ text: '', category: '', tokens: 0 });
+    const [editingPrompt, setEditingPrompt] = useState(null);
     const [editingCategory, setEditingCategory] = useState(null);
     const [editCategoryName, setEditCategoryName] = useState('');
     const [searchTerm, setSearchTerm] = useState('');
@@ -39,56 +40,79 @@
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [signature] = useState('MN.gpt');
 
-    // تحميل البيانات عند التهيئة
+    // 🔽 تحميل البيانات من localStorage
     useEffect(() => {
       const savedPrompts = JSON.parse(localStorage.getItem('prompts')) || [
-        { id: 1, text: 'اشرح مفهوم الذكاء الاصطناعي بطريقة بسيطة.', category: 'تعليمي', tokens: 23, rating: 4 },
-        { id: 2, text: 'اكتب قصة قصيرة عن رحلة إلى الفضاء.', category: 'إبداعي', tokens: 45, rating: 5 },
-        { id: 3, text: 'ما هو تأثير التكنولوجيا على التعليم؟', category: 'تحليل بيانات', tokens: 18, rating: 3 },
-        { id: 4, text: 'اشرح كيف تعمل خوارزميات التعلم العميق.', category: 'تعليمي', tokens: 37, rating: 4 },
-        { id: 5, text: 'اكتب برنامجًا بلغة جافاسكربت لحساب العوامل.', category: 'برمجة', tokens: 41, rating: 4 },
-        { id: 6, text: 'أنشئ وصفًا لصورة فنية مستوحاة من الطبيعة.', category: 'إنشاء صور', tokens: 20, rating: 5 },
-        { id: 7, text: 'وصف مشهد فيديو تعليمي عن الكون.', category: 'إنشاء فيديو', tokens: 30, rating: 4 },
+        { id: 1, text: 'اشرح مفهوم الذكاء الاصطناعي بطريقة بسيطة.', category: 'تعليمي', tokens: 23 },
+        { id: 2, text: 'اكتب قصة قصيرة عن رحلة إلى الفضاء.', category: 'إبداعي', tokens: 45 },
+        { id: 3, text: 'ما هو تأثير التكنولوجيا على التعليم؟', category: 'تحليل بيانات', tokens: 18 },
+        { id: 4, text: 'اشرح كيف تعمل خوارزميات التعلم العميق.', category: 'تعليمي', tokens: 37 },
+        { id: 5, text: 'اكتب برنامجًا بلغة جافاسكربت لحساب العوامل.', category: 'برمجة', tokens: 41 },
+        { id: 6, text: 'أنشئ وصفًا لصورة فنية مستوحاة من الطبيعة.', category: 'إنشاء صور', tokens: 20 },
+        { id: 7, text: 'وصف مشهد فيديو تعليمي عن الكون.', category: 'إنشاء فيديو', tokens: 30 },
       ];
       const savedCategories = JSON.parse(localStorage.getItem('categories')) || ['عام', 'تعليمي', 'إبداعي', 'تحليل بيانات', 'برمجة', 'إنشاء صور', 'إنشاء فيديو'];
       setPrompts(savedPrompts);
       setCategories(savedCategories);
     }, []);
 
-    // حفظ البيانات في localStorage
+    // 📦 حفظ البيانات في localStorage
     const saveToLocalStorage = (updatedPrompts, updatedCategories) => {
       localStorage.setItem('prompts', JSON.stringify(updatedPrompts));
       localStorage.setItem('categories', JSON.stringify(updatedCategories));
+      exportPromptsToMarkdown(updatedPrompts); // 👈 تصدير البيانات بعد الحفظ
     };
 
-    // حساب التوكنات بشكل تقديري
+    // 🧮 تقدير عدد التوكيانات
     const estimateTokens = (text) => {
       const words = text.trim().split(/\s+/).length;
-      return Math.ceil(words * 1.25); // تقدير: 4 كلمات = 5 توكنات
+      return Math.ceil(words * 1.25);
     };
 
-    // إضافة برومبت جديد
-    const handleAddPrompt = (e) => {
+    // ➕ إضافة أو تعديل برومبت
+    const handleAddOrEditPrompt = (e) => {
       e.preventDefault();
       if (!newPrompt.text || !newPrompt.category) return;
-      const promptToAdd = { ...newPrompt, id: Date.now(), tokens: estimateTokens(newPrompt.text) };
-      const updatedPrompts = [...prompts, promptToAdd];
+
+      let updatedPrompts = [...prompts];
+
+      if (editingPrompt) {
+        // تعديل
+        updatedPrompts = updatedPrompts.map(p =>
+          p.id === editingPrompt.id ? { ...newPrompt, tokens: estimateTokens(newPrompt.text), id: editingPrompt.id } : p
+        );
+        setEditingPrompt(null);
+      } else {
+        // إضافة جديدة
+        const promptToAdd = { ...newPrompt, id: Date.now(), tokens: estimateTokens(newPrompt.text) };
+        updatedPrompts = [...prompts, promptToAdd];
+      }
+
       const updatedCategories = categories.includes(newPrompt.category) ? categories : [...categories, newPrompt.category];
+
       setPrompts(updatedPrompts);
       setCategories(updatedCategories);
       saveToLocalStorage(updatedPrompts, updatedCategories);
-      setNewPrompt({ text: '', category: '', tokens: 0, rating: 3 });
+
+      setNewPrompt({ text: '', category: '', tokens: 0 });
       setIsModalOpen(false);
     };
 
-    // حذف برومبت
+    // ✏️ بدء تعديل برومبت
+    const startEditPrompt = (prompt) => {
+      setEditingPrompt(prompt);
+      setNewPrompt({ text: prompt.text, category: prompt.category, tokens: prompt.tokens });
+      setIsModalOpen(true);
+    };
+
+    // ❌ حذف برومبت
     const handleDeletePrompt = (id) => {
       const updatedPrompts = prompts.filter(prompt => prompt.id !== id);
       setPrompts(updatedPrompts);
       saveToLocalStorage(updatedPrompts, categories);
     };
 
-    // إضافة قسم جديد
+    // ➕ إضافة قسم جديد
     const handleAddCategory = () => {
       if (!newPrompt.category.trim() || categories.includes(newPrompt.category)) return;
       const updatedCategories = [...categories, newPrompt.category];
@@ -96,7 +120,7 @@
       saveToLocalStorage(prompts, updatedCategories);
     };
 
-    // تعديل اسم القسم
+    // ✏️ تعديل اسم القسم
     const handleStartEditCategory = (category) => {
       setEditingCategory(category);
       setEditCategoryName(category);
@@ -117,7 +141,7 @@
       saveToLocalStorage(updatedPrompts, updatedCategories);
     };
 
-    // حذف قسم
+    // ❌ حذف قسم
     const handleDeleteCategory = (categoryToDelete) => {
       if (!window.confirm(`هل أنت متأكد من حذف القسم "${categoryToDelete}" وجميع البرومبتات المرتبطة به؟`)) return;
       const updatedPrompts = prompts.filter(p => p.category !== categoryToDelete);
@@ -127,13 +151,13 @@
       saveToLocalStorage(updatedPrompts, updatedCategories);
     };
 
-    // إحصاءات الأقسام
+    // 📊 إحصاءات الأقسام
     const getCategoryStats = () => {
       const stats = {};
       categories.forEach(category => {
         const catPrompts = prompts.filter(p => p.category === category);
         const totalTokens = catPrompts.reduce((sum, p) => sum + p.tokens, 0);
-        const totalRating = catPrompts.reduce((sum, p) => sum + p.rating, 0);
+        const totalRating = catPrompts.reduce((sum, p) => sum + (p.rating || 3), 0);
         stats[category] = {
           count: catPrompts.length,
           totalTokens: totalTokens,
@@ -144,7 +168,7 @@
       return stats;
     };
 
-    // البحث والفرز
+    // 🔍 البحث والفرز
     const filteredAndSortedPrompts = prompts
       .filter(prompt => prompt.text.toLowerCase().includes(searchTerm.toLowerCase()))
       .sort((a, b) => {
@@ -160,6 +184,39 @@
         setSortField(field);
         setSortOrder('asc');
       }
+    };
+
+    // 📄 تصدير البرومبتات إلى ملف Markdown (.md)
+    const exportPromptsToMarkdown = (promptsList = prompts) => {
+      let markdown = '# 📝 قائمة البرومبتات\n\n';
+
+      // تصنيف حسب القسم
+      const groupedByCategory = {};
+      promptsList.forEach(prompt => {
+        if (!groupedByCategory[prompt.category]) {
+          groupedByCategory[prompt.category] = [];
+        }
+        groupedByCategory[prompt.category].push(prompt);
+      });
+
+      // إضافة كل قسم
+      Object.entries(groupedByCategory).forEach(([category, promptList]) => {
+        markdown += `## 📁 القسم: ${category}\n\n`;
+        promptList.forEach((prompt, index) => {
+          markdown += `${index + 1}. **${prompt.text}**\n   - ID: \`${prompt.id}\`\n   - توكيانات: \`${prompt.tokens}\`\n\n`;
+        });
+      });
+
+      // تحويل النص إلى ملف
+      const blob = new Blob([markdown], { type: 'text/markdown' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'prompts.md';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
     };
 
     // عرض لوحة التحكم
@@ -185,10 +242,12 @@
               <p className="text-3xl font-bold text-green-600">{categories.length}</p>
             </div>
             <div className="bg-white p-6 rounded-lg shadow-md">
-              <h3 className="text-lg font-semibold text-gray-700 mb-2">التقييم المتوسط</h3>
-              <p className="text-3xl font-bold text-yellow-500">
-                {(prompts.reduce((sum, p) => sum + p.rating, 0) / prompts.length || 0).toFixed(1)} ⭐
-              </p>
+              <button
+                onClick={() => exportPromptsToMarkdown()}
+                className="w-full py-3 bg-purple-600 text-white rounded hover:bg-purple-700 transition"
+              >
+                📥 تصدير البيانات إلى Markdown
+              </button>
             </div>
           </div>
           <div className="bg-white rounded-lg shadow-md overflow-hidden">
@@ -198,7 +257,6 @@
                   <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">القسم</th>
                   <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">عدد البرومبتات</th>
                   <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">متوسط التوكيانات</th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">متوسط التقييم</th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
@@ -207,7 +265,6 @@
                     <td className="px-6 py-4 whitespace-nowrap">{category}</td>
                     <td className="px-6 py-4 whitespace-nowrap">{data.count}</td>
                     <td className="px-6 py-4 whitespace-nowrap">{data.averageTokens}</td>
-                    <td className="px-6 py-4 whitespace-nowrap">{data.averageRating} ⭐</td>
                   </tr>
                 ))}
               </tbody>
@@ -222,9 +279,27 @@
         {/* Header */}
         <header className="flex justify-between items-center pb-4 border-b border-gray-200">
           <h1 className="text-2xl font-bold text-indigo-700">{signature}</h1>
-          <button onClick={() => setIsModalOpen(true)} className="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700 transition">
-            إضافة برومبت جديد
-          </button>
+          <div className="space-x-4 space-x-reverse rtl:space-x-reverse">
+            <button
+              onClick={() => exportPromptsToMarkdown()}
+              className="inline-flex items-center px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700 transition"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 ml-2" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clipRule="evenodd" />
+              </svg>
+              تصدير Markdown
+            </button>
+            <button
+              onClick={() => {
+                setEditingPrompt(null);
+                setNewPrompt({ text: '', category: '', tokens: 0 });
+                setIsModalOpen(true);
+              }}
+              className="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700 transition"
+            >
+              إضافة برومبت جديد
+            </button>
+          </div>
         </header>
 
         {/* Tabs Navigation */}
@@ -265,9 +340,6 @@
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
                   <tr>
-                    <th onClick={() => toggleSort('id')} className="px-6 py-3 text-right text-sm font-medium text-gray-500 cursor-pointer">
-                      ID {sortField === 'id' && (sortOrder === 'asc' ? '↑' : '↓')}
-                    </th>
                     <th className="px-6 py-3 text-right text-sm font-medium text-gray-500">النص</th>
                     <th onClick={() => toggleSort('category')} className="px-6 py-3 text-right text-sm font-medium text-gray-500 cursor-pointer">
                       القسم {sortField === 'category' && (sortOrder === 'asc' ? '↑' : '↓')}
@@ -275,31 +347,30 @@
                     <th onClick={() => toggleSort('tokens')} className="px-6 py-3 text-right text-sm font-medium text-gray-500 cursor-pointer">
                       التوكيانات {sortField === 'tokens' && (sortOrder === 'asc' ? '↑' : '↓')}
                     </th>
-                    <th onClick={() => toggleSort('rating')} className="px-6 py-3 text-right text-sm font-medium text-gray-500 cursor-pointer">
-                      التقييم {sortField === 'rating' && (sortOrder === 'asc' ? '↑' : '↓')}
-                    </th>
                     <th className="px-6 py-3 text-right text-sm font-medium text-gray-500">الإجراءات</th>
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
                   {filteredAndSortedPrompts.map(prompt => (
                     <tr key={prompt.id} className="hover:bg-gray-50">
-                      <td className="px-6 py-4 whitespace-nowrap">{prompt.id}</td>
-                      <td className="px-6 py-4 whitespace-nowrap">{prompt.text}</td>
+                      <td className="px-6 py-4 whitespace-normal">{prompt.text}</td>
                       <td className="px-6 py-4 whitespace-nowrap">{prompt.category}</td>
                       <td className="px-6 py-4 whitespace-nowrap">{prompt.tokens}</td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        {[...Array(5)].map((_, i) => (
-                          <span key={i} className={i < prompt.rating ? "text-yellow-500" : "text-gray-300"}>★</span>
-                        ))}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <button
-                          onClick={() => handleDeletePrompt(prompt.id)}
-                          className="text-red-600 hover:text-red-800"
-                        >
-                          حذف
-                        </button>
+                        <div className="flex space-x-2 space-x-reverse">
+                          <button
+                            onClick={() => startEditPrompt(prompt)}
+                            className="text-yellow-600 hover:text-yellow-800"
+                          >
+                            تعديل
+                          </button>
+                          <button
+                            onClick={() => handleDeletePrompt(prompt.id)}
+                            className="text-red-600 hover:text-red-800"
+                          >
+                            حذف
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -359,12 +430,12 @@
           </div>
         )}
 
-        {/* Modal لإضافة برومبت */}
+        {/* Modal لإضافة أو تعديل برومبت */}
         {isModalOpen && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
             <div className="bg-white p-6 rounded-lg shadow-xl max-w-md w-full">
-              <h3 className="text-xl font-bold mb-4">إضافة برومبت جديد</h3>
-              <form onSubmit={handleAddPrompt}>
+              <h3 className="text-xl font-bold mb-4">{editingPrompt ? 'تعديل البرومبت' : 'إضافة برومبت جديد'}</h3>
+              <form onSubmit={handleAddOrEditPrompt}>
                 <textarea
                   rows="4"
                   placeholder="مثال: اشرح مفهوم الذكاء الاصطناعي..."
@@ -372,9 +443,6 @@
                   onChange={(e) => setNewPrompt({...newPrompt, text: e.target.value})}
                   className="w-full p-3 border border-gray-300 rounded mb-4 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 ></textarea>
-                <div className="mb-4 text-sm text-gray-500">
-                  عدد التوكيانات المتوقع: <strong>{estimateTokens(newPrompt.text)}</strong>
-                </div>
                 <select
                   value={newPrompt.category}
                   onChange={(e) => setNewPrompt({...newPrompt, category: e.target.value})}
@@ -385,25 +453,17 @@
                     <option key={idx} value={cat}>{cat}</option>
                   ))}
                 </select>
-                <div className="mb-4">
-                  <label className="block mb-2">التقييم:</label>
-                  <div className="flex space-x-2 space-x-reverse">
-                    {[1, 2, 3, 4, 5].map(star => (
-                      <button
-                        key={star}
-                        type="button"
-                        onClick={() => setNewPrompt({...newPrompt, rating: star})}
-                        className="focus:outline-none"
-                      >
-                        <span className={star <= newPrompt.rating ? "text-yellow-500 text-2xl" : "text-gray-300 text-2xl"}>★</span>
-                      </button>
-                    ))}
-                  </div>
+                <div className="mb-4 text-sm text-gray-500">
+                  عدد التوكيانات المتوقع: <strong>{estimateTokens(newPrompt.text)}</strong>
                 </div>
                 <div className="flex justify-end space-x-2 space-x-reverse">
                   <button
                     type="button"
-                    onClick={() => setIsModalOpen(false)}
+                    onClick={() => {
+                      setIsModalOpen(false);
+                      setEditingPrompt(null);
+                      setNewPrompt({ text: '', category: '', tokens: 0 });
+                    }}
                     className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400"
                   >
                     إلغاء
@@ -412,7 +472,7 @@
                     type="submit"
                     className="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700"
                   >
-                    حفظ
+                    {editingPrompt ? 'تحديث' : 'حفظ'}
                   </button>
                 </div>
               </form>
