@@ -38,9 +38,10 @@
     const [sortField, setSortField] = useState('id');
     const [sortOrder, setSortOrder] = useState('asc');
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [previewPrompt, setPreviewPrompt] = useState(null); // لعرض البرومبت بالكامل
     const [signature] = useState('MN.gpt');
 
-    // 🔽 تحميل البيانات من localStorage
+    // تحميل البيانات عند التهيئة
     useEffect(() => {
       const savedPrompts = JSON.parse(localStorage.getItem('prompts')) || [
         { id: 1, text: 'اشرح مفهوم الذكاء الاصطناعي بطريقة بسيطة.', category: 'تعليمي', tokens: 23 },
@@ -56,20 +57,20 @@
       setCategories(savedCategories);
     }, []);
 
-    // 📦 حفظ البيانات في localStorage
+    // حفظ البيانات في localStorage
     const saveToLocalStorage = (updatedPrompts, updatedCategories) => {
       localStorage.setItem('prompts', JSON.stringify(updatedPrompts));
       localStorage.setItem('categories', JSON.stringify(updatedCategories));
       exportPromptsToMarkdown(updatedPrompts); // 👈 تصدير البيانات بعد الحفظ
     };
 
-    // 🧮 تقدير عدد التوكيانات
+    // تقدير عدد التوكيانات
     const estimateTokens = (text) => {
       const words = text.trim().split(/\s+/).length;
       return Math.ceil(words * 1.25);
     };
 
-    // ➕ إضافة أو تعديل برومبت
+    // إضافة أو تعديل برومبت
     const handleAddOrEditPrompt = (e) => {
       e.preventDefault();
       if (!newPrompt.text || !newPrompt.category) return;
@@ -98,21 +99,21 @@
       setIsModalOpen(false);
     };
 
-    // ✏️ بدء تعديل برومبت
+    // بدء تعديل برومبت
     const startEditPrompt = (prompt) => {
       setEditingPrompt(prompt);
       setNewPrompt({ text: prompt.text, category: prompt.category, tokens: prompt.tokens });
       setIsModalOpen(true);
     };
 
-    // ❌ حذف برومبت
+    // حذف برومبت
     const handleDeletePrompt = (id) => {
       const updatedPrompts = prompts.filter(prompt => prompt.id !== id);
       setPrompts(updatedPrompts);
       saveToLocalStorage(updatedPrompts, categories);
     };
 
-    // ➕ إضافة قسم جديد
+    // إضافة قسم جديد
     const handleAddCategory = () => {
       if (!newPrompt.category.trim() || categories.includes(newPrompt.category)) return;
       const updatedCategories = [...categories, newPrompt.category];
@@ -120,7 +121,7 @@
       saveToLocalStorage(prompts, updatedCategories);
     };
 
-    // ✏️ تعديل اسم القسم
+    // تعديل اسم القسم
     const handleStartEditCategory = (category) => {
       setEditingCategory(category);
       setEditCategoryName(category);
@@ -141,7 +142,7 @@
       saveToLocalStorage(updatedPrompts, updatedCategories);
     };
 
-    // ❌ حذف قسم
+    // حذف قسم
     const handleDeleteCategory = (categoryToDelete) => {
       if (!window.confirm(`هل أنت متأكد من حذف القسم "${categoryToDelete}" وجميع البرومبتات المرتبطة به؟`)) return;
       const updatedPrompts = prompts.filter(p => p.category !== categoryToDelete);
@@ -151,24 +152,22 @@
       saveToLocalStorage(updatedPrompts, updatedCategories);
     };
 
-    // 📊 إحصاءات الأقسام
+    // إحصاءات الأقسام
     const getCategoryStats = () => {
       const stats = {};
       categories.forEach(category => {
         const catPrompts = prompts.filter(p => p.category === category);
         const totalTokens = catPrompts.reduce((sum, p) => sum + p.tokens, 0);
-        const totalRating = catPrompts.reduce((sum, p) => sum + (p.rating || 3), 0);
         stats[category] = {
           count: catPrompts.length,
           totalTokens: totalTokens,
-          averageTokens: catPrompts.length > 0 ? Math.round(totalTokens / catPrompts.length) : 0,
-          averageRating: catPrompts.length > 0 ? (totalRating / catPrompts.length).toFixed(1) : 0
+          averageTokens: catPrompts.length > 0 ? Math.round(totalTokens / catPrompts.length) : 0
         };
       });
       return stats;
     };
 
-    // 🔍 البحث والفرز
+    // البحث والفرز
     const filteredAndSortedPrompts = prompts
       .filter(prompt => prompt.text.toLowerCase().includes(searchTerm.toLowerCase()))
       .sort((a, b) => {
@@ -186,11 +185,19 @@
       }
     };
 
-    // 📄 تصدير البرومبتات إلى ملف Markdown (.md)
+    // عرض البرومبت كاملاً في نافذة منبثقة
+    const openPromptPreview = (prompt) => {
+      setPreviewPrompt(prompt);
+    };
+
+    const closePromptPreview = () => {
+      setPreviewPrompt(null);
+    };
+
+    // تصدير البرومبتات إلى ملف Markdown (.md)
     const exportPromptsToMarkdown = (promptsList = prompts) => {
       let markdown = '# 📝 قائمة البرومبتات\n\n';
 
-      // تصنيف حسب القسم
       const groupedByCategory = {};
       promptsList.forEach(prompt => {
         if (!groupedByCategory[prompt.category]) {
@@ -199,7 +206,6 @@
         groupedByCategory[prompt.category].push(prompt);
       });
 
-      // إضافة كل قسم
       Object.entries(groupedByCategory).forEach(([category, promptList]) => {
         markdown += `## 📁 القسم: ${category}\n\n`;
         promptList.forEach((prompt, index) => {
@@ -207,7 +213,6 @@
         });
       });
 
-      // تحويل النص إلى ملف
       const blob = new Blob([markdown], { type: 'text/markdown' });
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
@@ -226,7 +231,7 @@
       return (
         <div className="space-y-8">
           <h2 className="text-2xl font-bold text-gray-800">لوحة التحكم</h2>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="bg-white p-6 rounded-lg shadow-md">
               <h3 className="text-lg font-semibold text-gray-700 mb-2">إجمالي البرومبتات</h3>
               <p className="text-3xl font-bold text-indigo-600">{prompts.length}</p>
@@ -236,10 +241,6 @@
               <p className="text-3xl font-bold text-blue-600">
                 {prompts.reduce((sum, p) => sum + p.tokens, 0)}
               </p>
-            </div>
-            <div className="bg-white p-6 rounded-lg shadow-md">
-              <h3 className="text-lg font-semibold text-gray-700 mb-2">عدد الأقسام</h3>
-              <p className="text-3xl font-bold text-green-600">{categories.length}</p>
             </div>
             <div className="bg-white p-6 rounded-lg shadow-md">
               <button
@@ -280,15 +281,6 @@
         <header className="flex justify-between items-center pb-4 border-b border-gray-200">
           <h1 className="text-2xl font-bold text-indigo-700">{signature}</h1>
           <div className="space-x-4 space-x-reverse rtl:space-x-reverse">
-            <button
-              onClick={() => exportPromptsToMarkdown()}
-              className="inline-flex items-center px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700 transition"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 ml-2" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clipRule="evenodd" />
-              </svg>
-              تصدير Markdown
-            </button>
             <button
               onClick={() => {
                 setEditingPrompt(null);
@@ -340,7 +332,7 @@
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
                   <tr>
-                    <th className="px-6 py-3 text-right text-sm font-medium text-gray-500">النص</th>
+                    <th className="px-6 py-3 text-right text-sm font-medium text-gray-500 cursor-pointer">النص</th>
                     <th onClick={() => toggleSort('category')} className="px-6 py-3 text-right text-sm font-medium text-gray-500 cursor-pointer">
                       القسم {sortField === 'category' && (sortOrder === 'asc' ? '↑' : '↓')}
                     </th>
@@ -353,11 +345,19 @@
                 <tbody className="bg-white divide-y divide-gray-200">
                   {filteredAndSortedPrompts.map(prompt => (
                     <tr key={prompt.id} className="hover:bg-gray-50">
-                      <td className="px-6 py-4 whitespace-normal">{prompt.text}</td>
+                      <td className="px-6 py-4 whitespace-normal max-w-md">
+                        {prompt.text.length > 80 ? `${prompt.text.substring(0, 80)}...` : prompt.text}
+                      </td>
                       <td className="px-6 py-4 whitespace-nowrap">{prompt.category}</td>
                       <td className="px-6 py-4 whitespace-nowrap">{prompt.tokens}</td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex space-x-2 space-x-reverse">
+                          <button
+                            onClick={() => openPromptPreview(prompt)}
+                            className="text-blue-600 hover:text-blue-800"
+                          >
+                            معاينة
+                          </button>
                           <button
                             onClick={() => startEditPrompt(prompt)}
                             className="text-yellow-600 hover:text-yellow-800"
@@ -476,6 +476,24 @@
                   </button>
                 </div>
               </form>
+            </div>
+          </div>
+        )}
+
+        {/* Modal لمراجعة البرومبت */
+        previewPrompt && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white p-6 rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+              <h3 className="text-xl font-bold mb-4">معاينة البرومبت</h3>
+              <p className="whitespace-pre-line mb-6">{previewPrompt.text}</p>
+              <div className="flex justify-end">
+                <button
+                  onClick={closePromptPreview}
+                  className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400"
+                >
+                  إغلاق
+                </button>
+              </div>
             </div>
           </div>
         )}
