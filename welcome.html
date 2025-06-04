@@ -2,23 +2,31 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8" />
-  <title>مرحبًا بك</title>
+  <title>MN.gpt - الذكاء الاصطناعي معاً</title>
   <script src="https://cdn.tailwindcss.com"></script> 
 </head>
-<body class="bg-gray-100 flex items-center justify-center h-screen">
-  <div class="bg-white p-8 rounded shadow-md w-full max-w-md text-right">
-    <h2 class="text-xl font-bold mb-4">من فضلك قدّم اسمك</h2>
-    <input id="username" type="text" placeholder="اسمك" class="w-full p-2 border rounded mb-4" />
-    <button onclick="startApp()" class="bg-indigo-600 text-white px-4 py-2 rounded">ابدأ</button>
-  </div>
+<body class="bg-gray-50 text-gray-800">
+  <div class="min-h-screen flex flex-col items-center justify-center px-4">
+    <h1 class="text-4xl font-bold text-indigo-700 mb-4">MN.gpt</h1>
+    <p class="text-xl text-center mb-8">منصة لإدارة البرومبتات وتصميم الاستعلامات الخاصة بالذكاء الاصطناعي</p>
+    
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl w-full mb-10">
+      <div class="bg-white p-6 rounded-lg shadow-md text-center">
+        <h2 class="text-xl font-semibold mb-2">المستخدمين</h2>
+        <p>استخدم أفضل البرومبتات وشارك أفكارك.</p>
+        <a href="login.html" class="block mt-4 text-indigo-600 underline">تسجيل الدخول كمستخدم</a>
+      </div>
 
-  <script>
-    function startApp() {
-      const name = document.getElementById('username').value.trim();
-      if (!name) return alert("الرجاء إدخال اسمك");
-      localStorage.setItem('adminName', name);
-      window.location.href = "admin.html";
-    }
-  </script>
+      <div class="bg-white p-6 rounded-lg shadow-md text-center">
+        <h2 class="text-xl font-semibold mb-2">المسؤولين</h2>
+        <p>أضف وحرر البرومبتات وقم بإدارتها.</p>
+        <a href="login.html" class="block mt-4 text-indigo-600 underline">تسجيل الدخول كمسؤول</a>
+      </div>
+    </div>
+
+    <a href="login.html" class="bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700 transition">
+      ابدأ الآن
+    </a>
+  </div>
 </body>
 </html>
