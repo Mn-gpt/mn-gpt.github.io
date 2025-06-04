@@ -9,7 +9,7 @@
   <script src="https://unpkg.com/react@18/umd/react.development.js"  crossorigin></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"  crossorigin></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script> 
-  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"  rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"  rel="stylesheet">
 
   <style>
     body {
@@ -19,7 +19,7 @@
     }
   </style>
 </head>
-<body class="min-h-screen bg-gray-50 text-gray-800">
+<body class="min-h-screen bg-gray-100 text-gray-800">
 <div id="root" class="max-w-6xl mx-auto px-4 py-8"></div>
 
 <script type="text/babel">
@@ -27,30 +27,21 @@
   const { useState, useEffect } = React;
 
   function App() {
-    // 🔒 التحقق من تسجيل الدخول
-    const [userRole, setUserRole] = useState(null);
-
-    useEffect(() => {
-      const role = localStorage.getItem('userRole');
-      if (!role) {
-        window.location.href = 'login.html'; // إعادة توجيه إن لم يكن هناك دور
-      } else {
-        setUserRole(role);
-      }
-    }, []);
-
-    if (!userRole) return <div>جاري التحقق من تسجيل الدخول...</div>;
-
-    // باقي الحالة
     const [activeTab, setActiveTab] = useState('dashboard');
     const [prompts, setPrompts] = useState([]);
     const [categories, setCategories] = useState([]);
     const [newPrompt, setNewPrompt] = useState({ text: '', category: '', tokens: 0 });
+    const [editingPrompt, setEditingPrompt] = useState(null);
     const [editingCategory, setEditingCategory] = useState(null);
     const [editCategoryName, setEditCategoryName] = useState('');
+    const [searchTerm, setSearchTerm] = useState('');
+    const [sortField, setSortField] = useState('id');
+    const [sortOrder, setSortOrder] = useState('asc');
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [previewPrompt, setPreviewPrompt] = useState(null); // لعرض البرومبت بالكامل
     const [signature] = useState('MN.gpt');
 
-    // 🔽 تحميل البيانات من localStorage
+    // تحميل البيانات عند التهيئة
     useEffect(() => {
       const savedPrompts = JSON.parse(localStorage.getItem('prompts')) || [
         { id: 1, text: 'اشرح مفهوم الذكاء الاصطناعي بطريقة بسيطة.', category: 'تعليمي', tokens: 23 },
@@ -66,33 +57,63 @@
       setCategories(savedCategories);
     }, []);
 
-    // 📦 حفظ البيانات في localStorage
+    // حفظ البيانات في localStorage
     const saveToLocalStorage = (updatedPrompts, updatedCategories) => {
       localStorage.setItem('prompts', JSON.stringify(updatedPrompts));
       localStorage.setItem('categories', JSON.stringify(updatedCategories));
+      exportPromptsToMarkdown(updatedPrompts); // 👈 تصدير البيانات بعد الحفظ
     };
 
-    // ➕ إضافة برومبت جديد
-    const handleAddPrompt = (e) => {
+    // تقدير عدد التوكيانات
+    const estimateTokens = (text) => {
+      const words = text.trim().split(/\s+/).length;
+      return Math.ceil(words * 1.25);
+    };
+
+    // إضافة أو تعديل برومبت
+    const handleAddOrEditPrompt = (e) => {
       e.preventDefault();
       if (!newPrompt.text || !newPrompt.category) return;
-      const promptToAdd = { ...newPrompt, id: Date.now() };
-      const updatedPrompts = [...prompts, promptToAdd];
+
+      let updatedPrompts = [...prompts];
+
+      if (editingPrompt) {
+        // تعديل
+        updatedPrompts = updatedPrompts.map(p =>
+          p.id === editingPrompt.id ? { ...newPrompt, tokens: estimateTokens(newPrompt.text), id: editingPrompt.id } : p
+        );
+        setEditingPrompt(null);
+      } else {
+        // إضافة جديدة
+        const promptToAdd = { ...newPrompt, id: Date.now(), tokens: estimateTokens(newPrompt.text) };
+        updatedPrompts = [...prompts, promptToAdd];
+      }
+
       const updatedCategories = categories.includes(newPrompt.category) ? categories : [...categories, newPrompt.category];
+
       setPrompts(updatedPrompts);
       setCategories(updatedCategories);
       saveToLocalStorage(updatedPrompts, updatedCategories);
+
       setNewPrompt({ text: '', category: '', tokens: 0 });
+      setIsModalOpen(false);
     };
 
-    // ❌ حذف برومبت
+    // بدء تعديل برومبت
+    const startEditPrompt = (prompt) => {
+      setEditingPrompt(prompt);
+      setNewPrompt({ text: prompt.text, category: prompt.category, tokens: prompt.tokens });
+      setIsModalOpen(true);
+    };
+
+    // حذف برومبت
     const handleDeletePrompt = (id) => {
       const updatedPrompts = prompts.filter(prompt => prompt.id !== id);
       setPrompts(updatedPrompts);
       saveToLocalStorage(updatedPrompts, categories);
     };
 
-    // ➕ إضافة قسم جديد
+    // إضافة قسم جديد
     const handleAddCategory = () => {
       if (!newPrompt.category.trim() || categories.includes(newPrompt.category)) return;
       const updatedCategories = [...categories, newPrompt.category];
@@ -100,7 +121,7 @@
       saveToLocalStorage(prompts, updatedCategories);
     };
 
-    // ✏️ تعديل اسم القسم
+    // تعديل اسم القسم
     const handleStartEditCategory = (category) => {
       setEditingCategory(category);
       setEditCategoryName(category);
@@ -121,7 +142,7 @@
       saveToLocalStorage(updatedPrompts, updatedCategories);
     };
 
-    // ❌ حذف قسم
+    // حذف قسم
     const handleDeleteCategory = (categoryToDelete) => {
       if (!window.confirm(`هل أنت متأكد من حذف القسم "${categoryToDelete}" وجميع البرومبتات المرتبطة به؟`)) return;
       const updatedPrompts = prompts.filter(p => p.category !== categoryToDelete);
@@ -131,7 +152,7 @@
       saveToLocalStorage(updatedPrompts, updatedCategories);
     };
 
-    // 📊 إحصاءات الأقسام
+    // إحصاءات الأقسام
     const getCategoryStats = () => {
       const stats = {};
       categories.forEach(category => {
@@ -146,12 +167,69 @@
       return stats;
     };
 
+    // البحث والفرز
+    const filteredAndSortedPrompts = prompts
+      .filter(prompt => prompt.text.toLowerCase().includes(searchTerm.toLowerCase()))
+      .sort((a, b) => {
+        const valueA = a[sortField];
+        const valueB = b[sortField];
+        return sortOrder === 'asc' ? valueA - valueB : valueB - valueA;
+      });
+
+    const toggleSort = (field) => {
+      if (sortField === field) {
+        setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+      } else {
+        setSortField(field);
+        setSortOrder('asc');
+      }
+    };
+
+    // عرض البرومبت كاملاً في نافذة منبثقة
+    const openPromptPreview = (prompt) => {
+      setPreviewPrompt(prompt);
+    };
+
+    const closePromptPreview = () => {
+      setPreviewPrompt(null);
+    };
+
+    // تصدير البرومبتات إلى ملف Markdown (.md)
+    const exportPromptsToMarkdown = (promptsList = prompts) => {
+      let markdown = '# 📝 قائمة البرومبتات\n\n';
+
+      const groupedByCategory = {};
+      promptsList.forEach(prompt => {
+        if (!groupedByCategory[prompt.category]) {
+          groupedByCategory[prompt.category] = [];
+        }
+        groupedByCategory[prompt.category].push(prompt);
+      });
+
+      Object.entries(groupedByCategory).forEach(([category, promptList]) => {
+        markdown += `## 📁 القسم: ${category}\n\n`;
+        promptList.forEach((prompt, index) => {
+          markdown += `${index + 1}. **${prompt.text}**\n   - ID: \`${prompt.id}\`\n   - توكيانات: \`${prompt.tokens}\`\n\n`;
+        });
+      });
+
+      const blob = new Blob([markdown], { type: 'text/markdown' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'prompts.md';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    };
+
     // عرض لوحة التحكم
     const renderDashboard = () => {
       const stats = getCategoryStats();
 
       return (
-        <div className="space-y-6">
+        <div className="space-y-8">
           <h2 className="text-2xl font-bold text-gray-800">لوحة التحكم</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="bg-white p-6 rounded-lg shadow-md">
@@ -165,8 +243,12 @@
               </p>
             </div>
             <div className="bg-white p-6 rounded-lg shadow-md">
-              <h3 className="text-lg font-semibold text-gray-700 mb-2">عدد الأقسام</h3>
-              <p className="text-3xl font-bold text-green-600">{categories.length}</p>
+              <button
+                onClick={() => exportPromptsToMarkdown()}
+                className="w-full py-3 bg-purple-600 text-white rounded hover:bg-purple-700 transition"
+              >
+                📥 تصدير البيانات إلى Markdown
+              </button>
             </div>
           </div>
           <div className="bg-white rounded-lg shadow-md overflow-hidden">
@@ -175,7 +257,6 @@
                 <tr>
                   <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">القسم</th>
                   <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">عدد البرومبتات</th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">إجمالي التوكيانات</th>
                   <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">متوسط التوكيانات</th>
                 </tr>
               </thead>
@@ -184,7 +265,6 @@
                   <tr key={category} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap">{category}</td>
                     <td className="px-6 py-4 whitespace-nowrap">{data.count}</td>
-                    <td className="px-6 py-4 whitespace-nowrap">{data.totalTokens}</td>
                     <td className="px-6 py-4 whitespace-nowrap">{data.averageTokens}</td>
                   </tr>
                 ))}
@@ -196,22 +276,26 @@
     };
 
     return (
-      <div className="container mx-auto">
+      <div className="space-y-6">
         {/* Header */}
-        <header className="flex justify-between items-center pb-4 border-b border-gray-200 mb-6">
+        <header className="flex justify-between items-center pb-4 border-b border-gray-200">
           <h1 className="text-2xl font-bold text-indigo-700">{signature}</h1>
-          {userRole === 'admin' && (
+          <div className="space-x-4 space-x-reverse rtl:space-x-reverse">
             <button
-              onClick={() => setActiveTab('prompts')}
-              className="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700"
+              onClick={() => {
+                setEditingPrompt(null);
+                setNewPrompt({ text: '', category: '', tokens: 0 });
+                setIsModalOpen(true);
+              }}
+              className="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700 transition"
             >
-              إدارة البرومبتات
+              إضافة برومبت جديد
             </button>
-          )}
+          </div>
         </header>
 
         {/* Tabs Navigation */}
-        <div className="flex space-x-4 rtl:space-x-reverse border-b border-gray-200 mb-6">
+        <div className="flex space-x-4 rtl:space-x-reverse border-b border-gray-200">
           <button
             onClick={() => setActiveTab('dashboard')}
             className={`py-2 px-4 font-medium ${activeTab === 'dashboard' ? 'border-b-2 border-indigo-600 text-indigo-600' : 'text-gray-600'}`}
@@ -220,13 +304,7 @@
           </button>
           <button
             onClick={() => setActiveTab('prompts')}
-            disabled={userRole !== 'admin'}
-            className={`py-2 px-4 font-medium ${userRole === 'admin' 
-              ? activeTab === 'prompts' 
-                ? 'border-b-2 border-indigo-600 text-indigo-600' 
-                : 'text-gray-600'
-              : 'text-gray-400 cursor-not-allowed'
-            }`}
+            className={`py-2 px-4 font-medium ${activeTab === 'prompts' ? 'border-b-2 border-indigo-600 text-indigo-600' : 'text-gray-600'}`}
           >
             إدارة البرومبتات
           </button>
@@ -234,142 +312,201 @@
 
         {/* Tab Content */}
         {activeTab === 'dashboard' && renderDashboard()}
-        {activeTab === 'prompts' && userRole === 'admin' && (
+        {activeTab === 'prompts' && (
           <div className="space-y-6">
             <h2 className="text-2xl font-bold text-gray-800">إدارة البرومبتات</h2>
 
-            {/* Form لإضافة برومبت */}
-            <form onSubmit={handleAddPrompt} className="bg-white shadow rounded-lg p-6 mb-8">
+            {/* Search Bar */}
+            <div className="mb-4">
               <input
                 type="text"
-                placeholder="مثال: اشرح مفهوم الذكاء الاصطناعي..."
-                value={newPrompt.text}
-                onChange={(e) => setNewPrompt({...newPrompt, text: e.target.value})}
+                placeholder="ابحث في البرومبتات..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
               />
-              <select
-                value={newPrompt.category}
-                onChange={(e) => setNewPrompt({...newPrompt, category: e.target.value})}
-                className="w-full p-3 mt-4 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              >
-                <option value="">اختر قسمًا</option>
-                {categories.map((cat, idx) => (
-                  <option key={idx} value={cat}>{cat}</option>
-                ))}
-              </select>
-              <input
-                type="number"
-                placeholder="عدد التوكيانات"
-                value={newPrompt.tokens}
-                onChange={(e) => setNewPrompt({...newPrompt, tokens: parseInt(e.target.value) || 0})}
-                className="w-full p-3 mt-4 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              />
-              <div className="mt-4 flex flex-wrap gap-3">
-                <button
-                  type="submit"
-                  className="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700 transition"
-                >
-                  إضافة برومبت
-                </button>
-                <button
-                  type="button"
-                  onClick={handleAddCategory}
-                  disabled={!newPrompt.category.trim() || categories.includes(newPrompt.category)}
-                  className={`px-4 py-2 rounded ${
-                    categories.includes(newPrompt.category)
-                      ? 'bg-gray-400 cursor-not-allowed'
-                      : 'bg-blue-600 hover:bg-blue-700 text-white'
-                  }`}
-                >
-                  إضافة قسم جديد
-                </button>
-              </div>
-            </form>
-
-            {/* قائمة البرومبتات */}
-            <div className="bg-white rounded-lg shadow-md overflow-hidden">
-              <div className="p-4 border-b border-gray-200">
-                <h3 className="font-semibold text-lg">قائمة البرومبتات</h3>
-              </div>
-              <ul className="divide-y divide-gray-200">
-                {prompts.map(prompt => (
-                  <li key={prompt.id} className="p-4 flex justify-between items-center hover:bg-gray-50">
-                    <span>{prompt.text} — <strong>{prompt.category}</strong> ({prompt.tokens} توكيان)</span>
-                    {userRole === 'admin' && (
-                      <button
-                        onClick={() => handleDeletePrompt(prompt.id)}
-                        className="text-red-600 hover:text-red-800"
-                      >
-                        حذف
-                      </button>
-                    )}
-                  </li>
-                ))}
-                {prompts.length === 0 && (
-                  <li className="p-4 text-center text-gray-500">لا توجد برومبتات مضافة بعد</li>
-                )}
-              </ul>
             </div>
 
-            {/* قائمة الأقسام */}
+            {/* Table of Prompts with Sorting and Ratings */}
+            <div className="bg-white rounded-lg shadow-md overflow-hidden">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-6 py-3 text-right text-sm font-medium text-gray-500 cursor-pointer">النص</th>
+                    <th onClick={() => toggleSort('category')} className="px-6 py-3 text-right text-sm font-medium text-gray-500 cursor-pointer">
+                      القسم {sortField === 'category' && (sortOrder === 'asc' ? '↑' : '↓')}
+                    </th>
+                    <th onClick={() => toggleSort('tokens')} className="px-6 py-3 text-right text-sm font-medium text-gray-500 cursor-pointer">
+                      التوكيانات {sortField === 'tokens' && (sortOrder === 'asc' ? '↑' : '↓')}
+                    </th>
+                    <th className="px-6 py-3 text-right text-sm font-medium text-gray-500">الإجراءات</th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {filteredAndSortedPrompts.map(prompt => (
+                    <tr key={prompt.id} className="hover:bg-gray-50">
+                      <td className="px-6 py-4 whitespace-normal max-w-md">
+                        {prompt.text.length > 80 ? `${prompt.text.substring(0, 80)}...` : prompt.text}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">{prompt.category}</td>
+                      <td className="px-6 py-4 whitespace-nowrap">{prompt.tokens}</td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex space-x-2 space-x-reverse">
+                          <button
+                            onClick={() => openPromptPreview(prompt)}
+                            className="text-blue-600 hover:text-blue-800"
+                          >
+                            معاينة
+                          </button>
+                          <button
+                            onClick={() => startEditPrompt(prompt)}
+                            className="text-yellow-600 hover:text-yellow-800"
+                          >
+                            تعديل
+                          </button>
+                          <button
+                            onClick={() => handleDeletePrompt(prompt.id)}
+                            className="text-red-600 hover:text-red-800"
+                          >
+                            حذف
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Categories Section */}
             <div className="bg-white rounded-lg shadow-md overflow-hidden">
               <div className="p-4 border-b border-gray-200">
                 <h3 className="font-semibold text-lg">الأقسام</h3>
               </div>
               <ul className="divide-y divide-gray-200">
                 {categories.map(cat => (
-                  <li key={cat} className="p-4 flex justify-between items-center hover:bg-gray-50">
-                    {editingCategory === cat ? (
-                      <>
-                        <input
-                          className="border border-gray-300 rounded p-1 w-40"
-                          value={editCategoryName}
-                          onChange={(e) => setEditCategoryName(e.target.value)}
-                        />
-                        <button
-                          onClick={handleUpdateCategory}
-                          className="text-green-600"
-                        >
-                          حفظ
-                        </button>
-                      </>
-                    ) : (
-                      <span>{cat}</span>
-                    )}
-                    {userRole === 'admin' && (
-                      <div className="flex space-x-2 space-x-reverse">
-                        <button
-                          onClick={() => handleStartEditCategory(cat)}
-                          className="text-yellow-600"
-                        >
-                          تعديل
-                        </button>
-                        <button
-                          onClick={() => handleDeleteCategory(cat)}
-                          className="text-red-600"
-                        >
-                          حذف
-                        </button>
-                      </div>
-                    )}
+                  <li key={cat} className="p-4 flex justify-between items-center hover:bg-gray-50 transition">
+                    <div className="flex items-center space-x-2 space-x-reverse">
+                      {editingCategory === cat ? (
+                        <>
+                          <input
+                            className="border border-gray-300 rounded p-1 w-40"
+                            value={editCategoryName}
+                            onChange={(e) => setEditCategoryName(e.target.value)}
+                          />
+                          <button
+                            onClick={handleUpdateCategory}
+                            className="text-green-600"
+                          >
+                            حفظ
+                          </button>
+                        </>
+                      ) : (
+                        <span>{cat}</span>
+                      )}
+                    </div>
+                    <div className="flex space-x-2 space-x-reverse">
+                      {editingCategory !== cat && (
+                        <>
+                          <button
+                            onClick={() => handleStartEditCategory(cat)}
+                            className="text-yellow-600 hover:text-yellow-800"
+                          >
+                            تعديل
+                          </button>
+                          <button
+                            onClick={() => handleDeleteCategory(cat)}
+                            className="text-red-600 hover:text-red-800"
+                          >
+                            حذف
+                          </button>
+                        </>
+                      )}
+                    </div>
                   </li>
                 ))}
-                {categories.length === 0 && (
-                  <li className="p-4 text-center text-gray-500">لا توجد أقسام مضافة بعد</li>
-                )}
               </ul>
             </div>
           </div>
         )}
 
+        {/* Modal لإضافة أو تعديل برومبت */}
+        {isModalOpen && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white p-6 rounded-lg shadow-xl max-w-md w-full">
+              <h3 className="text-xl font-bold mb-4">{editingPrompt ? 'تعديل البرومبت' : 'إضافة برومبت جديد'}</h3>
+              <form onSubmit={handleAddOrEditPrompt}>
+                <textarea
+                  rows="4"
+                  placeholder="مثال: اشرح مفهوم الذكاء الاصطناعي..."
+                  value={newPrompt.text}
+                  onChange={(e) => setNewPrompt({...newPrompt, text: e.target.value})}
+                  className="w-full p-3 border border-gray-300 rounded mb-4 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                ></textarea>
+                <select
+                  value={newPrompt.category}
+                  onChange={(e) => setNewPrompt({...newPrompt, category: e.target.value})}
+                  className="w-full p-3 border border-gray-300 rounded mb-4 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                >
+                  <option value="">اختر قسمًا</option>
+                  {categories.map((cat, idx) => (
+                    <option key={idx} value={cat}>{cat}</option>
+                  ))}
+                </select>
+                <div className="mb-4 text-sm text-gray-500">
+                  عدد التوكيانات المتوقع: <strong>{estimateTokens(newPrompt.text)}</strong>
+                </div>
+                <div className="flex justify-end space-x-2 space-x-reverse">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsModalOpen(false);
+                      setEditingPrompt(null);
+                      setNewPrompt({ text: '', category: '', tokens: 0 });
+                    }}
+                    className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400"
+                  >
+                    إلغاء
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700"
+                  >
+                    {editingPrompt ? 'تحديث' : 'حفظ'}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
+        {/* Modal لمراجعة البرومبت */
+        previewPrompt && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white p-6 rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+              <h3 className="text-xl font-bold mb-4">معاينة البرومبت</h3>
+              <p className="whitespace-pre-line mb-6">{previewPrompt.text}</p>
+              <div className="flex justify-end">
+                <button
+                  onClick={closePromptPreview}
+                  className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400"
+                >
+                  إغلاق
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Footer */}
-        <footer className="pt-6 border-t border-gray-200 text-center text-sm text-gray-500 mt-10">
+        <footer className="pt-6 border-t border-gray-200 text-center text-sm text-gray-500">
           &copy; {new Date().getFullYear()} {signature}. جميع الحقوق محفوظة.
         </footer>
       </div>
     );
   }
 
+  // Render App
   ReactDOM.createRoot(document.getElementById('root')).render(<App />);
 </script>
 </body>
