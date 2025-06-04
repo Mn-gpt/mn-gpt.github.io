@@ -166,7 +166,7 @@
               <p className="text-3xl font-bold text-indigo-600">{prompts.length}</p>
             </div>
             <div className="bg-white p-6 rounded-lg shadow-md">
-              <h3 className="text-lg font-semibold text-gray-700 mb-2">إجمالي التوكيانات</h3>
+              <h3 className="text-lg font-semibold text-gray-700 mb-2">إجمالي التوكنات</h3>
               <p className="text-3xl font-bold text-blue-600">
                 {prompts.reduce((sum, p) => sum + p.tokens, 0)}
               </p>
@@ -182,7 +182,7 @@
                 <tr>
                   <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">القسم</th>
                   <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">عدد البرومبتات</th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">متوسط التوكيانات</th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">متوسط التوكنات</th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
@@ -299,7 +299,7 @@
             <ul className="space-y-3">
               {prompts.map(prompt => (
                 <li key={prompt.id} className="bg-white p-4 rounded shadow-sm flex justify-between items-center hover:shadow-md transition">
-                  <span>{prompt.text} — <strong>{prompt.category}</strong> ({prompt.tokensتوكنات)</span>
+                  <span>{prompt.text} — <strong>{prompt.category}</strong> ({prompt.tokens} توكنات)</span>
                   <div className="flex space-x-2 space-x-reverse">
                     <button
                       onClick={() => startEditPrompt(prompt)}
