@@ -1,0 +1,42 @@
+<DOCTYPE html>
+<html lang="ar">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>برومبتات بالعربية</title>
+  <link rel="stylesheet" href="assets/style.css" />
+  <style>
+    body { font-family: sans-serif; direction: rtl; padding: 1rem; background-color: #f8f8f8; }
+    h1 { text-align: center; color: #333; }
+    .prompt-card { background: white; border-radius: 10px; box-shadow: 0 0 8px #ccc; margin: 1rem 0; padding: 1rem; }
+    .prompt-title { font-weight: bold; margin-bottom: 0.5rem; }
+    .prompt-text { color: #444; white-space: pre-wrap; }
+  </style>
+</head>
+<body>
+  <h1>📚 مكتبة البرومبتات</h1>
+  <div id="prompts-container">جارٍ التحميل...</div>
+
+  <script>
+    fetch('prompts.json')
+      .then(response => response.json())
+      .then(data => {
+        const container = document.getElementById('prompts-container');
+        container.innerHTML = ''; // مسح "جارٍ التحميل"
+        data.prompts.forEach(prompt => {
+          const card = document.createElement('div');
+          card.className = 'prompt-card';
+          card.innerHTML = `
+            <div class="prompt-title">${prompt.title}</div>
+            <div class="prompt-text">${prompt.text}</div>
+          `;
+          container.appendChild(card);
+        });
+      })
+      .catch(error => {
+        document.getElementById('prompts-container').innerText = 'حدث خطأ في تحميل البيانات.';
+        console.error(error);
+      });
+  </script>
+</body>
+</html>
