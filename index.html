@@ -2,7 +2,7 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Prompt Manager - MN.gpt</title>
   <script src="https://unpkg.com/react@18/umd/react.development.js"  crossorigin></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"  crossorigin></script>
@@ -14,12 +14,9 @@
       background-color: #f9fafb;
       color: #1f2937;
     }
-    textarea {
-      resize: none;
-    }
   </style>
 </head>
-<body class="p-4 bg-gray-100 min-h-screen">
+<body class="p-6">
 <div id="root"></div>
 
 <script type="text/babel">
@@ -30,9 +27,10 @@
     const [prompts, setPrompts] = useState([]);
     const [categories, setCategories] = useState(['عام', 'تعليمي', 'إبداعي', 'تحليل بيانات', 'برمجة']);
     const [newPrompt, setNewPrompt] = useState({ text: '', category: '', tokens: 0 });
-    const [editingPrompt, setEditingPrompt] = useState(null);
+    const [editingCategory, setEditingCategory] = useState(null);
+    const [editCategoryName, setEditCategoryName] = useState('');
+    const [signature, setSignature] = useState('MN.gpt');
     const [searchTerm, setSearchTerm] = useState('');
-    const [showModal, setShowModal] = useState(false);
 
     // Mock Data
     useEffect(() => {
@@ -58,85 +56,146 @@
       setPrompts(prompts.filter(prompt => prompt.id !== id));
     };
 
-    const handleEditPrompt = (prompt) => {
-      setEditingPrompt(prompt);
-      setShowModal(true);
+    const handleAddCategory = () => {
+      if (!newPrompt.category.trim() || categories.includes(newPrompt.category)) return;
+      setCategories([...categories, newPrompt.category]);
     };
 
-    const handleUpdatePrompt = () => {
-      if (!editingPrompt.text || !editingPrompt.category) return;
-      setPrompts(prompts.map(p => p.id === editingPrompt.id ? editingPrompt : p));
-      setShowModal(false);
+    const handleStartEditCategory = (category) => {
+      setEditingCategory(category);
+      setEditCategoryName(category);
     };
 
-    const filteredPrompts = prompts.filter(p =>
-      p.text.toLowerCase().includes(searchTerm.toLowerCase())
+    const handleUpdateCategory = () => {
+      if (!editCategoryName.trim()) return;
+      const updatedPrompts = prompts.map(p => p.category === editingCategory ? { ...p, category: editCategoryName } : p);
+      const updatedCategories = categories.map(c => c === editingCategory ? editCategoryName : c);
+      setPrompts(updatedPrompts);
+      setCategories(updatedCategories);
+      setEditingCategory(null);
+      setEditCategoryName('');
+    };
+
+    const handleDeleteCategory = (categoryToDelete) => {
+      if (!window.confirm(`هل أنت متأكد من حذف القسم "${categoryToDelete}" وجميع البرومبتات المرتبطة به؟`)) return;
+      setCategories(categories.filter(c => c !== categoryToDelete));
+      setPrompts(prompts.filter(p => p.category !== categoryToDelete));
+    };
+
+    const getCategoryStats = () => {
+      const stats = {};
+      categories.forEach(category => {
+        const catPrompts = prompts.filter(p => p.category === category);
+        const total = catPrompts.reduce((sum, p) => sum + p.tokens, 0);
+        stats[category] = {
+          count: catPrompts.length,
+          totalTokens: total,
+          averageTokens: catPrompts.length > 0 ? Math.round(total / catPrompts.length) : 0
+        };
+      });
+      return stats;
+    };
+
+    // 🔍 الفلاتر الجديدة مع البحث
+    const filteredPrompts = prompts.filter(prompt =>
+      prompt.text.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      prompt.category.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
+    const renderDashboard = () => {
+      const stats = getCategoryStats();
+
+      return (
+        <div className="space-y-6">
+          <h2 className="text-2xl font-bold text-gray-800">لوحة التحكم</h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="bg-white p-6 rounded-lg shadow-md">
+              <h3 className="text-lg font-semibold text-gray-700 mb-2">إجمالي البرومبتات</h3>
+              <p className="text-3xl font-bold text-indigo-600">{prompts.length}</p>
+            </div>
+            <div className="bg-white p-6 rounded-lg shadow-md">
+              <h3 className="text-lg font-semibold text-gray-700 mb-2">إجمالي التوكيانات</h3>
+              <p className="text-3xl font-bold text-blue-600">
+                {prompts.reduce((sum, p) => sum + p.tokens, 0)}
+              </p>
+            </div>
+            <div className="bg-white p-6 rounded-lg shadow-md">
+              <h3 className="text-lg font-semibold text-gray-700 mb-2">عدد الأقسام</h3>
+              <p className="text-3xl font-bold text-green-600">{categories.length}</p>
+            </div>
+          </div>
+          <div className="bg-white rounded-lg shadow-md overflow-hidden">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">القسم</th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">عدد البرومبتات</th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">إجمالي التوكيانات</th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">المتوسط</th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {Object.entries(stats).map(([category, data]) => (
+                  <tr key={category} className="hover:bg-gray-50">
+                    <td className="px-6 py-4 whitespace-nowrap">{category}</td>
+                    <td className="px-6 py-4 whitespace-nowrap">{data.count}</td>
+                    <td className="px-6 py-4 whitespace-nowrap">{data.totalTokens}</td>
+                    <td className="px-6 py-4 whitespace-nowrap">{data.averageTokens}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      );
+    };
+
     return (
-      <div className="container mx-auto max-w-lg">
+      <div className="container mx-auto">
         {/* Tabs */}
         <div className="flex space-x-4 rtl:space-x-reverse mb-6">
-          <button onClick={() => setActiveTab('dashboard')} className={`px-4 py-2 rounded ${activeTab === 'dashboard' ? 'bg-indigo-600 text-white' : 'bg-gray-200 text-gray-800'}`}>
+          <button onClick={() => setActiveTab('dashboard')} className={`px-4 py-2 rounded ${activeTab === 'dashboard' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-800'}`}>
             لوحة التحكم
           </button>
-          <button onClick={() => setActiveTab('prompts')} className={`px-4 py-2 rounded ${activeTab === 'prompts' ? 'bg-indigo-600 text-white' : 'bg-gray-200 text-gray-800'}`}>
-            البرومبتات
+          <button onClick={() => setActiveTab('prompts')} className={`px-4 py-2 rounded ${activeTab === 'prompts' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-800'}`}>
+            إدارة البرومبتات
           </button>
         </div>
 
         {/* Dashboard Tab */}
-        {activeTab === 'dashboard' && (
-          <div className="space-y-6">
-            <h2 className="text-2xl font-bold text-gray-800">لوحة التحكم</h2>
-            <div className="grid grid-cols-1 gap-4">
-              <div className="bg-white p-4 rounded shadow">
-                <h3 className="text-lg font-semibold text-gray-700">إجمالي البرومبتات</h3>
-                <p className="text-2xl font-bold text-indigo-600">{prompts.length}</p>
-              </div>
-              <div className="bg-white p-4 rounded shadow">
-                <h3 className="text-lg font-semibold text-gray-700">إجمالي التوكيانات</h3>
-                <p className="text-2xl font-bold text-blue-600">
-                  {prompts.reduce((sum, p) => sum + p.tokens, 0)}
-                </p>
-              </div>
-              <div className="bg-white p-4 rounded shadow">
-                <h3 className="text-lg font-semibold text-gray-700">عدد الأقسام</h3>
-                <p className="text-2xl font-bold text-green-600">{categories.length}</p>
-              </div>
-            </div>
-          </div>
-        )}
+        {activeTab === 'dashboard' && renderDashboard()}
 
         {/* Prompts Tab */}
         {activeTab === 'prompts' && (
           <div className="space-y-6">
-            {/* Search Box */}
+            <h2 className="text-2xl font-bold text-gray-800">إدارة البرومبتات</h2>
+
+            {/* 🔍 Search Box */}
             <input
               type="text"
-              placeholder="ابحث عن برومبت..."
+              placeholder="ابحث عن برومبت أو قسم..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
             />
 
             {/* Add Prompt Form */}
-            <form onSubmit={handleAddPrompt} className="bg-white p-4 rounded shadow space-y-3">
+            <form onSubmit={handleAddPrompt} className="space-y-4 bg-white p-6 rounded-lg shadow-md">
               <input
                 type="text"
                 placeholder="نص البرومبت"
                 value={newPrompt.text}
                 onChange={(e) => setNewPrompt({ ...newPrompt, text: e.target.value })}
-                className="w-full p-2 border rounded"
+                className="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
               />
               <select
                 value={newPrompt.category}
                 onChange={(e) => setNewPrompt({ ...newPrompt, category: e.target.value })}
-                className="w-full p-2 border rounded"
+                className="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
               >
                 <option value="">اختر قسمًا</option>
-                {categories.map((cat, idx) => (
-                  <option key={idx} value={cat}>{cat}</option>
+                {categories.map(cat => (
+                  <option key={cat} value={cat}>{cat}</option>
                 ))}
               </select>
               <input
@@ -144,88 +203,90 @@
                 placeholder="عدد التوكيانات"
                 value={newPrompt.tokens}
                 onChange={(e) => setNewPrompt({ ...newPrompt, tokens: parseInt(e.target.value) || 0 })}
-                className="w-full p-2 border rounded"
+                className="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
               />
-              <button
-                type="submit"
-                className="w-full bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition"
-              >
-                إضافة برومبت
-              </button>
+              <div className="flex space-x-4 space-x-reverse">
+                <button
+                  type="submit"
+                  className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition"
+                >
+                  إضافة برومبت
+                </button>
+                <button
+                  type="button"
+                  onClick={handleAddCategory}
+                  disabled={!newPrompt.category.trim() || categories.includes(newPrompt.category)}
+                  className={`px-4 py-2 rounded transition ${
+                    categories.includes(newPrompt.category)
+                      ? 'bg-gray-400 cursor-not-allowed'
+                      : 'bg-blue-600 hover:bg-blue-700 text-white'
+                  }`}
+                >
+                  إضافة قسم جديد
+                </button>
+              </div>
             </form>
 
-            {/* Prompt List */}
+            {/* Filtered Prompts List */}
             <ul className="space-y-3">
-              {filteredPrompts.map(prompt => (
-                <li key={prompt.id} className="bg-white p-4 rounded shadow flex flex-col">
-                  <span className="font-medium">{prompt.text.substring(0, 60)}...</span>
-                  <small className="text-sm text-gray-500 mt-1">
-                    القسم: {prompt.category} | توكيانات: {prompt.tokens}
-                  </small>
-                  <div className="flex justify-between mt-2">
-                    <button
-                      onClick={() => handleEditPrompt(prompt)}
-                      className="text-indigo-600 hover:text-indigo-800 text-sm"
-                    >
-                      تعديل
-                    </button>
+              {filteredPrompts.length === 0 ? (
+                <p className="text-gray-500 text-center">لا يوجد برومبتات مطابقة للبحث.</p>
+              ) : (
+                filteredPrompts.map(prompt => (
+                  <li key={prompt.id} className="bg-white p-4 rounded shadow flex justify-between items-center">
+                    <span>{prompt.text.substring(0, 50)}... — <strong>{prompt.category}</strong> ({prompt.tokens} توكيان)</span>
                     <button
                       onClick={() => handleDeletePrompt(prompt.id)}
-                      className="text-red-600 hover:text-red-800 text-sm"
+                      className="text-red-600 hover:text-red-800"
                     >
                       حذف
                     </button>
-                    <button
-                      onClick={() => alert(prompt.text)}
-                      className="text-blue-600 hover:text-blue-800 text-sm"
-                    >
-                      عرض كامل
-                    </button>
-                  </div>
+                  </li>
+                ))
+              )}
+            </ul>
+
+            {/* Categories Section */}
+            <h3 className="text-xl font-semibold mt-8">الأقسام:</h3>
+            <ul className="space-y-2">
+              {categories.map(cat => (
+                <li key={cat} className="flex items-center justify-between bg-gray-100 p-3 rounded">
+                  {editingCategory === cat ? (
+                    <>
+                      <input
+                        className="border p-1 rounded w-full"
+                        value={editCategoryName}
+                        onChange={(e) => setEditCategoryName(e.target.value)}
+                      />
+                      <button
+                        onClick={handleUpdateCategory}
+                        className="text-green-600 mr-2"
+                      >
+                        حفظ
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <span>{cat}</span>
+                      <div className="space-x-2 rtl:space-x-reverse">
+                        <button
+                          onClick={() => handleStartEditCategory(cat)}
+                          className="text-yellow-600"
+                        >
+                          تعديل
+                        </button>
+                        <button
+                          onClick={() => handleDeleteCategory(cat)}
+                          className="text-red-600"
+                        >
+                          حذف
+                        </button>
+                      </div>
+                    </>
+                  )}
                 </li>
               ))}
             </ul>
-          </div>
-        )}
-
-        {/* Modal for Editing */}
-        {showModal && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-            <div className="bg-white rounded w-full max-w-md p-6 relative">
-              <button
-                onClick={() => setShowModal(false)}
-                className="absolute top-2 right-2 text-gray-500 hover:text-gray-800"
-              >
-                &times; إغلاق
-              </button>
-              <h3 className="text-lg font-bold mb-4">تحرير البرومبت</h3>
-              <textarea
-                rows="4"
-                value={editingPrompt?.text || ''}
-                onChange={(e) => setEditingPrompt({ ...editingPrompt, text: e.target.value })}
-                className="w-full p-3 border rounded mb-3"
-              ></textarea>
-              <input
-                type="text"
-                value={editingPrompt?.category || ''}
-                onChange={(e) => setEditingPrompt({ ...editingPrompt, category: e.target.value })}
-                className="w-full p-2 border rounded mb-3"
-                placeholder="القسم"
-              />
-              <input
-                type="number"
-                value={editingPrompt?.tokens || 0}
-                onChange={(e) => setEditingPrompt({ ...editingPrompt, tokens: parseInt(e.target.value) || 0 })}
-                className="w-full p-2 border rounded mb-4"
-                placeholder="عدد التوكيانات"
-              />
-              <button
-                onClick={handleUpdatePrompt}
-                className="w-full bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700"
-              >
-                حفظ التعديلات
-              </button>
-            </div>
           </div>
         )}
       </div>
