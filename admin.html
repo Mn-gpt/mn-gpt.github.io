@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <title>إدارة البرومبتات</title>
+  <script src="https://cdn.tailwindcss.com"></script> 
+</head>
+<body class="p-6 bg-gray-100">
+  <h1 class="text-2xl font-bold mb-4">إدارة البرومبتات</h1>
+  <a href="index.html" class="text-blue-600 hover:underline mb-4 inline-block">العودة إلى الصفحة الرئيسية</a>
+
+  <input type="text" id="searchAdmin" placeholder="بحث..." class="w-full p-2 border rounded mb-4" />
+
+  <div id="promptList" class="space-y-4"></div>
+  <button onclick="exportToCSV()" class="mt-4 bg-green-600 text-white px-4 py-2 rounded">تصدير CSV</button>
+
+  <script>
+    const data = [
+      { id: 1, text: "اشرح مفهوم الذكاء الاصطناعي بطريقة بسيطة.", category: "تعليمي", tokens: 23, tool: "ChatGPT" },
+      { id: 2, text: "صمم غلاف كتاب احترافي باستخدام Canva.", category: "الجرافيك", tokens: 30, tool: "Canva" }
+    ];
+
+    function renderPrompts(filteredData = data) {
+      const container = document.getElementById('promptList');
+      container.innerHTML = '';
+      filteredData.forEach(prompt => {
+        const div = document.createElement('div');
+        div.className = "bg-white p-4 rounded shadow";
+        div.innerHTML = `
+          <h3 class="font-semibold">${prompt.text}</h3>
+          <p class="text-sm text-gray-600">القسم: ${prompt.category} | الأداة: ${prompt.tool} | توكيانات: ${prompt.tokens}</p>
+          <a href="prompts/prompt${prompt.id}.md" target="_blank" class="text-indigo-600 hover:underline mt-2 block">عرض/تعديل (Markdown)</a>
+        `;
+        container.appendChild(div);
+      });
+    }
+
+    document.getElementById('searchAdmin').addEventListener('input', e => {
+      const term = e.target.value.toLowerCase();
+      const filtered = data.filter(p => p.text.toLowerCase().includes(term));
+      renderPrompts(filtered);
+    });
+
+    function exportToCSV() {
+      let csv = 'id,text,category,tokens,tool\n';
+      data.forEach(p => {
+        csv += `${p.id},"${p.text}",${p.category},${p.tokens},${p.tool}\n`;
+      });
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'prompts.csv';
+      a.click();
+    }
+
+    renderPrompts();
+  </script>
+</body>
+</html>
