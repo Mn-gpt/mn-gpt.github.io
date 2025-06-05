@@ -8,7 +8,7 @@
   <!-- React + ReactDOM -->
   <script src="https://unpkg.com/react@18/umd/react.development.js"  crossorigin></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"  crossorigin></script>
-  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>  
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script> 
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"  rel="stylesheet" />
 
   <style>
@@ -34,10 +34,10 @@
     const [editCategoryName, setEditCategoryName] = useState('');
     const [searchTerm, setSearchTerm] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
-    const [itemsPerPage] = useState(4); // 👈 عدد العناصر في كل صفحة
+    const [itemsPerPage] = useState(4); // ✅ العدد هنا 4
     const [signature] = useState('MN.gpt');
 
-    // 🔽 تحميل البيانات من localStorage
+    // 🔽 تحميل البيانات من localStorage عند التهيئة
     useEffect(() => {
       const savedPrompts = JSON.parse(localStorage.getItem('prompts')) || [
         { id: 1, text: 'اشرح مفهوم الذكاء الاصطناعي بطريقة بسيطة.', category: 'تعليمي', tokens: 23 },
@@ -47,6 +47,7 @@
         { id: 5, text: 'اكتب برنامجًا بلغة جافاسكربت لحساب العوامل.', category: 'برمجة', tokens: 41 },
       ];
       const savedCategories = JSON.parse(localStorage.getItem('categories')) || ['عام', 'تعليمي', 'إبداعي', 'تحليل بيانات', 'برمجة'];
+      
       setPrompts(savedPrompts);
       setCategories(savedCategories);
     }, []);
@@ -79,7 +80,12 @@
 
     // ➕ إضافة قسم جديد
     const handleAddCategory = () => {
-      if (!newPrompt.category.trim() || categories.includes(newPrompt.category)) return;
+      if (!newPrompt.category.trim()) return;
+      if (categories.includes(newPrompt.category)) {
+        alert("هذا القسم موجود مسبقًا");
+        return;
+      }
+
       const updatedCategories = [...categories, newPrompt.category];
       setCategories(updatedCategories);
       saveToLocalStorage(prompts, updatedCategories);
@@ -116,6 +122,28 @@
       saveToLocalStorage(updatedPrompts, updatedCategories);
     };
 
+    // 🔍 البحث والفرز
+    const filteredPrompts = prompts.filter(prompt =>
+      prompt.text.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      prompt.category.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
+    const indexOfLastItem = currentPage * itemsPerPage;
+    const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+    const currentPrompts = filteredPrompts.slice(indexOfFirstItem, indexOfLastItem);
+
+    // ⬅️ الصفحة السابقة
+    const goToPrevious = () => {
+      if (currentPage > 1) setCurrentPage(currentPage - 1);
+    };
+
+    // ➡️ الصفحة التالية
+    const goToNext = () => {
+      if (currentPage < Math.ceil(filteredPrompts.length / itemsPerPage)) {
+        setCurrentPage(currentPage + 1);
+      }
+    };
+
     // 📊 إحصاءات الأقسام
     const getCategoryStats = () => {
       const stats = {};
@@ -131,40 +159,13 @@
       return stats;
     };
 
-    // 🔍 البحث والفرز
-    const filteredPrompts = prompts.filter(prompt =>
-      prompt.text.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-
-    // 📄 تقسيم النتائج إلى صفحات
-    const indexOfLastItem = currentPage * itemsPerPage;
-    const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-    const currentPrompts = filteredPrompts.slice(indexOfFirstItem, indexOfLastItem);
-
-    // 🔁 تغيير الصفحة
-    const paginate = (pageNumber) => setCurrentPage(pageNumber);
-
-    // ⬅️ الصفحة السابقة
-    const goToPrevious = () => {
-      if (currentPage > 1) setCurrentPage(currentPage - 1);
-    };
-
-    // ➡️ الصفحة التالية
-    const goToNext = () => {
-      if (currentPage < Math.ceil(filteredPrompts.length / itemsPerPage)) {
-        setCurrentPage(currentPage + 1);
-      }
-    };
-
-    // 💾 تصدير جميع البرومبتات إلى ملف Markdown
+    // 💾 تصدير البرومبتات إلى ملف Markdown (.md)
     const exportPromptsToMarkdown = () => {
       let markdown = '# 📝 قائمة البرومبتات\n\n';
 
       const groupedByCategory = {};
       prompts.forEach(prompt => {
-        if (!groupedByCategory[prompt.category]) {
-          groupedByCategory[prompt.category] = [];
-        }
+        if (!groupedByCategory[prompt.category]) groupedByCategory[prompt.category] = [];
         groupedByCategory[prompt.category].push(prompt);
       });
 
@@ -186,7 +187,7 @@
       URL.revokeObjectURL(url);
     };
 
-    // 📋 نسخ نص البرومبت
+    // 📋 نسخ نص البرومبت إلى الحافظة
     const copyPromptText = (text) => {
       navigator.clipboard.writeText(text);
       alert("تم نسخ البرومبت!");
@@ -202,6 +203,8 @@
       return (
         <div className="space-y-6">
           <h2 className="text-2xl font-bold text-gray-800">لوحة التحكم</h2>
+
+          {/* Cards */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="bg-white p-6 rounded-lg shadow-md">
               <h3 className="text-lg font-semibold text-gray-700 mb-2">عدد البرومبتات</h3>
@@ -254,7 +257,10 @@
         {/* Tabs Navigation */}
         <div className="flex space-x-4 rtl:space-x-reverse mb-6 border-b border-gray-200">
           <button
-            onClick={() => setActiveTab('dashboard')}
+            onClick={() => {
+              setActiveTab('dashboard');
+              setCurrentPage(1);
+            }}
             className={`py-2 px-4 font-medium ${
               activeTab === 'dashboard'
                 ? 'border-b-2 border-indigo-600 text-indigo-600'
@@ -264,7 +270,10 @@
             لوحة التحكم
           </button>
           <button
-            onClick={() => setActiveTab('prompts')}
+            onClick={() => {
+              setActiveTab('prompts');
+              setCurrentPage(1);
+            }}
             className={`py-2 px-4 font-medium ${
               activeTab === 'prompts'
                 ? 'border-b-2 border-indigo-600 text-indigo-600'
@@ -289,7 +298,7 @@
                 value={searchTerm}
                 onChange={(e) => {
                   setSearchTerm(e.target.value);
-                  setCurrentPage(1); // إعادة تعيين الصفحة بعد البحث
+                  setCurrentPage(1);
                 }}
                 className="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
               />
@@ -307,7 +316,7 @@
                   setNewPrompt({
                     ...newPrompt,
                     text,
-                    tokens: Math.ceil(text.split(/\s+/).length * 1.25)
+                    tokens: Math.ceil(text.split(/\s+/).length * 1.25),
                   });
                 }}
                 className="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
@@ -330,6 +339,17 @@
                 ))}
               </select>
 
+              <div className="mt-4">
+                <label className="block text-sm font-medium text-gray-700">أدخل اسم قسم جديد (اختياري)</label>
+                <input
+                  type="text"
+                  placeholder="مثال: تسويقي"
+                  value={newPrompt.category}
+                  onChange={(e) => setNewPrompt({...newPrompt, category: e.target.value})}
+                  className="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                />
+              </div>
+
               <div className="flex flex-wrap gap-3 pt-2">
                 <button
                   type="submit"
@@ -340,7 +360,7 @@
                 <button
                   type="button"
                   onClick={handleAddCategory}
-                  disabled={!newPrompt.category || categories.includes(newPrompt.category)}
+                  disabled={!newPrompt.category.trim() || categories.includes(newPrompt.category)}
                   className={`inline-flex justify-center items-center px-4 py-3 border border-transparent text-sm font-medium rounded-md shadow-sm text-white transition ${
                     categories.includes(newPrompt.category)
                       ? 'bg-gray-400 cursor-not-allowed'
@@ -406,7 +426,7 @@
                 >
                   السابق
                 </button>
-                
+
                 {Array.from({ length: Math.ceil(filteredPrompts.length / itemsPerPage) }, (_, i) => (
                   <button
                     key={i + 1}
@@ -475,7 +495,7 @@
             </div>
           </div>
         )}
-        
+
         {/* Footer */}
         <footer className="mt-10 pt-6 border-t border-gray-200 text-center text-sm text-gray-500">
           &copy; {new Date().getFullYear()} {signature}. جميع الحقوق محفوظة.
@@ -484,6 +504,7 @@
     );
   }
 
+  // Render App
   ReactDOM.createRoot(document.getElementById('root')).render(<App />);
 </script>
 </body>
