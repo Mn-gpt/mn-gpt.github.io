@@ -2,8 +2,20 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>برومبتات القسم - MN.gpt</title>
+
+  <!-- TailwindCSS -->
   <script src="https://cdn.tailwindcss.com"></script> 
+  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;600&display=swap" rel="stylesheet">
+  
+  <style>
+    body {
+      font-family: 'Tajawal', sans-serif;
+      background-color: #f9fafb; 
+      color: #1f2937;
+    }
+  </style>
 </head>
 <body class="bg-gray-50 min-h-screen">
 
@@ -29,7 +41,7 @@
       </h1>
     </div>
     <div class="border-t border-gray-200 px-4 py-5 sm:p-6">
-      <ul class="divide-y divide-gray-200 space-y-4">
+      <ul id="promptsList" class="divide-y divide-gray-200">
         <!-- سيتم ملؤها ديناميكياً -->
       </ul>
     </div>
@@ -42,48 +54,70 @@
 </footer>
 
 <script>
-  const urlParams = new URLSearchParams(window.location.search);
-  const categoryName = urlParams.get('category');
-  document.getElementById('categoryName').textContent = categoryName;
+  try {
+    // الحصول على اسم القسم من الرابط
+    const urlParams = new URLSearchParams(window.location.search);
+    const categoryName = urlParams.get('category');
+    
+    document.getElementById('categoryName').textContent = categoryName || 'غير معروف';
 
-  const prompts = JSON.parse(localStorage.getItem('prompts')) || [
-    { id: 1, text: 'اشرح مفهوم الذكاء الاصطناعي بطريقة بسيطة.', category: 'تعليمي', tokens: 23 },
-    { id: 2, text: 'اكتب قصة قصيرة عن رحلة إلى الفضاء.', category: 'إبداعي', tokens: 45 },
-    { id: 3, text: 'ما هو تأثير التكنولوجيا على التعليم؟', category: 'تحليل بيانات', tokens: 18 },
-    { id: 4, text: 'اشرح كيف تعمل خوارزميات التعلم العميق.', category: 'تعليمي', tokens: 37 },
-    { id: 5, text: 'اكتب برنامجًا بلغة جافاسكربت لحساب العوامل.', category: 'برمجة', tokens: 41 },
-  ];
+    // استرجاع البرومبتات من localStorage أو استخدام بيانات تجريبية
+    const prompts = JSON.parse(localStorage.getItem('prompts')) || [
+      { id: 1, text: 'اشرح مفهوم الذكاء الاصطناعي بطريقة بسيطة.', category: 'تعليمي', tokens: 23 },
+      { id: 2, text: 'اكتب قصة قصيرة عن رحلة إلى الفضاء.', category: 'إبداعي', tokens: 45 },
+      { id: 3, text: 'ما هو تأثير التكنولوجيا على التعليم؟', category: 'تحليل بيانات', tokens: 18 },
+      { id: 4, text: 'اشرح كيف تعمل خوارزميات التعلم العميق.', category: 'تعليمي', tokens: 37 },
+      { id: 5, text: 'اكتب برنامجًا بلغة جافاسكربت لحساب العوامل.', category: 'برمجة', tokens: 41 },
+    ];
 
-  const filteredPrompts = prompts.filter(p => p.category === categoryName);
-  const list = document.querySelector('ul');
+    // فلترة البرومبتات حسب القسم
+    const filteredPrompts = categoryName 
+      ? prompts.filter(p => p.category === categoryName) 
+      : [];
 
-  if (filteredPrompts.length > 0) {
-    filteredPrompts.forEach(prompt => {
-      const li = document.createElement('li');
-      li.className = 'bg-white p-4 rounded shadow mb-3 hover:bg-gray-50 transition';
-      li.innerHTML = `
-        <div class="flex justify-between items-start">
-          <div class="pr-4">
-            <p class="font-medium">${prompt.text}</p>
-            <div class="mt-2 text-sm text-gray-500">
-              <span>ID: \`${prompt.id}\`</span> • <span>Tokens: \`${prompt.tokens}\`</span>
+    const list = document.getElementById('promptsList');
+
+    if (filteredPrompts.length > 0) {
+      filteredPrompts.forEach(prompt => {
+        const li = document.createElement('li');
+        li.className = 'bg-white p-4 rounded shadow mb-3 hover:bg-gray-50 transition';
+        li.innerHTML = `
+          <div class="flex justify-between items-start">
+            <div class="pr-4">
+              <p class="font-medium">${prompt.text}</p>
+              <div class="mt-2 text-sm text-gray-500">
+                <span>ID: \`${prompt.id}\`</span> • <span>Tokens: \`${prompt.tokens}\`</span>
+              </div>
             </div>
+            <button onclick="copyPrompt('${prompt.text}')" class="text-blue-600 hover:text-blue-800 transition">نسخ</button>
           </div>
-          <button onclick="copyPrompt('${prompt.text}')" class="text-blue-600 hover:text-blue-800 transition">نسخ</button>
-        </div>
-      `;
-      list.appendChild(li);
-    });
-  } else {
-    const empty = document.createElement('li');
-    empty.className = 'text-center py-4 text-gray-500';
-    empty.textContent = 'لا توجد برومبتات مضافة لهذا القسم.';
-    list.appendChild(empty);
-  }
+        `;
+        list.appendChild(li);
+      });
+    } else {
+      const empty = document.createElement('li');
+      empty.className = 'text-center py-4 text-gray-500';
+      empty.textContent = categoryName 
+        ? 'لا توجد برومبتات مضافة لهذا القسم بعد.' 
+        : 'لا يمكن تحديد القسم من الرابط.';
+      list.appendChild(empty);
+    }
 
-  function copyPrompt(text) {
-    navigator.clipboard.writeText(text);
-    alert("تم نسخ البرومبت!");
+    function copyPrompt(text) {
+      navigator.clipboard.writeText(text).then(() => {
+        alert("تم نسخ البرومبت!");
+      }).catch(err => {
+        console.error("فشل النسخ:", err);
+        alert("فشل نسخ النص، يرجى المحاولة مرة أخرى.");
+      });
+    }
+  } catch (error) {
+    console.error("خطأ في تحميل الصفحة:", error);
+    const list = document.getElementById('promptsList');
+    const errorDiv = document.createElement('li');
+    errorDiv.className = 'text-center py-8 text-red-600 bg-red-50 rounded-md';
+    errorDiv.textContent = 'حدث خطأ أثناء تحميل البرومبتات. يرجى إعادة تحميل الصفحة.';
+    list.appendChild(errorDiv);
   }
 </script>
 
