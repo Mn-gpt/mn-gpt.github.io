@@ -2,31 +2,105 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8" />
-  <title>MN.gpt - الذكاء الاصطناعي معاً</title>
-  <script src="https://cdn.tailwindcss.com"></script> 
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>MN.gpt - منصة إدارة البرومبتات</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"  rel="stylesheet" />
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f9fafb;
+      color: #1f2937;
+    }
+  </style>
 </head>
-<body class="bg-gray-50 text-gray-800">
-  <div class="min-h-screen flex flex-col items-center justify-center px-4">
-    <h1 class="text-4xl font-bold text-indigo-700 mb-4">MN.gpt</h1>
-    <p class="text-xl text-center mb-8">منصة لإدارة البرومبتات وتصميم الاستعلامات الخاصة بالذكاء الاصطناعي</p>
-    
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl w-full mb-10">
-      <div class="bg-white p-6 rounded-lg shadow-md text-center">
-        <h2 class="text-xl font-semibold mb-2">المستخدمين</h2>
-        <p>استخدم أفضل البرومبتات وشارك أفكارك.</p>
-        <a href="login.html" class="block mt-4 text-indigo-600 underline">تسجيل الدخول كمستخدم</a>
-      </div>
+<body class="bg-gray-50 min-h-screen">
 
-      <div class="bg-white p-6 rounded-lg shadow-md text-center">
-        <h2 class="text-xl font-semibold mb-2">المسؤولين</h2>
-        <p>أضف وحرر البرومبتات وقم بإدارتها.</p>
-        <a href="login.html" class="block mt-4 text-indigo-600 underline">تسجيل الدخول كمسؤول</a>
-      </div>
+  <!-- Header -->
+  <header class="py-6 border-b border-gray-200">
+    <div class="container mx-auto flex justify-between items-center px-4">
+      <h1 class="text-3xl font-bold text-indigo-700">MN.gpt</h1>
+      <a href="login-register.html" class="text-indigo-600 hover:text-indigo-800 font-medium">دخول</a>
     </div>
+  </header>
 
-    <a href="login.html" class="bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700 transition">
-      ابدأ الآن
-    </a>
-  </div>
+  <!-- Hero Section -->
+  <section class="py-20 bg-white">
+    <div class="container mx-auto px-4 text-center">
+      <h2 class="text-4xl md:text-5xl font-extrabold text-gray-800 mb-6">منصة لإدارة البرومبتات الخاصة بك</h2>
+      <p class="text-lg text-gray-600 max-w-2xl mx-auto mb-8">
+        MN.gpt هو نظام يساعدك على حفظ، فرز، تعديل، وتصدير برومبتاتك بطريقة احترافية وبسيطة.
+      </p>
+      <a href="login-register.html" class="inline-block bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 px-6 rounded-md transition duration-200">
+        ابدأ الآن
+      </a>
+    </div>
+  </section>
+
+  <!-- Features Section -->
+  <section class="py-16 container mx-auto px-4">
+    <h3 class="text-2xl font-bold text-gray-800 text-center mb-10">مميزات MN.gpt</h3>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+      
+      <!-- Feature 1 -->
+      <div class="bg-gray-50 p-6 rounded-lg shadow-sm text-center">
+        <div class="w-16 h-16 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center mx-auto mb-4">
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
+              d="M9 12h6m-6 4h6m2-8H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2z" />
+          </svg>
+        </div>
+        <h4 class="text-xl font-semibold mb-2">إدارة البرومبتات</h4>
+        <p class="text-gray-600">
+          يمكنك إضافة برومبتاتك، تنظيمها بالأقسام، والبحث فيها بسهولة.
+        </p>
+      </div>
+
+      <!-- Feature 2 -->
+      <div class="bg-gray-50 p-6 rounded-lg shadow-sm text-center">
+        <div class="w-16 h-16 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-4">
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
+              d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+          </svg>
+        </div>
+        <h4 class="text-xl font-semibold mb-2">حساب توكيانات آلي</h4>
+        <p class="text-gray-600">
+          يتم حساب عدد التوكيانات لكل برومبت أثناء الكتابة مباشرةً.
+        </p>
+      </div>
+
+      <!-- Feature 3 -->
+      <div class="bg-gray-50 p-6 rounded-lg shadow-sm text-center">
+        <div class="w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
+              d="M4 5a1 1 0 011-1h14a1 1 0 011 1v14a1 1 0 01-1 1H5a1 1 0 01-1-1V5z" />
+          </svg>
+        </div>
+        <h4 class="text-xl font-semibold mb-2">تصدير بصيغة Markdown</h4>
+        <p class="text-gray-600">
+          صُدر كل البرومبتات التي أنشأتها بصيغة مرتبة (.md) لاستخدامها مع ChatGPT أو GitHub.
+        </p>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- Call to Action -->
+  <section class="py-16 bg-indigo-600 text-white text-center">
+    <div class="container mx-auto px-4">
+      <h3 class="text-2xl md:text-3xl font-bold mb-4">جرب MN.gpt اليوم!</h3>
+      <p class="mb-6 text-lg">ابدأ بإدارة برومبتاتك بشكل ذكي وسهل.</p>
+      <a href="login-register.html" class="inline-block bg-white text-indigo-600 font-semibold py-3 px-6 rounded-md hover:bg-gray-100 transition">
+        إنشاء حساب مجاني
+      </a>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="py-6 border-t border-gray-200 text-center text-sm text-gray-500 mt-10">
+    &copy; {new Date().getFullYear()} MN.gpt. جميع الحقوق محفوظة.
+  </footer>
+
 </body>
 </html>
