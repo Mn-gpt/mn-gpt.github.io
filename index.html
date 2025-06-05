@@ -4,13 +4,13 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Prompt Manager - MN.gpt</title>
-
+  
   <!-- React + ReactDOM -->
   <script src="https://unpkg.com/react@18/umd/react.development.js"  crossorigin></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"  crossorigin></script>
-  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script> 
-  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"  rel="stylesheet">
-
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>  
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"  rel="stylesheet" />
+  
   <style>
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -19,11 +19,10 @@
     }
   </style>
 </head>
-<body class="p-6 bg-gray-100 min-h-screen">
+<body class="p-6">
 <div id="root"></div>
 
 <script type="text/babel">
-
   const { useState, useEffect } = React;
 
   function App() {
@@ -31,22 +30,23 @@
     const [prompts, setPrompts] = useState([]);
     const [categories, setCategories] = useState([]);
     const [newPrompt, setNewPrompt] = useState({ text: '', category: '', tokens: 0 });
-    const [editingPrompt, setEditingPrompt] = useState(null);
     const [editingCategory, setEditingCategory] = useState(null);
     const [editCategoryName, setEditCategoryName] = useState('');
-    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [mainCategory, setMainCategory] = useState('');
+    const [subCategory, setSubCategory] = useState('');
     const [signature] = useState('MN.gpt');
 
-    // 🔽 تحميل البيانات عند التهيئة
+    // 🔽 تحميل البيانات من localStorage
     useEffect(() => {
       const savedPrompts = JSON.parse(localStorage.getItem('prompts')) || [
         { id: 1, text: 'اشرح مفهوم الذكاء الاصطناعي بطريقة بسيطة.', category: 'تعليمي', tokens: 23 },
-        { id: 2, text: 'اكتب قصة قصيرة عن رحلة إلى الفضاء.', category: 'إبداعي', tokens: 45 },
-        { id: 3, text: 'ما هو تأثير التكنولوجيا على التعليم؟', category: 'تحليل بيانات', tokens: 18 },
-        { id: 4, text: 'اشرح كيف تعمل خوارزميات التعلم العميق.', category: 'تعليمي', tokens: 37 },
+        { id: 2, text: 'اكتب قصة قصيرة عن رحلة إلى الفضاء.', category: 'قصص', tokens: 45 },
+        { id: 3, text: 'ما هو تأثير التكنولوجيا على التعليم؟', category: 'تفكير نقدي', tokens: 18 },
+        { id: 4, text: 'اشرح كيف تعمل خوارزميات التعلم العميق.', category: 'تطويري', tokens: 37 },
         { id: 5, text: 'اكتب برنامجًا بلغة جافاسكربت لحساب العوامل.', category: 'برمجة', tokens: 41 },
       ];
-      const savedCategories = JSON.parse(localStorage.getItem('categories')) || ['عام', 'تعليمي', 'إبداعي', 'تحليل بيانات', 'برمجة'];
+      const savedCategories = JSON.parse(localStorage.getItem('categories')) || ['تسويق', 'احترافي', 'إبداعي', 'أدبي', 'قصص', 'أفكار', 'تطويري', 'ويب', 'برمجة', 'تعليمي', 'تفاعلي', 'تفكير نقدي', 'صور وجرافيك', 'فيديو'];
+      
       setPrompts(savedPrompts);
       setCategories(savedCategories);
     }, []);
@@ -57,40 +57,17 @@
       localStorage.setItem('categories', JSON.stringify(updatedCategories));
     };
 
-    // ➕ إضافة أو تعديل برومبت
-    const handleAddOrEditPrompt = (e) => {
+    // ➕ إضافة برومبت جديد
+    const handleAddPrompt = (e) => {
       e.preventDefault();
       if (!newPrompt.text || !newPrompt.category) return;
-
-      let updatedPrompts = [...prompts];
-
-      if (editingPrompt) {
-        // تحديث البرومبت
-        updatedPrompts = updatedPrompts.map(p =>
-          p.id === editingPrompt.id ? { ...newPrompt, id: editingPrompt.id } : p
-        );
-        setEditingPrompt(null);
-      } else {
-        // إضافة جديد
-        const promptToAdd = { ...newPrompt, id: Date.now() };
-        updatedPrompts.push(promptToAdd);
-      }
-
+      const promptToAdd = { ...newPrompt, id: Date.now() };
+      const updatedPrompts = [...prompts, promptToAdd];
       const updatedCategories = categories.includes(newPrompt.category) ? categories : [...categories, newPrompt.category];
-
       setPrompts(updatedPrompts);
       setCategories(updatedCategories);
       saveToLocalStorage(updatedPrompts, updatedCategories);
-
       setNewPrompt({ text: '', category: '', tokens: 0 });
-      setIsModalOpen(false);
-    };
-
-    // ✏️ بدء تعديل برومبت
-    const startEditPrompt = (prompt) => {
-      setEditingPrompt(prompt);
-      setNewPrompt({ text: prompt.text, category: prompt.category, tokens: prompt.tokens });
-      setIsModalOpen(true);
     };
 
     // ❌ حذف برومبت
@@ -154,67 +131,30 @@
       return stats;
     };
 
-    const renderDashboard = () => {
-      const stats = getCategoryStats();
-
-      return (
-        <div className="space-y-6">
-          <h2 className="text-2xl font-bold text-gray-800">لوحة التحكم</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="bg-white p-6 rounded-lg shadow-md">
-              <h3 className="text-lg font-semibold text-gray-700 mb-2">إجمالي البرومبتات</h3>
-              <p className="text-3xl font-bold text-indigo-600">{prompts.length}</p>
-            </div>
-            <div className="bg-white p-6 rounded-lg shadow-md">
-              <h3 className="text-lg font-semibold text-gray-700 mb-2">إجمالي التوكيانات</h3>
-              <p className="text-3xl font-bold text-blue-600">
-                {prompts.reduce((sum, p) => sum + p.tokens, 0)}
-              </p>
-            </div>
-            <div className="bg-white p-6 rounded-lg shadow-md">
-              <h3 className="text-lg font-semibold text-gray-700 mb-2">عدد الأقسام</h3>
-              <p className="text-3xl font-bold text-green-600">{categories.length}</p>
-            </div>
-          </div>
-          <div className="bg-white rounded-lg shadow-md overflow-hidden">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">القسم</th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">عدد البرومبتات</th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">متوسط التوكيانات</th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {Object.entries(stats).map(([category, data]) => (
-                  <tr key={category} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap">{category}</td>
-                    <td className="px-6 py-4 whitespace-nowrap">{data.count}</td>
-                    <td className="px-6 py-4 whitespace-nowrap">{data.averageTokens}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      );
+    // ✅ تحديد الأقسام الرئيسية والفرعية
+    const mainCategories = {
+      "AabicNLP": ["تسويق", "إبداعي"],
+      "تسويق": ["احترافي", "إبداعي"],
+      "أدبي": ["قصص", "أفكار"],
+      "تطويري": ["ويب", "برمجة"],
+      "تعليمي": ["تفاعلي", "تفكير نقدي"],
+      "صور وجرافيك": [],
+      "فيديو": []
     };
+
+    const allCategories = Object.keys(mainCategories).reduce((acc, main) => {
+      acc.push(main);
+      acc.push(...mainCategories[main]);
+      return acc;
+    }, []);
+
+    const filteredSubCategories = mainCategories[mainCategory] || [];
 
     return (
       <div className="container mx-auto">
         {/* Header */}
         <header className="flex justify-between items-center pb-6 border-b border-gray-200 mb-6">
           <h1 className="text-3xl font-bold text-indigo-700">{signature}</h1>
-          <button
-            onClick={() => {
-              setEditingPrompt(null);
-              setNewPrompt({ text: '', category: '', tokens: 0 });
-              setIsModalOpen(true);
-            }}
-            className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded transition"
-          >
-            إضافة برومبت جديد
-          </button>
         </header>
 
         {/* Tabs Navigation */}
@@ -242,30 +182,96 @@
         </div>
 
         {/* Tab Content */}
-        {activeTab === 'dashboard' && renderDashboard()}
+        {activeTab === 'dashboard' && (
+          <div className="space-y-6">
+            <h2 className="text-2xl font-bold text-gray-800">لوحة التحكم</h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="bg-white p-6 rounded-lg shadow-md">
+                <h3 className="text-lg font-semibold text-gray-700 mb-2">إجمالي البرومبتات</h3>
+                <p className="text-3xl font-bold text-indigo-600">{prompts.length}</p>
+              </div>
+              <div className="bg-white p-6 rounded-lg shadow-md">
+                <h3 className="text-lg font-semibold text-gray-700 mb-2">إجمالي التوكيانات</h3>
+                <p className="text-3xl font-bold text-blue-600">
+                  {prompts.reduce((sum, p) => sum + p.tokens, 0)}
+                </p>
+              </div>
+              <div className="bg-white p-6 rounded-lg shadow-md">
+                <h3 className="text-lg font-semibold text-gray-700 mb-2">عدد الأقسام</h3>
+                <p className="text-3xl font-bold text-green-600">{categories.length}</p>
+              </div>
+            </div>
+
+            <div className="bg-white rounded-lg shadow-md overflow-hidden">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">القسم</th>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">عدد البرومبتات</th>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">إجمالي التوكيانات</th>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">متوسط التوكيانات</th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {Object.entries(getCategoryStats()).map(([category, data]) => (
+                    <tr key={category} className="hover:bg-gray-50">
+                      <td className="px-6 py-4 whitespace-nowrap">{category}</td>
+                      <td className="px-6 py-4 whitespace-nowrap">{data.count}</td>
+                      <td className="px-6 py-4 whitespace-nowrap">{data.totalTokens}</td>
+                      <td className="px-6 py-4 whitespace-nowrap">{data.averageTokens}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
         {activeTab === 'prompts' && (
           <div className="space-y-6">
             <h2 className="text-2xl font-bold text-gray-800">إدارة البرومبتات</h2>
 
             {/* Form لإضافة برومبت */}
-            <form onSubmit={handleAddOrEditPrompt} className="bg-white p-6 rounded-lg shadow-md space-y-4">
+            <form onSubmit={handleAddPrompt} className="bg-white p-6 rounded-lg shadow-md space-y-4">
               <input
                 type="text"
-                placeholder="مثال: اشرح مفهوم الذكاء الاصطناعي..."
+                placeholder="نص البرومبت"
                 value={newPrompt.text}
                 onChange={(e) => setNewPrompt({...newPrompt, text: e.target.value})}
                 className="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
               />
+
+              {/* اختيار القسم الرئيسي */}
               <select
-                value={newPrompt.category}
-                onChange={(e) => setNewPrompt({...newPrompt, category: e.target.value})}
+                value={mainCategory}
+                onChange={(e) => {
+                  setMainCategory(e.target.value);
+                  setSubCategory('');
+                }}
                 className="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
               >
-                <option value="">اختر قسمًا</option>
-                {categories.map((cat, idx) => (
+                <option value="">اختر قسمًا رئيسيًا</option>
+                {Object.keys(mainCategories).map((cat, idx) => (
                   <option key={idx} value={cat}>{cat}</option>
                 ))}
               </select>
+
+              {/* اختيار القسم الفرعي */}
+              <select
+                value={subCategory}
+                onChange={(e) => {
+                  setSubCategory(e.target.value);
+                  setNewPrompt({...newPrompt, category: e.target.value});
+                }}
+                disabled={!mainCategory}
+                className={`w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500 ${!mainCategory ? 'bg-gray-100 cursor-not-allowed' : ''}`}
+              >
+                <option value="">اختر قسمًا فرعيًا</option>
+                {filteredSubCategories.map((cat, idx) => (
+                  <option key={idx} value={cat}>{cat}</option>
+                ))}
+              </select>
+
               <input
                 type="number"
                 placeholder="عدد التوكيانات"
@@ -273,21 +279,22 @@
                 onChange={(e) => setNewPrompt({...newPrompt, tokens: parseInt(e.target.value) || 0})}
                 className="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
               />
-              <div className="flex flex-wrap gap-3 mt-2">
+
+              <div className="flex flex-wrap gap-3 pt-2">
                 <button
                   type="submit"
-                  className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded transition"
+                  className="inline-flex justify-center items-center px-4 py-3 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none transition"
                 >
-                  {editingPrompt ? 'تحديث البرومبت' : 'إضافة برومبت'}
+                  إضافة برومبت
                 </button>
                 <button
                   type="button"
                   onClick={handleAddCategory}
-                  disabled={!newPrompt.category || categories.includes(newPrompt.category)}
-                  className={`px-4 py-2 rounded transition ${
+                  disabled={!newPrompt.category.trim() || categories.includes(newPrompt.category)}
+                  className={`inline-flex justify-center items-center px-4 py-3 border border-transparent text-sm font-medium rounded-md shadow-sm text-white focus:outline-none transition ${
                     categories.includes(newPrompt.category)
-                      ? 'bg-gray-300 cursor-not-allowed'
-                      : 'bg-blue-600 hover:bg-blue-700 text-white'
+                      ? 'bg-gray-400 cursor-not-allowed'
+                      : 'bg-blue-600 hover:bg-blue-700'
                   }`}
                 >
                   إضافة قسم جديد
@@ -300,25 +307,14 @@
               {prompts.map(prompt => (
                 <li key={prompt.id} className="bg-white p-4 rounded shadow-sm flex justify-between items-center hover:shadow-md transition">
                   <span>{prompt.text} — <strong>{prompt.category}</strong> ({prompt.tokens} توكيان)</span>
-                  <div className="flex space-x-2 space-x-reverse">
-                    <button
-                      onClick={() => startEditPrompt(prompt)}
-                      className="text-yellow-600 hover:text-yellow-800 transition"
-                    >
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                        <path d="M17.414 2.586a2 2 0 010 2.828l-14.03 14.03a1 1 0 01-.707.293H10a1 1 0 011 1v1c0 .552.448 1 1 1h1a1 1 0 011-1v-1h6.03a1 1 0 01.707-.293l-14.03-14.03a2 2 0 012.828 0L10 12.172V15a1 1 0 01-1 1h-3a1 1 0 01-1-1v-3a1 1 0 011-1h2.828l6.586-6.586a2 2 0 012.828 0z" />
-                        <path d="M3 18a1 1 0 011-1h6a1 1 0 011 1v3a1 1 0 01-1 1H4a1 1 0 01-1-1v-3z" />
-                      </svg>
-                    </button>
-                    <button
-                      onClick={() => handleDeletePrompt(prompt.id)}
-                      className="text-red-600 hover:text-red-800 transition"
-                    >
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                        <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2h1.382l-.724 1.447A1 1 0 004 8h12a1 1 0 000-2h-3.382l-.724-1.447A1 1 0 0012 4h-1.382l-.724-1.447A1 1 0 009 2zm9 12a1 1 0 011 1v3a1 1 0 01-1 1H2a1 1 0 01-1-1v-3a1 1 0 011-1h16z" clipRule="evenodd" />
-                      </svg>
-                    </button>
-                  </div>
+                  <button
+                    onClick={() => handleDeletePrompt(prompt.id)}
+                    className="text-red-600 hover:text-red-800 transition"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 000-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 001 1v1a1 1 0 00-1 1H9a1 1 0 000-2v-1a1 1 0 00-1-1V8a1 1 0 001-1h1z" clipRule="evenodd" />
+                    </svg>
+                  </button>
                 </li>
               ))}
               {prompts.length === 0 && (
@@ -357,60 +353,6 @@
           </div>
         )}
 
-        {/* Modal لإضافة/تعديل برومبت */}
-        {isModalOpen && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white p-6 rounded-lg shadow-xl max-w-md w-full">
-              <h3 className="text-xl font-bold mb-4">{editingPrompt ? 'تعديل البرومبت' : 'إضافة برومبت جديد'}</h3>
-              <form onSubmit={handleAddOrEditPrompt}>
-                <textarea
-                  rows="4"
-                  placeholder="مثال: اشرح مفهوم الذكاء الاصطناعي..."
-                  value={newPrompt.text}
-                  onChange={(e) => setNewPrompt({...newPrompt, text: e.target.value})}
-                  className="w-full p-3 border border-gray-300 rounded mb-4 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                ></textarea>
-                <select
-                  value={newPrompt.category}
-                  onChange={(e) => setNewPrompt({...newPrompt, category: e.target.value})}
-                  className="w-full p-3 border border-gray-300 rounded mb-4 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                >
-                  <option value="">اختر قسمًا</option>
-                  {categories.map((cat, idx) => (
-                    <option key={idx} value={cat}>{cat}</option>
-                  ))}
-                </select>
-                <input
-                  type="number"
-                  placeholder="عدد التوكيانات"
-                  value={newPrompt.tokens}
-                  onChange={(e) => setNewPrompt({...newPrompt, tokens: parseInt(e.target.value) || 0})}
-                  className="w-full p-3 border border-gray-300 rounded mb-4 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                />
-                <div className="flex justify-end space-x-2 space-x-reverse">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setIsModalOpen(false);
-                      setEditingPrompt(null);
-                      setNewPrompt({ text: '', category: '', tokens: 0 });
-                    }}
-                    className="px-4 py-2 bg-gray-300 hover:bg-gray-400 rounded"
-                  >
-                    إلغاء
-                  </button>
-                  <button
-                    type="submit"
-                    className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded"
-                  >
-                    {editingPrompt ? 'تحديث' : 'حفظ'}
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        )}
-
         {/* Footer */}
         <footer className="mt-10 pt-6 border-t border-gray-200 text-center text-sm text-gray-500">
           &copy; {new Date().getFullYear()} {signature}. جميع الحقوق محفوظة.
@@ -419,7 +361,6 @@
     );
   }
 
-  // Render App
   ReactDOM.createRoot(document.getElementById('root')).render(<App />);
 </script>
 </body>
