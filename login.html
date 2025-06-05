@@ -2,55 +2,220 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8" />
-  <title>تسجيل الدخول - MN.gpt</title>
-  <script src="https://cdn.tailwindcss.com"></script> 
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>دخول - MN.gpt</title>
+  <script src="https://unpkg.com/react@18/umd/react.development.js"  crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"  crossorigin></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script> 
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"  rel="stylesheet" />
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f9fafb;
+      color: #1f2937;
+    }
+  </style>
 </head>
-<body class="bg-gray-100 flex items-center justify-center min-h-screen">
-  <div class="w-full max-w-md bg-white p-8 rounded-lg shadow-md">
-    <h2 class="text-2xl font-bold text-center mb-6">مرحبًا بك في MN.gpt</h2>
-    <form id="loginForm" class="space-y-4">
-      <input type="text" id="username" placeholder="اسم المستخدم" required class="w-full p-3 border rounded" />
-      <input type="password" id="password" placeholder="كلمة المرور" required class="w-full p-3 border rounded" />
-      
-      <select id="role" class="w-full p-3 border rounded">
-        <option value="">اختر دورك</option>
-        <option value="admin">مدير</option>
-        <option value="user">مستخدم</option>
-      </select>
+<body class="min-h-screen bg-gray-100 flex items-center justify-center p-4">
 
-      <button type="submit" class="w-full bg-indigo-600 text-white py-3 rounded hover:bg-indigo-700">
-        تسجيل الدخول
-      </button>
-    </form>
-    <p class="mt-4 text-center text-sm text-gray-600">
-      ليس لديك حساب؟ <a href="welcome.html" class="text-indigo-600 hover:underline">ابدأ هنا</a>
-    </p>
-  </div>
+<div id="root" class="w-full max-w-md"></div>
 
-  <script>
-    document.getElementById('loginForm').addEventListener('submit', function(e) {
-      e.preventDefault();
-      const role = document.getElementById('role').value;
+<script type="text/babel">
+  const { useState } = React;
 
-      if (role === 'admin') {
-        // يمكنك استخدام اسم مستخدم/كلمة مرور ثابتة للمسؤول
-        const username = document.getElementById('username').value;
-        const password = document.getElementById('password').value;
-
-        if (username === 'admin' && password === '123456') {
-          localStorage.setItem('userRole', 'admin');
-          window.location.href = 'index.html';
-        } else {
-          alert('اسم المستخدم أو كلمة المرور غير صحيحة للمدير');
-        }
-      } else if (role === 'user') {
-        // يمكن تخزين المستخدم العادي مؤقتًا
-        localStorage.setItem('userRole', 'user');
-        window.location.href = 'index.html';
-      } else {
-        alert('يرجى اختيار دور صحيح');
-      }
+  function AuthApp() {
+    const [isLogin, setIsLogin] = useState(true);
+    const [formData, setFormData] = useState({
+      username: '',
+      email: '',
+      password: '',
+      confirmPassword: ''
     });
-  </script>
+    const [error, setError] = useState('');
+    const [success, setSuccess] = useState('');
+
+    // التعامل مع إدخال البيانات
+    const handleChange = (e) => {
+      const { name, value } = e.target;
+      setFormData({ ...formData, [name]: value });
+    };
+
+    // تسجيل الدخول
+    const handleLogin = (e) => {
+      e.preventDefault();
+      const users = JSON.parse(localStorage.getItem('users')) || [];
+      const user = users.find(u => u.email === formData.email && u.password === formData.password);
+
+      if (user) {
+        localStorage.setItem('currentUser', JSON.stringify(user));
+        window.location.href = 'app.html'; // الانتقال إلى صفحة التطبيق
+      } else {
+        setError("البريد أو كلمة المرور غير صحيحة");
+      }
+    };
+
+    // إنشاء حساب
+    const handleRegister = (e) => {
+      e.preventDefault();
+      if (formData.password !== formData.confirmPassword) {
+        setError("كلمة المرور غير متطابقة");
+        return;
+      }
+
+      const users = JSON.parse(localStorage.getItem('users')) || [];
+
+      const existingUser = users.find(u => u.email === formData.email);
+      if (existingUser) {
+        setError("البريد الإلكتروني مستخدم مسبقًا");
+        return;
+      }
+
+      const newUser = {
+        username: formData.username,
+        email: formData.email,
+        password: formData.password
+      };
+
+      users.push(newUser);
+      localStorage.setItem('users', JSON.stringify(users));
+      localStorage.setItem('currentUser', JSON.stringify(newUser));
+
+      setSuccess("تم التسجيل بنجاح!");
+      setTimeout(() => {
+        window.location.href = 'app.html';
+      }, 1500);
+    };
+
+    return (
+      <div className="bg-white p-8 rounded-lg shadow-md w-full">
+        <h2 className="text-2xl font-bold text-gray-800 mb-6 text-center">{isLogin ? 'تسجيل الدخول' : 'إنشاء حساب جديد'}</h2>
+
+        {error && <div className="mb-4 p-3 bg-red-100 text-red-700 rounded">{error}</div>}
+        {success && <div className="mb-4 p-3 bg-green-100 text-green-700 rounded">{success}</div>}
+
+        {isLogin ? (
+          <form onSubmit={handleLogin}>
+            <div className="mb-4">
+              <label className="block text-gray-700 mb-2">البريد الإلكتروني</label>
+              <input
+                type="email"
+                name="email"
+                value={formData.email}
+                onChange={handleChange}
+                required
+                className="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              />
+            </div>
+
+            <div className="mb-6">
+              <label className="block text-gray-700 mb-2">كلمة المرور</label>
+              <input
+                type="password"
+                name="password"
+                value={formData.password}
+                onChange={handleChange}
+                required
+                className="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              />
+            </div>
+
+            <button
+              type="submit"
+              className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 px-4 rounded transition"
+            >
+              دخول
+            </button>
+
+            <div className="mt-4 text-center">
+              <p className="text-sm text-gray-600">
+                ليس لديك حساب؟{' '}
+                <button
+                  type="button"
+                  onClick={() => setIsLogin(false)}
+                  className="text-indigo-600 hover:text-indigo-800"
+                >
+                  إنشاء حساب
+                </button>
+              </p>
+            </div>
+          </form>
+        ) : (
+          <form onSubmit={handleRegister}>
+            <div className="mb-4">
+              <label className="block text-gray-700 mb-2">اسم المستخدم</label>
+              <input
+                type="text"
+                name="username"
+                value={formData.username}
+                onChange={handleChange}
+                required
+                className="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              />
+            </div>
+
+            <div className="mb-4">
+              <label className="block text-gray-700 mb-2">البريد الإلكتروني</label>
+              <input
+                type="email"
+                name="email"
+                value={formData.email}
+                onChange={handleChange}
+                required
+                className="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              />
+            </div>
+
+            <div className="mb-4">
+              <label className="block text-gray-700 mb-2">كلمة المرور</label>
+              <input
+                type="password"
+                name="password"
+                value={formData.password}
+                onChange={handleChange}
+                required
+                className="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              />
+            </div>
+
+            <div className="mb-6">
+              <label className="block text-gray-700 mb-2">تأكيد كلمة المرور</label>
+              <input
+                type="password"
+                name="confirmPassword"
+                value={formData.confirmPassword}
+                onChange={handleChange}
+                required
+                className="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              />
+            </div>
+
+            <button
+              type="submit"
+              className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-4 rounded transition"
+            >
+              إنشاء الحساب
+            </button>
+
+            <div className="mt-4 text-center">
+              <p className="text-sm text-gray-600">
+                هل لديك حساب بالفعل؟{' '}
+                <button
+                  type="button"
+                  onClick={() => setIsLogin(true)}
+                  className="text-indigo-600 hover:text-indigo-800"
+                >
+                  سجل الدخول
+                </button>
+              </p>
+            </div>
+          </form>
+        )}
+      </div>
+    );
+  }
+
+  ReactDOM.createRoot(document.getElementById('root')).render(<AuthApp />);
+</script>
+
 </body>
 </html>
