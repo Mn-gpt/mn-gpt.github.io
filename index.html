@@ -4,11 +4,13 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Prompt Manager - MN.gpt</title>
+
   <!-- React + ReactDOM -->
   <script src="https://unpkg.com/react@18/umd/react.development.js"  crossorigin></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"  crossorigin></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script> 
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"  rel="stylesheet" />
+
   <style>
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -18,17 +20,13 @@
   </style>
 </head>
 <body class="p-6 bg-gray-50 min-h-screen">
+
 <div id="root"></div>
 
 <script type="text/babel">
   const { useState, useEffect } = React;
 
   function App() {
-    // 🔒 حالة المستخدم
-    const isUserAdmin = localStorage.getItem('isAdmin') === 'true';
-    const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
-
-    // 📋 بيانات الصفحة
     const [activeTab, setActiveTab] = useState('dashboard');
     const [prompts, setPrompts] = useState([]);
     const [categories, setCategories] = useState([]);
@@ -40,13 +38,11 @@
     const [itemsPerPage] = useState(4);
     const [signature] = useState('MN.gpt');
 
-    // 🔽 تحميل البيانات من localStorage عند التهيئة
-    useEffect(() => {
-      if (!isLoggedIn) {
-        window.location.href = 'login.html';
-        return;
-      }
+    // تحديد نوع المستخدم
+    const isUserAdmin = localStorage.getItem('isAdmin') === 'true';
 
+    // تحميل البيانات من localStorage
+    useEffect(() => {
       const savedPrompts = JSON.parse(localStorage.getItem('prompts')) || [
         { id: 1, text: 'اشرح مفهوم الذكاء الاصطناعي بطريقة بسيطة.', category: 'تعليمي', tokens: 23 },
         { id: 2, text: 'اكتب قصة قصيرة عن رحلة إلى الفضاء.', category: 'إبداعي', tokens: 45 },
@@ -59,13 +55,13 @@
       setCategories(savedCategories);
     }, []);
 
-    // 📦 حفظ البيانات في localStorage
+    // حفظ البيانات في localStorage
     const saveToLocalStorage = (updatedPrompts, updatedCategories) => {
       localStorage.setItem('prompts', JSON.stringify(updatedPrompts));
       localStorage.setItem('categories', JSON.stringify(updatedCategories));
     };
 
-    // ➕ إضافة برومبت جديد
+    // إضافة برومبت جديد
     const handleAddPrompt = (e) => {
       e.preventDefault();
       if (!newPrompt.text || !newPrompt.category) return;
@@ -78,14 +74,26 @@
       setNewPrompt({ text: '', category: '', tokens: 0 });
     };
 
-    // ❌ حذف برومبت
+    // حذف برومبت
     const handleDeletePrompt = (id) => {
       const updatedPrompts = prompts.filter(prompt => prompt.id !== id);
       setPrompts(updatedPrompts);
       saveToLocalStorage(updatedPrompts, categories);
     };
 
-    // ✏️ تعديل اسم القسم
+    // إضافة قسم جديد
+    const handleAddCategory = () => {
+      if (!newPrompt.category.trim()) return;
+      if (categories.includes(newPrompt.category)) {
+        alert("هذا القسم موجود مسبقًا");
+        return;
+      }
+      const updatedCategories = [...categories, newPrompt.category];
+      setCategories(updatedCategories);
+      saveToLocalStorage(prompts, updatedCategories);
+    };
+
+    // تعديل اسم القسم
     const handleStartEditCategory = (category) => {
       setEditingCategory(category);
       setEditCategoryName(category);
@@ -106,7 +114,7 @@
       saveToLocalStorage(updatedPrompts, updatedCategories);
     };
 
-    // ❌ حذف قسم
+    // حذف قسم
     const handleDeleteCategory = (categoryToDelete) => {
       if (!window.confirm(`هل أنت متأكد من حذف القسم "${categoryToDelete}" وجميع البرومبتات المرتبطة به؟`)) return;
       const updatedPrompts = prompts.filter(p => p.category !== categoryToDelete);
@@ -116,7 +124,7 @@
       saveToLocalStorage(updatedPrompts, updatedCategories);
     };
 
-    // 🔍 البحث والفرز
+    // البحث والفرز
     const filteredPrompts = prompts.filter(prompt =>
       prompt.text.toLowerCase().includes(searchTerm.toLowerCase()) ||
       prompt.category.toLowerCase().includes(searchTerm.toLowerCase())
@@ -126,19 +134,18 @@
     const indexOfFirstItem = indexOfLastItem - itemsPerPage;
     const currentPrompts = filteredPrompts.slice(indexOfFirstItem, indexOfLastItem);
 
-    // ⬅️ الصفحة السابقة
+    // التنقل بين الصفحات
     const goToPrevious = () => {
       if (currentPage > 1) setCurrentPage(currentPage - 1);
     };
 
-    // ➡️ الصفحة التالية
     const goToNext = () => {
       if (currentPage < Math.ceil(filteredPrompts.length / itemsPerPage)) {
         setCurrentPage(currentPage + 1);
       }
     };
 
-    // 📊 إحصاءات الأقسام
+    // إحصاءات الأقسام
     const getCategoryStats = () => {
       const stats = {};
       categories.forEach(category => {
@@ -153,9 +160,9 @@
       return stats;
     };
 
-    // 💾 تصدير البرومبتات إلى ملف Markdown (.md)
+    // تصدير البرومبتات إلى Markdown
     const exportPromptsToMarkdown = () => {
-      let markdown = '# 📝 قائمة البرومبتات\n\n';
+      let markdown = '# 📝 قائمة البرومبتات\n';
       const groupedByCategory = {};
       prompts.forEach(prompt => {
         if (!groupedByCategory[prompt.category]) groupedByCategory[prompt.category] = [];
@@ -164,7 +171,7 @@
       Object.entries(groupedByCategory).forEach(([category, promptList]) => {
         markdown += `## 📁 القسم: ${category}\n`;
         promptList.forEach((prompt, index) => {
-          markdown += `${index + 1}. **[${prompt.category}]** ${prompt.text}\n   - \`ID: ${prompt.id}\`\n   - \`tokens: ${prompt.tokens}\`\n\n`;
+          markdown += `${index + 1}. **[${prompt.category}]** ${prompt.text}\n   - \`ID: ${prompt.id}\`\n   - \`tokens: ${prompt.tokens}\`\n`;
         });
       });
       const blob = new Blob([markdown], { type: 'text/markdown' });
@@ -178,18 +185,19 @@
       URL.revokeObjectURL(url);
     };
 
-    // 📋 نسخ نص البرومبت إلى الحافظة
+    // نسخ النص
     const copyPromptText = (text) => {
       navigator.clipboard.writeText(text);
-      alert("✅ تم نسخ البرومبت!");
+      alert("تم نسخ البرومبت!");
     };
 
-    // 💡 عرض لوحة التحكم
+    // عرض لوحة التحكم
     const renderDashboard = () => {
       const stats = getCategoryStats();
       const totalPrompts = prompts.length;
       const totalTokens = prompts.reduce((sum, p) => sum + p.tokens, 0);
       const averageTokens = totalPrompts > 0 ? Math.round(totalTokens / totalPrompts) : 0;
+
       return (
         <div className="space-y-6">
           <h2 className="text-2xl font-bold text-gray-800">لوحة التحكم</h2>
@@ -242,15 +250,7 @@
           <h1 className="text-3xl font-bold text-indigo-700">{signature}</h1>
           <div className="space-x-4 space-x-reverse">
             <a href="welcome.html" className="text-indigo-600 hover:text-indigo-800 underline">الترحيب</a>
-            <button
-              onClick={() => {
-                localStorage.clear();
-                window.location.href = 'login.html';
-              }}
-              className="text-red-600 hover:text-red-800"
-            >
-              خروج
-            </button>
+            <a href="login.html" className="text-gray-700 hover:text-indigo-600">تسجيل دخول</a>
           </div>
         </header>
 
@@ -288,12 +288,13 @@
         {activeTab === 'dashboard' && renderDashboard()}
         {activeTab === 'prompts' && (
           <div className="space-y-6">
-           <h2 className="text-2xl font-bold text-gray-800">
-    إدارة البرومبتات.    
-       {!isUserAdmin && (
-    <span className="text-sm text-green-600 bg-green-100 px-2 py-1 rounded mr-2 inline-block">مستخدم عادي - لا يمكنك التعديل</span>
-      )}
-   <h2 className="text-2xl font-bold text-gray-800">إدارة البرومبتات</h2>
+            <h2 className="text-2xl font-bold text-gray-800">إدارة البرومبتات</h2>
+            {/* رسالة للمستخدم العادي */}
+            {!isUserAdmin && (
+              <div className="bg-yellow-100 text-yellow-800 p-3 rounded text-sm">
+                ⚠️ ملاحظة: أنت مستخدم عادي، يمكنك فقط نسخ البرومبتات ولا يمكنك إضافة أو تعديل أو حذف أي شيء.
+              </div>
+            )}
             {/* Search Bar */}
             <div className="mb-4">
               <input
@@ -307,69 +308,70 @@
                 className="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
               />
             </div>
-
             {/* Form لإضافة برومبت */}
-            <form onSubmit={handleAddPrompt} className="bg-white p-6 rounded-lg shadow-md space-y-4">
-              <label className="block text-sm font-medium text-gray-700">نص البرومبت</label>
-              <textarea
-                rows="4"
-                placeholder="مثال: اشرح مفهوم الذكاء الاصطناعي..."
-                value={newPrompt.text}
-                onChange={(e) => {
-                  const text = e.target.value;
-                  setNewPrompt({
-                    ...newPrompt,
-                    text,
-                    tokens: Math.ceil(text.split(/\s+/).length * 1.25),
-                  });
-                }}
-                className="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              ></textarea>
-              <div className="text-sm text-gray-600">
-                عدد tokens المتوقعة: <strong>{Math.ceil(newPrompt.text.split(/\s+/).length * 1.25)}</strong>
-              </div>
-              <label className="block text-sm font-medium text-gray-700 mt-4">القسم</label>
-              <select
-                value={newPrompt.category}
-                onChange={(e) => setNewPrompt({...newPrompt, category: e.target.value})}
-                className="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              >
-                <option value="">اختر قسمًا</option>
-                {categories.map((cat, idx) => (
-                  <option key={idx} value={cat}>{cat}</option>
-                ))}
-              </select>
-              <div className="mt-4">
-                <label className="block text-sm font-medium text-gray-700">أدخل اسم قسم جديد (اختياري)</label>
-                <input
-                  type="text"
-                  placeholder="مثال: تسويقي"
+            {isUserAdmin && (
+              <form onSubmit={handleAddPrompt} className="bg-white p-6 rounded-lg shadow-md space-y-4">
+                <label className="block text-sm font-medium text-gray-700">نص البرومبت</label>
+                <textarea
+                  rows="4"
+                  placeholder="مثال: اشرح مفهوم الذكاء الاصطناعي..."
+                  value={newPrompt.text}
+                  onChange={(e) => {
+                    const text = e.target.value;
+                    setNewPrompt({
+                      ...newPrompt,
+                      text,
+                      tokens: Math.ceil(text.split(/\s+/).length * 1.25),
+                    });
+                  }}
+                  className="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                ></textarea>
+                <div className="text-sm text-gray-600">
+                  عدد tokens المتوقعة: <strong>{Math.ceil(newPrompt.text.split(/\s+/).length * 1.25)}</strong>
+                </div>
+                <label className="block text-sm font-medium text-gray-700 mt-4">القسم</label>
+                <select
                   value={newPrompt.category}
                   onChange={(e) => setNewPrompt({...newPrompt, category: e.target.value})}
                   className="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                />
-              </div>
-              <div className="flex flex-wrap gap-3 pt-2">
-                <button
-                  type="submit"
-                  className="inline-flex justify-center items-center px-4 py-3 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 transition"
                 >
-                  إضافة برومبت
-                </button>
-                <button
-                  type="button"
-                  onClick={handleAddCategory}
-                  disabled={!newPrompt.category.trim() || categories.includes(newPrompt.category)}
-                  className={`inline-flex justify-center items-center px-4 py-3 border border-transparent text-sm font-medium rounded-md shadow-sm text-white transition ${
-                    categories.includes(newPrompt.category)
-                      ? 'bg-gray-400 cursor-not-allowed'
-                      : 'bg-blue-600 hover:bg-blue-700'
-                  }`}
-                >
-                  إضافة قسم جديد
-                </button>
-              </div>
-            </form>
+                  <option value="">اختر قسمًا</option>
+                  {categories.map((cat, idx) => (
+                    <option key={idx} value={cat}>{cat}</option>
+                  ))}
+                </select>
+                <div className="mt-4">
+                  <label className="block text-sm font-medium text-gray-700">أدخل اسم قسم جديد (اختياري)</label>
+                  <input
+                    type="text"
+                    placeholder="مثال: تسويقي"
+                    value={newPrompt.category}
+                    onChange={(e) => setNewPrompt({...newPrompt, category: e.target.value})}
+                    className="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  />
+                </div>
+                <div className="flex flex-wrap gap-3 pt-2">
+                  <button
+                    type="submit"
+                    className="inline-flex justify-center items-center px-4 py-3 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 transition"
+                  >
+                    إضافة برومبت
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleAddCategory}
+                    disabled={!newPrompt.category.trim() || categories.includes(newPrompt.category)}
+                    className={`inline-flex justify-center items-center px-4 py-3 border border-transparent text-sm font-medium rounded-md shadow-sm text-white transition ${
+                      categories.includes(newPrompt.category)
+                        ? 'bg-gray-400 cursor-not-allowed'
+                        : 'bg-blue-600 hover:bg-blue-700'
+                    }`}
+                  >
+                    إضافة قسم جديد
+                  </button>
+                </div>
+              </form>
+            )}
 
             {/* زر التصدير */}
             <div className="flex justify-end">
@@ -449,55 +451,53 @@
             )}
 
             {/* قائمة الأقسام */}
-            <div className="mt-8">
-              <h3 className="text-xl font-semibold text-gray-800 mb-4">الأقسام</h3>
-              <ul className="space-y-2">
-                {categories.map(cat => (
-                  <li key={cat} className="bg-gray-50 p-3 rounded flex justify-between items-center hover:bg-gray-100 transition">
-                    {editingCategory === cat ? (
-                      <>
-                        <input
-                          className="border p-1 rounded w-full"
-                          value={editCategoryName}
-                          onChange={(e) => setEditCategoryName(e.target.value)}
-                        />
-                        <button
-                          onClick={handleUpdateCategory}
-                          className="text-green-600 mr-2"
-                        >
-                          حفظ
-                        </button>
-                      </>
-                    ) : (
-                      <>
-                        <span>{cat}</span>
-                        <div className="flex space-x-2 space-x-reverse">
-                          {isUserAdmin && (
-                            <>
-                              <button
-                                onClick={() => handleStartEditCategory(cat)}
-                                className="text-yellow-600 hover:text-yellow-800"
-                              >
-                                تعديل
-                              </button>
-                              <button
-                                onClick={() => handleDeleteCategory(cat)}
-                                className="text-red-600 hover:text-red-800"
-                              >
-                                حذف
-                              </button>
-                            </>
-                          )}
-                        </div>
-                      </>
-                    )}
-                  </li>
-                ))}
-                {categories.length === 0 && (
-                  <li className="text-center py-2 text-gray-500">لا توجد أقسام مضافة بعد</li>
-                )}
-              </ul>
-            </div>
+            {isUserAdmin && (
+              <div className="mt-8">
+                <h3 className="text-xl font-semibold text-gray-800 mb-4">الأقسام</h3>
+                <ul className="space-y-2">
+                  {categories.map(cat => (
+                    <li key={cat} className="bg-gray-50 p-3 rounded flex justify-between items-center hover:bg-gray-100 transition">
+                      {editingCategory === cat ? (
+                        <>
+                          <input
+                            className="border p-1 rounded w-full"
+                            value={editCategoryName}
+                            onChange={(e) => setEditCategoryName(e.target.value)}
+                          />
+                          <button
+                            onClick={handleUpdateCategory}
+                            className="text-green-600 mr-2"
+                          >
+                            حفظ
+                          </button>
+                        </>
+                      ) : (
+                        <>
+                          <span>{cat}</span>
+                          <div className="flex space-x-2 space-x-reverse">
+                            <button
+                              onClick={() => handleStartEditCategory(cat)}
+                              className="text-yellow-600 hover:text-yellow-800"
+                            >
+                              تعديل
+                            </button>
+                            <button
+                              onClick={() => handleDeleteCategory(cat)}
+                              className="text-red-600 hover:text-red-800"
+                            >
+                              حذف
+                            </button>
+                          </div>
+                        </>
+                      )}
+                    </li>
+                  ))}
+                  {categories.length === 0 && (
+                    <li className="text-center py-2 text-gray-500">لا توجد أقسام مضافة بعد</li>
+                  )}
+                </ul>
+              </div>
+            )}
           </div>
         )}
 
