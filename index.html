@@ -19,7 +19,7 @@
     }
   </style>
 </head>
-<body class="p-6 bg-gray-50 min-h-screen">
+<body class="bg-gray-50 min-h-screen">
 
 <div id="root"></div>
 
@@ -192,8 +192,13 @@
 
     // 📋 نسخ نص البرومبت
     const copyPromptText = (text) => {
-      navigator.clipboard.writeText(text);
-      alert("تم نسخ البرومبت!");
+      try {
+        navigator.clipboard.writeText(text.trim());
+        alert("✅ تم نسخ البرومبت!");
+      } catch (err) {
+        console.error("فشل النسخ:", err);
+        alert("❌ فشل النسخ، يرجى المحاولة مرة أخرى.");
+      }
     };
 
     // 💡 عرض لوحة التحكم للمستخدم العادي أو المسؤول
@@ -210,7 +215,7 @@
           {/* رسالة للمستخدم العادي */}
           {!isUserAdmin && (
             <div className="bg-yellow-100 text-yellow-800 p-3 rounded text-sm">
-              ⚠️ ملاحظة: أنت مستخدم عادي، يمكنك فقط النقر على القسم لرؤية البرومبتات.
+              ⚠️ ملاحظة: أنت مستخدم عادي، يمكنك فقط النقر على القسم لرؤية البرومبتات ولا يمكنك التعديل.
             </div>
           )}
 
@@ -230,53 +235,53 @@
             </div>
           </div>
 
-   {/* قائمة الأقسام للمستخدم العادي */}
-{!isUserAdmin ? (
-  <div>
-    <h3 className="text-xl font-semibold text-gray-800 mb-4">الأقسام المتاحة</h3>
-    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-      {categories.map(cat => (
-        <a
-          key={cat}
-          href={`category-prompts.html?category=${encodeURIComponent(cat)}`}
-          className="bg-white p-4 rounded shadow hover:bg-gray-50 transition flex justify-between items-center"
-        >
-          <span className="font-medium text-indigo-600">{cat}</span>
-          <svg className="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
-          </svg>
-        </a>
-      ))}
-      {categories.length === 0 && (
-        <p className="text-gray-500">لا توجد أقسام مضافة بعد.</p>
-      )}
-    </div>
-  </div>
-) : (
-  // الجدول العادي للمسؤول
-  <div className="bg-white rounded-lg shadow-md overflow-hidden">
-    <table className="min-w-full divide-y divide-gray-200">
-      <thead className="bg-gray-50">
-        <tr>
-          <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">القسم</th>
-          <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">عدد البرومبتات</th>
-          <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">إجمالي tokens</th>
-          <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">متوسط tokens</th>
-        </tr>
-      </thead>
-      <tbody className="bg-white divide-y divide-gray-200">
-        {Object.entries(stats).map(([category, data]) => (
-          <tr key={category} className="hover:bg-gray-50">
-            <td className="px-6 py-4 whitespace-nowrap">{category}</td>
-            <td className="px-6 py-4 whitespace-nowrap">{data.count}</td>
-            <td className="px-6 py-4 whitespace-nowrap">{data.totalTokens}</td>
-            <td className="px-6 py-4 whitespace-nowrap">{data.averageTokens}</td>
-          </tr>
-        ))}
-      </tbody>
-    </table>
-  </div>
-)}
+          {/* قائمة الأقسام للمستخدم العادي */}
+          {!isUserAdmin ? (
+            <div>
+              <h3 className="text-xl font-semibold text-gray-800 mb-4">الأقسام المتاحة</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                {categories.map(cat => (
+                  <a
+                    key={cat}
+                    href={`category-prompts.html?category=${encodeURIComponent(cat)}`}
+                    className="bg-white p-4 rounded shadow hover:bg-gray-50 transition flex justify-between items-center"
+                  >
+                    <span className="font-medium text-indigo-600">{cat}</span>
+                    <svg className="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
+                    </svg>
+                  </a>
+                ))}
+                {categories.length === 0 && (
+                  <p className="text-gray-500">لا توجد أقسام مضافة بعد.</p>
+                )}
+              </div>
+            </div>
+          ) : (
+            // Table of Category Stats للمسؤول فقط
+            <div className="bg-white rounded-lg shadow-md overflow-hidden">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">القسم</th>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">عدد البرومبتات</th>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">إجمالي tokens</th>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">متوسط tokens</th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {Object.entries(stats).map(([category, data]) => (
+                    <tr key={category} className="hover:bg-gray-50">
+                      <td className="px-6 py-4 whitespace-nowrap">{category}</td>
+                      <td className="px-6 py-4 whitespace-nowrap">{data.count}</td>
+                      <td className="px-6 py-4 whitespace-nowrap">{data.totalTokens}</td>
+                      <td className="px-6 py-4 whitespace-nowrap">{data.averageTokens}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
       );
     };
@@ -365,14 +370,16 @@
           </form>
 
           {/* زر التصدير */}
-          <div className="flex justify-end">
-            <button
-              onClick={exportPromptsToMarkdown}
-              className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded text-sm"
-            >
-              📥 تصدير إلى Markdown
-            </button>
-          </div>
+          {isUserAdmin && (
+            <div className="flex justify-end">
+              <button
+                onClick={exportPromptsToMarkdown}
+                className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded text-sm"
+              >
+                📥 تصدير إلى Markdown
+              </button>
+            </div>
+          )}
 
           {/* قائمة البرومبتات */}
           <ul className="divide-y divide-gray-200">
@@ -393,12 +400,14 @@
                       >
                         نسخ
                       </button>
-                      <button
-                        onClick={() => handleDeletePrompt(prompt.id)}
-                        className="text-red-600 hover:text-red-800 transition"
-                      >
-                        حذف
-                      </button>
+                      {isUserAdmin && (
+                        <button
+                          onClick={() => handleDeletePrompt(prompt.id)}
+                          className="text-red-600 hover:text-red-800 transition"
+                        >
+                          حذف
+                        </button>
+                      )}
                     </div>
                   </div>
                 </li>
@@ -408,7 +417,7 @@
             )}
           </ul>
 
-          {/* أزرار التنقل بين الصفحات */}
+          {/* Pagination Controls */}
           {filteredPrompts.length > itemsPerPage && (
             <div className="flex justify-center space-x-2 space-x-reverse mt-6">
               <button
@@ -450,57 +459,59 @@
           )}
 
           {/* قائمة الأقسام */}
-          <div className="mt-8">
-            <h3 className="text-xl font-semibold text-gray-800 mb-4">الأقسام</h3>
-            <ul className="space-y-2">
-              {categories.map(cat => (
-                <li key={cat} className="bg-gray-50 p-3 rounded flex justify-between items-center hover:bg-gray-100 transition">
-                  {editingCategory === cat ? (
-                    <>
-                      <input
-                        className="border p-1 rounded w-full"
-                        value={editCategoryName}
-                        onChange={(e) => setEditCategoryName(e.target.value)}
-                      />
-                      <button
-                        onClick={handleUpdateCategory}
-                        className="text-green-600 mr-2"
-                      >
-                        حفظ
-                      </button>
-                    </>
-                  ) : (
-                    <>
-                      <span>{cat}</span>
-                      <div className="flex space-x-2 space-x-reverse">
+          {isUserAdmin && (
+            <div className="mt-8">
+              <h3 className="text-xl font-semibold text-gray-800 mb-4">الأقسام</h3>
+              <ul className="space-y-2">
+                {categories.map(cat => (
+                  <li key={cat} className="bg-gray-50 p-3 rounded flex justify-between items-center hover:bg-gray-100 transition">
+                    {editingCategory === cat ? (
+                      <>
+                        <input
+                          className="border p-1 rounded w-full"
+                          value={editCategoryName}
+                          onChange={(e) => setEditCategoryName(e.target.value)}
+                        />
                         <button
-                          onClick={() => handleStartEditCategory(cat)}
-                          className="text-yellow-600 hover:text-yellow-800"
+                          onClick={handleUpdateCategory}
+                          className="text-green-600 mr-2"
                         >
-                          تعديل
+                          حفظ
                         </button>
-                        <button
-                          onClick={() => handleDeleteCategory(cat)}
-                          className="text-red-600 hover:text-red-800"
-                        >
-                          حذف
-                        </button>
-                      </div>
-                    </>
-                  )}
-                </li>
-              ))}
-              {categories.length === 0 && (
-                <li className="text-center py-2 text-gray-500">لا توجد أقسام مضافة بعد.</li>
-              )}
-            </ul>
-          </div>
+                      </>
+                    ) : (
+                      <>
+                        <span>{cat}</span>
+                        <div className="flex space-x-2 space-x-reverse">
+                          <button
+                            onClick={() => handleStartEditCategory(cat)}
+                            className="text-yellow-600 hover:text-yellow-800"
+                          >
+                            تعديل
+                          </button>
+                          <button
+                            onClick={() => handleDeleteCategory(cat)}
+                            className="text-red-600 hover:text-red-800"
+                          >
+                            حذف
+                          </button>
+                        </div>
+                      </>
+                    )}
+                  </li>
+                ))}
+                {categories.length === 0 && (
+                  <li className="text-center py-2 text-gray-500">لا توجد أقسام مضافة بعد.</li>
+                )}
+              </ul>
+            </div>
+          )}
         </div>
       );
     };
 
     return (
-      <div className="container mx-auto max-w-6xl">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <header className="flex justify-between items-center pb-6 border-b border-gray-200 mb-6">
           <h1 className="text-3xl font-bold text-indigo-700">{signature}</h1>
