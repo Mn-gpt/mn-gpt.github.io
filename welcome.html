@@ -2,77 +2,51 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>مرحباً بك - MN-GPT</title>
   <script src="https://cdn.tailwindcss.com"></script> 
   <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css" />
 </head>
 <body class="bg-gray-50 min-h-screen flex flex-col">
-
-  <!-- Navigation Bar -->
   <nav class="bg-white shadow-sm">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div class="flex justify-between h-16 items-center">
         <span class="text-xl font-bold text-indigo-600">MN-GPT</span>
         <div class="space-x-4 space-x-reverse">
           <a href="index.html" class="text-gray-700 hover:text-indigo-600">الرئيسية</a>
-          <a href="login.html" class="text-gray-700 hover:text-indigo-600">تسجيل الدخول</a>
+          <a href="login.html" class="text-gray-700 hover:text-indigo-600">خروج</a>
         </div>
       </div>
     </div>
   </nav>
 
-  <!-- Main Content -->
-  <main class="flex-grow max-w-7xl mx-auto px-4 py-8">
-    <div class="bg-white shadow overflow-hidden sm:rounded-lg mb-8">
-      <div class="px-4 py-5 sm:px-6">
-        <h1 class="text-2xl leading-6 font-bold text-gray-900">مرحباً بك في MN-GPT</h1>
-        <p class="mt-1 max-w-2xl text-sm text-gray-500">منصة إدارة البرومبتات الذكية</p>
-      </div>
-      <div class="border-t border-gray-200 px-4 py-5 sm:p-6">
-        <dl class="grid grid-cols-1 gap-x-4 gap-y-8 sm:grid-cols-3">
-          <div><dt class="text-sm font-medium text-gray-500">إجمالي البرومبتات</dt><dd class="mt-1 text-sm text-gray-900">5</dd></div>
-          <div><dt class="text-sm font-medium text-gray-500">إجمالي التوكيانات</dt><dd class="mt-1 text-sm text-gray-900">164</dd></div>
-          <div><dt class="text-sm font-medium text-gray-500">عدد الأقسام</dt><dd class="mt-1 text-sm text-gray-900">5</dd></div>
-        </dl>
-
-        <div class="mt-6 overflow-hidden rounded-lg border border-gray-200">
-          <table class="min-w-full divide-y divide-gray-200">
-            <thead class="bg-gray-50">
-              <tr>
-                <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">القسم</th>
-                <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">عدد البرومبتات</th>
-                <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">إجمالي التوكيانات</th>
-                <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">متوسط التوكيانات</th>
-              </tr>
-            </thead>
-            <tbody class="bg-white divide-y divide-gray-200">
-              <tr><td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">عام</td><td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">0</td><td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">0</td><td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">0</td></tr>
-              <tr><td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">تعليمي</td><td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">2</td><td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">60</td><td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">30</td></tr>
-              <tr><td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">إبداعي</td><td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">1</td><td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">45</td><td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">45</td></tr>
-              <tr><td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">تحليل بيانات</td><td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">1</td><td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">18</td><td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">18</td></tr>
-              <tr><td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">برمجة</td><td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">1</td><td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">41</td><td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">41</td></tr>
-            </tbody>
-          </table>
-        </div>
+  <main class="flex-grow max-w-7xl mx-auto px-4 py-8 text-center">
+    <h1 class="text-3xl font-bold text-gray-900 mb-4">مرحباً بك في MN-GPT</h1>
+    <p class="text-lg text-gray-700 mb-6">منصة إدارة البرومبتات الذكية</p>
+    
+    <div class="bg-white shadow overflow-hidden sm:rounded-lg p-6 max-w-md mx-auto">
+      <p class="mb-4">تم تسجيل دخولك كـ:</p>
+      <p id="userEmail" class="font-semibold text-indigo-600"></p>
+      
+      <div class="mt-6">
+        <a href="index.html" class="btn-primary inline-block">الدخول إلى لوحة التحكم</a>
       </div>
     </div>
   </main>
 
-  <!-- Footer -->
   <footer class="bg-white border-t border-gray-200 text-center py-4 text-sm text-gray-500">
     &copy; {{ new Date().getFullYear() }} MN-GPT. جميع الحقوق محفوظة.
   </footer>
 
-  <!-- JS to check login -->
   <script>
     const isLoggedIn = localStorage.getItem('isLoggedIn');
+    const userEmail = localStorage.getItem('userEmail');
 
     if (!isLoggedIn) {
       alert('يجب تسجيل الدخول أولاً');
       window.location.href = 'login.html';
     }
+
+    document.getElementById('userEmail').textContent = userEmail;
   </script>
 </body>
 </html>
