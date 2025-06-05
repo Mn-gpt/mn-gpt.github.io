@@ -288,7 +288,12 @@
         {activeTab === 'dashboard' && renderDashboard()}
         {activeTab === 'prompts' && (
           <div className="space-y-6">
-            <h2 className="text-2xl font-bold text-gray-800">إدارة البرومبتات</h2>
+           <h2 className="text-2xl font-bold text-gray-800">
+    إدارة البرومبتات.    
+       {!isUserAdmin && (
+    <span className="text-sm text-green-600 bg-green-100 px-2 py-1 rounded mr-2 inline-block">مستخدم عادي - لا يمكنك التعديل</span>
+      )}
+   <h2 className="text-2xl font-bold text-gray-800">إدارة البرومبتات</h2>
             {/* Search Bar */}
             <div className="mb-4">
               <input
