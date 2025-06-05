@@ -10,7 +10,12 @@
   <a href="index.html" class="text-blue-600 hover:underline mb-4 inline-block">العودة إلى الصفحة الرئيسية</a>
 
   <input type="text" id="searchAdmin" placeholder="بحث..." class="w-full p-2 border rounded mb-4" />
-
+<script>
+  const loggedInUser = localStorage.getItem('loggedInUser');
+  if (!loggedInUser) {
+    window.location.href = 'login.html';
+  }
+</script>
   <div id="promptList" class="space-y-4"></div>
   <button onclick="exportToCSV()" class="mt-4 bg-green-600 text-white px-4 py-2 rounded">تصدير CSV</button>
 
