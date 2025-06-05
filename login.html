@@ -3,52 +3,65 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>تسجيل الدخول - MN.gpt</title>
-  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"  rel="stylesheet" />
+  <title>تسجيل الدخول - MN-GPT</title>
+  <script src="https://cdn.tailwindcss.com"></script> 
+  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css" />
 </head>
-<body class="bg-gray-50 min-h-screen flex items-center justify-center p-6">
+<body class="bg-gray-50 min-h-screen flex items-center justify-center">
 
-  <div class="w-full max-w-md bg-white p-8 rounded shadow-md">
-    <h2 class="text-2xl font-bold text-indigo-700 mb-6">مرحبًا بك في MN.gpt</h2>
-    
-    <form id="loginForm" class="space-y-4">
-      <div>
-        <label for="email" class="block text-sm font-medium text-gray-700">البريد الإلكتروني</label>
-        <input type="email" id="email" required class="mt-1 w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="example@example.com" />
+  <div class="w-full max-w-md">
+    <div class="bg-white shadow overflow-hidden sm:rounded-lg p-6 space-y-6">
+      <h2 class="text-2xl leading-6 font-bold text-gray-900 text-center">تسجيل الدخول</h2>
+
+      <form id="loginForm" class="space-y-6">
+        <div>
+          <label for="email" class="block text-sm font-medium text-gray-700 mb-1">بريد جوجل الإلكتروني</label>
+          <input type="email" name="email" id="email" required 
+            class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+            placeholder="example@gmail.com" />
+        </div>
+
+        <div>
+          <label for="ip" class="block text-sm font-medium text-gray-700 mb-1">عنوان IP (تم اكتشافه تلقائياً)</label>
+          <input type="text" name="ip" id="ip" value="192.168.1.1" readonly
+            class="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-md cursor-not-allowed sm:text-sm" />
+        </div>
+
+        <button type="submit" class="btn-primary w-full">تسجيل الدخول</button>
+      </form>
+
+      <div class="relative my-6">
+        <div class="absolute inset-0 flex items-center"><div class="w-full border-t border-gray-300"></div></div>
+        <div class="relative flex justify-center text-sm"><span class="px-2 bg-white text-gray-500">أو</span></div>
       </div>
-      <div>
-        <label for="password" class="block text-sm font-medium text-gray-700">كلمة المرور</label>
-        <input type="password" id="password" required class="mt-1 w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="••••••••" />
-      </div>
-      <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded transition">
-        تسجيل الدخول
+
+      <button onclick="window.location.href='index.html'" class="btn-secondary w-full text-center">
+        العودة للرئيسية
       </button>
-      <p class="text-center mt-4">
-        <a href="register.html" class="text-indigo-600 hover:text-indigo-800">ليس لديك حساب؟ اضغط هنا للتسجيل</a>
-      </p>
-    </form>
+    </div>
+
+    <div class="mt-4 text-center text-sm text-gray-600">
+      هذه مجرد صفحة تسجيل دخول تجريبية.
+    </div>
   </div>
 
+  <!-- JS to save login state -->
   <script>
     document.getElementById('loginForm').addEventListener('submit', function(e) {
       e.preventDefault();
       const email = document.getElementById('email').value.trim();
-      const password = document.getElementById('password').value;
 
-      if (!email || !password) {
-        alert("يرجى ملء الحقول");
+      if (!email || !email.endsWith('@gmail.com')) {
+        alert('يرجى إدخال بريد إلكتروني صحيح من جوجل (مثل example@gmail.com)');
         return;
       }
 
-      // البحث عن المستخدم في localStorage
-      const user = JSON.parse(localStorage.getItem(`user_${email}`));
+      // Save fake login state in localStorage
+      localStorage.setItem('isLoggedIn', 'true');
+      localStorage.setItem('userEmail', email);
 
-      if (user && user.password === password) {
-        localStorage.setItem('loggedInUser', email);
-        window.location.href = 'admin.html';
-      } else {
-        alert("البريد أو كلمة المرور غير صحيحة");
-      }
+      window.location.href = 'welcome.html';
     });
   </script>
 </body>
