@@ -1,4 +1,4 @@
-<DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8" />
@@ -12,7 +12,7 @@
     <div class="flex justify-between h-16 items-center">
       <span class="text-xl font-bold text-indigo-600">MN-GPT</span>
       <div class="space-x-4 space-x-reverse">
-        <a href="index.html" class="text-gray-700 hover:text-indigo-600">الرئيسية</a>
+        <a href="welcome.html" class="text-gray-700 hover:text-indigo-600">الرئيسية</a>
         <a href="login.html" class="text-gray-700 hover:text-indigo-600">تسجيل الخروج</a>
       </div>
     </div>
@@ -33,11 +33,14 @@
 </main>
 
 <script>
+  // الحصول على اسم القسم من الرابط
   const urlParams = new URLSearchParams(window.location.search);
   const categoryName = urlParams.get('category');
+
   document.getElementById('categoryName').textContent = categoryName;
 
-  const prompts = JSON.parse(localStorage.getItem('prompts')) || [
+  // البيانات التجريبية
+  const prompts = [
     { id: 1, text: 'اشرح مفهوم الذكاء الاصطناعي بطريقة بسيطة.', category: 'تعليمي', tokens: 23 },
     { id: 2, text: 'اكتب قصة قصيرة عن رحلة إلى الفضاء.', category: 'إبداعي', tokens: 45 },
     { id: 3, text: 'ما هو تأثير التكنولوجيا على التعليم؟', category: 'تحليل بيانات', tokens: 18 },
