@@ -9,7 +9,7 @@
   <script src="https://unpkg.com/react@18/umd/react.development.js"  crossorigin></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"  crossorigin></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script> 
-  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"  rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"  rel="stylesheet" />
 
   <style>
     body {
@@ -19,8 +19,8 @@
     }
   </style>
 </head>
-<body class="min-h-screen bg-gray-50 p-6">
-<div id="root" class="max-w-6xl mx-auto"></div>
+<body class="min-h-screen bg-gray-100 text-gray-800">
+<div id="root" class="max-w-6xl mx-auto px-4 py-8"></div>
 
 <script type="text/babel">
 
@@ -46,11 +46,11 @@
     const [editCategoryName, setEditCategoryName] = useState('');
     const [signature] = useState('MN.gpt');
 
-    // 🔽 تحميل البيانات عند التهيئة
+    // 🔽 تحميل البيانات من localStorage عند التهيئة
     useEffect(() => {
       const savedPrompts = JSON.parse(localStorage.getItem('prompts')) || [];
       const savedCategories = JSON.parse(localStorage.getItem('categories')) || defaultCategories;
-      
+
       setPrompts(savedPrompts);
       setCategories(savedCategories);
     }, []);
@@ -65,7 +65,7 @@
     const handleAddPrompt = (e) => {
       e.preventDefault();
       if (!newPrompt.text || !newPrompt.category) return;
-      
+
       const promptToAdd = { ...newPrompt, id: Date.now() };
       const updatedPrompts = [...prompts, promptToAdd];
       const updatedCategories = categories.includes(newPrompt.category) ? categories : [...categories, newPrompt.category];
@@ -92,17 +92,15 @@
       const updatedCategories = [...categories, categoryToAdd];
       setCategories(updatedCategories);
       saveToLocalStorage(prompts, updatedCategories);
-      
-      setNewPrompt({...newPrompt, category: ''}); // تفريغ الحقل
+      setNewPrompt({ ...newPrompt, category: '' }); // تفريغ الحقل بعد الإضافة
     };
 
-    // ✏️ تعديل اسم القسم - بدء
+    // ✏️ تعديل اسم القسم
     const handleStartEditCategory = (category) => {
       setEditingCategory(category);
       setEditCategoryName(category);
     };
 
-    // ✏️ تعديل اسم القسم - حفظ
     const handleUpdateCategory = () => {
       if (!editCategoryName.trim()) return;
 
@@ -170,14 +168,12 @@
               <p className="text-3xl font-bold text-green-600">{categories.length}</p>
             </div>
           </div>
-
           <div className="bg-white rounded-lg shadow-md overflow-hidden">
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
                   <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">القسم</th>
                   <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">عدد البرومبتات</th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">إجمالي التوكيانات</th>
                   <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">متوسط التوكيانات</th>
                 </tr>
               </thead>
@@ -186,7 +182,6 @@
                   <tr key={category} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap">{category}</td>
                     <td className="px-6 py-4 whitespace-nowrap">{data.count}</td>
-                    <td className="px-6 py-4 whitespace-nowrap">{data.totalTokens}</td>
                     <td className="px-6 py-4 whitespace-nowrap">{data.averageTokens}</td>
                   </tr>
                 ))}
@@ -200,17 +195,25 @@
     return (
       <div className="container mx-auto">
         {/* Header */}
-        <header className="flex justify-between items-center pb-4 border-b border-gray-200 mb-6">
+        <header className="flex justify-between items-center pb-6 border-b border-gray-200 mb-6">
           <h1 className="text-3xl font-bold text-indigo-700">{signature}</h1>
+          <button
+            onClick={() => {
+              setNewPrompt({ text: '', category: '', tokens: 0 });
+            }}
+            className="text-gray-600 hover:text-indigo-600"
+          >
+            تحديث
+          </button>
         </header>
 
         {/* Tabs Navigation */}
-        <div className="flex space-x-4 rtl:space-x-reverse border-b border-gray-200 mb-6">
+        <div className="flex space-x-4 rtl:space-x-reverse mb-6 border-b border-gray-200">
           <button
             onClick={() => setActiveTab('dashboard')}
             className={`py-2 px-4 font-medium ${
-              activeTab === 'dashboard'
-                ? 'border-b-2 border-indigo-600 text-indigo-600'
+              activeTab === 'dashboard' 
+                ? 'border-b-2 border-indigo-500 text-indigo-600' 
                 : 'text-gray-600'
             }`}
           >
@@ -219,8 +222,8 @@
           <button
             onClick={() => setActiveTab('prompts')}
             className={`py-2 px-4 font-medium ${
-              activeTab === 'prompts'
-                ? 'border-b-2 border-indigo-600 text-indigo-600'
+              activeTab === 'prompts' 
+                ? 'border-b-2 border-indigo-500 text-indigo-600' 
                 : 'text-gray-600'
             }`}
           >
@@ -228,27 +231,25 @@
           </button>
         </div>
 
-        {/* Dashboard Tab */}
+        {/* Tab Content */}
         {activeTab === 'dashboard' && renderDashboard()}
-
-        {/* Prompts Tab */}
         {activeTab === 'prompts' && (
           <div className="space-y-6">
             <h2 className="text-2xl font-bold text-gray-800">إدارة البرومبتات</h2>
 
             {/* Form لإضافة برومبت */}
-            <form onSubmit={handleAddPrompt} className="bg-white shadow rounded-lg p-6 space-y-4">
+            <form onSubmit={handleAddPrompt} className="bg-white p-6 rounded-lg shadow-md space-y-4">
               <input
                 type="text"
                 placeholder="مثال: اشرح مفهوم الذكاء الاصطناعي..."
                 value={newPrompt.text}
                 onChange={(e) => setNewPrompt({...newPrompt, text: e.target.value})}
-                className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
               />
               <select
                 value={newPrompt.category}
                 onChange={(e) => setNewPrompt({...newPrompt, category: e.target.value})}
-                className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
               >
                 <option value="">اختر قسمًا</option>
                 {categories.map((cat, idx) => (
@@ -260,13 +261,12 @@
                 placeholder="عدد التوكيانات"
                 value={newPrompt.tokens}
                 onChange={(e) => setNewPrompt({...newPrompt, tokens: parseInt(e.target.value) || 0})}
-                className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
               />
-
               <div className="flex flex-wrap gap-3 pt-2">
                 <button
                   type="submit"
-                  className="inline-flex justify-center items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 transition"
+                  className="inline-flex justify-center items-center px-4 py-3 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition"
                 >
                   إضافة برومبت
                 </button>
@@ -274,7 +274,7 @@
                   type="button"
                   onClick={handleAddCategory}
                   disabled={!newPrompt.category.trim() || categories.includes(newPrompt.category)}
-                  className={`inline-flex justify-center items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition ${
+                  className={`inline-flex justify-center items-center px-4 py-3 border border-transparent text-sm font-medium rounded-md shadow-sm text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition ${
                     categories.includes(newPrompt.category)
                       ? 'bg-gray-400 cursor-not-allowed'
                       : 'bg-blue-600 hover:bg-blue-700'
@@ -286,76 +286,49 @@
             </form>
 
             {/* قائمة البرومبتات */}
-            <div className="bg-white shadow rounded-lg overflow-hidden">
-              <div className="p-4 border-b border-gray-200">
-                <h3 className="font-semibold text-lg">قائمة البرومبتات</h3>
-              </div>
-              <ul className="divide-y divide-gray-200">
-                {prompts.map(prompt => (
-                  <li key={prompt.id} className="p-4 flex justify-between items-center hover:bg-gray-50 transition">
-                    <span>{prompt.text} — <strong>{prompt.category}</strong> ({prompt.tokens} توكيان)</span>
-                    <button
-                      onClick={() => handleDeletePrompt(prompt.id)}
-                      className="text-red-600 hover:text-red-800"
-                    >
-                      حذف
-                    </button>
-                  </li>
-                ))}
-                {prompts.length === 0 && (
-                  <li className="p-4 text-center text-gray-500">لا توجد برومبتات مضافة بعد</li>
-                )}
-              </ul>
-            </div>
+            <ul className="space-y-2">
+              {prompts.map(prompt => (
+                <li key={prompt.id} className="bg-white p-4 rounded shadow-sm flex justify-between items-center hover:shadow-md transition">
+                  <span>{prompt.text} — <strong>{prompt.category}</strong> ({prompt.tokens} توكيان)</span>
+                  <button
+                    onClick={() => handleDeletePrompt(prompt.id)}
+                    className="text-red-600 hover:text-red-800 transition"
+                  >
+                    حذف
+                  </button>
+                </li>
+              ))}
+              {prompts.length === 0 && (
+                <li className="text-center py-4 text-gray-500">لا توجد برومبتات مضافة بعد</li>
+              )}
+            </ul>
 
             {/* قائمة الأقسام */}
-            <div className="bg-white shadow rounded-lg overflow-hidden">
-              <div className="p-4 border-b border-gray-200">
-                <h3 className="font-semibold text-lg">الأقسام</h3>
-              </div>
-              <ul className="divide-y divide-gray-200">
+            <div className="mt-8">
+              <h3 className="text-xl font-semibold text-gray-800 mb-4">الأقسام</h3>
+              <ul className="space-y-2">
                 {categories.map(cat => (
-                  <li key={cat} className="p-4 flex justify-between items-center hover:bg-gray-50 transition">
-                    <div className="flex-grow pr-4">
-                      {editingCategory === cat ? (
-                        <div className="flex items-center space-x-2 space-x-reverse">
-                          <input
-                            className="border border-gray-300 rounded p-1 w-40"
-                            value={editCategoryName}
-                            onChange={(e) => setEditCategoryName(e.target.value)}
-                          />
-                          <button
-                            onClick={handleUpdateCategory}
-                            className="text-green-600"
-                          >
-                            حفظ
-                          </button>
-                        </div>
-                      ) : (
-                        <span>{cat}</span>
-                      )}
-                    </div>
-                    
+                  <li key={cat} className="bg-gray-50 p-3 rounded flex justify-between items-center hover:bg-gray-100 transition">
+                    <span>{cat}</span>
                     <div className="flex space-x-2 space-x-reverse">
-                      {editingCategory !== cat && (
-                        <>
-                          <button
-                            onClick={() => handleStartEditCategory(cat)}
-                            className="text-yellow-600 hover:text-yellow-800"
-                          >
-                            تعديل
-                          </button>
-                          <button
-                            onClick={() => handleDeleteCategory(cat)}
-                            className="text-red-600 hover:text-red-800"
-                          >
-                            حذف
-                          </button>
-                        </>
-                      )}
+                      <button
+                        onClick={() => handleStartEditCategory(cat)}
+                        className="text-yellow-600 hover:text-yellow-800"
+                      >
+                        تعديل
+                      </button>
+                      <button
+                        onClick={() => handleDeleteCategory(cat)}
+                        className="text-red-600 hover:text-red-800"
+                      >
+                        حذف
+                      </button>
                     </div>
                   </li>
                 ))}
+                {categories.length === 0 && (
+                  <li className="text-center py-2 text-gray-500">لا توجد أقسام مضافة بعد</li>
+                )}
               </ul>
             </div>
           </div>
