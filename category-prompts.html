@@ -2,7 +2,6 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>برومبتات القسم - MN.gpt</title>
   <script src="https://cdn.tailwindcss.com"></script> 
   <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;600&display=swap" rel="stylesheet">
@@ -38,9 +37,9 @@
       </h1>
     </div>
     <div class="border-t border-gray-200 px-4 py-5 sm:p-6">
-      <!-- قائمة البرومبتات -->
+      <!-- سيتم ملؤها ديناميكياً -->
       <ul class="divide-y divide-gray-200">
-        <!-- سيتم ملؤها ديناميكياً -->
+        <!-- سيتم إضافة البرومبتات هنا -->
       </ul>
     </div>
   </div>
@@ -52,12 +51,10 @@
 </footer>
 
 <script>
-  // الحصول على اسم القسم من الرابط (query string)
   const urlParams = new URLSearchParams(window.location.search);
   const categoryName = urlParams.get('category');
   document.getElementById('categoryName').textContent = categoryName;
 
-  // البيانات التجريبية (يمكن استبدالها بالبيانات من localStorage أو API في المستقبل)
   const prompts = JSON.parse(localStorage.getItem('prompts')) || [
     { id: 1, text: 'اشرح مفهوم الذكاء الاصطناعي بطريقة بسيطة.', category: 'تعليمي', tokens: 23 },
     { id: 2, text: 'اكتب قصة قصيرة عن رحلة إلى الفضاء.', category: 'إبداعي', tokens: 45 },
@@ -66,10 +63,7 @@
     { id: 5, text: 'اكتب برنامجًا بلغة جافاسكربت لحساب العوامل.', category: 'برمجة', tokens: 41 },
   ];
 
-  // فلترة البرومبتات حسب القسم
   const filteredPrompts = prompts.filter(p => p.category === categoryName);
-
-  // إضافة البرومبتات إلى الصفحة
   const list = document.querySelector('ul');
 
   if (filteredPrompts.length > 0) {
@@ -84,12 +78,7 @@
               <span>ID: \`${prompt.id}\`</span> • <span>Tokens: \`${prompt.tokens}\`</span>
             </div>
           </div>
-          <button 
-            onclick="copyPrompt('${prompt.text}')" 
-            class="text-blue-600 hover:text-blue-800 transition"
-          >
-            نسخ
-          </button>
+          <button onclick="copyPrompt('${prompt.text}')" class="text-blue-600 hover:text-blue-800 transition">نسخ</button>
         </div>
       `;
       list.appendChild(li);
@@ -97,16 +86,14 @@
   } else {
     const empty = document.createElement('li');
     empty.className = 'text-center py-4 text-gray-500';
-    empty.textContent = 'لا توجد برومبتات مضافة لهذا القسم بعد.';
+    empty.textContent = 'لا توجد برومبتات مضافة لهذا القسم.';
     list.appendChild(empty);
   }
 
-  // وظيفة النسخ
   function copyPrompt(text) {
     navigator.clipboard.writeText(text);
     alert("تم نسخ البرومبت!");
   }
 </script>
-
 </body>
 </html>
