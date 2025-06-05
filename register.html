@@ -1,0 +1,71 @@
+<DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>إنشاء حساب - MN.gpt</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"  rel="stylesheet" />
+</head>
+<body class="bg-gray-50 min-h-screen flex items-center justify-center p-6">
+
+  <div class="w-full max-w-md bg-white p-8 rounded shadow-md">
+    <h2 class="text-2xl font-bold text-indigo-700 mb-6">أنشئ حسابك الآن</h2>
+    
+    <form id="registerForm" class="space-y-4">
+      <div>
+        <label for="name" class="block text-sm font-medium text-gray-700">اسم المستخدم</label>
+        <input type="text" id="name" required class="mt-1 w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="مثال: أحمد" />
+      </div>
+      <div>
+        <label for="email" class="block text-sm font-medium text-gray-700">البريد الإلكتروني</label>
+        <input type="email" id="email" required class="mt-1 w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="example@example.com" />
+      </div>
+      <div>
+        <label for="password" class="block text-sm font-medium text-gray-700">كلمة المرور</label>
+        <input type="password" id="password" required class="mt-1 w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="••••••••" />
+      </div>
+      <div>
+        <label for="confirmPassword" class="block text-sm font-medium text-gray-700">تأكيد كلمة المرور</label>
+        <input type="password" id="confirmPassword" required class="mt-1 w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="••••••••" />
+      </div>
+      <button type="submit" class="w-full bg-green-600 hover:bg-green-700 text-white py-3 rounded transition">
+        إنشاء الحساب
+      </button>
+      <p class="text-center mt-4">
+        <a href="login.html" class="text-indigo-600 hover:text-indigo-800">لديك حساب؟ سجل دخولك</a>
+      </p>
+    </form>
+  </div>
+
+  <script>
+    document.getElementById('registerForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const name = document.getElementById('name').value.trim();
+      const email = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value;
+      const confirmPassword = document.getElementById('confirmPassword').value;
+
+      if (!name || !email || !password || !confirmPassword) {
+        alert("يرجى ملء جميع الحقول");
+        return;
+      }
+
+      if (password !== confirmPassword) {
+        alert("كلمتا المرور غير متطابقتين");
+        return;
+      }
+
+      if (localStorage.getItem(`user_${email}`)) {
+        alert("البريد الإلكتروني مستخدم مسبقًا");
+        return;
+      }
+
+      // حفظ المستخدم
+      localStorage.setItem(`user_${email}`, JSON.stringify({ name, email, password }));
+
+      alert("تم إنشاء الحساب بنجاح!");
+      window.location.href = 'login.html';
+    });
+  </script>
+</body>
+</html>
