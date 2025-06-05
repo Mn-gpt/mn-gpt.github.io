@@ -13,77 +13,76 @@
     }
   </style>
 </head>
-<body class="bg-gray-50 min-h-screen flex items-center justify-center">
-
-<div class="w-full max-w-3xl">
-  <!-- Card -->
-  <div class="bg-white shadow overflow-hidden sm:rounded-lg p-6 space-y-6">
-    <h1 class="text-2xl leading-6 font-bold text-gray-900 text-center">مرحباً بك في MN-GPT</h1>
-    <p class="mt-1 max-w-2xl text-sm text-gray-500 text-center">منصة إدارة البرومبتات الذكية</p>
-
-    <!-- رسالة المستخدم -->
-    <div class="bg-indigo-50 text-indigo-800 p-4 rounded-md text-center">
-      <p class="font-medium">مرحبًا، <span id="userEmail" class="text-indigo-600"></span></p>
+<body class="bg-gray-50 min-h-screen flex flex-col">
+  <nav class="bg-white shadow-sm">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex justify-between h-16 items-center">
+        <span class="text-xl font-bold text-indigo-600">MN-GPT</span>
+        <div class="space-x-4 rtl:space-x-reverse">
+          <a href="index.html" class="text-gray-700 hover:text-indigo-600">الرئيسية</a>
+          <a href="login.html" class="text-gray-700 hover:text-indigo-600">تسجيل الخروج</a>
+        </div>
+      </div>
     </div>
+  </nav>
 
-    <!-- إحصائيات المستخدم -->
-    <div id="userStats" class="space-y-4">
-      <h2 class="text-lg font-semibold text-gray-800 text-center">إحصائيات زيارتك</h2>
-      <ul id="statsList" class="space-y-3">
-        <!-- سيتم ملؤها ديناميكياً -->
-      </ul>
+  <main class="flex-grow max-w-7xl mx-auto px-4 py-8 text-center">
+    <h1 class="text-3xl font-bold text-gray-900 mb-4">مرحباً بك في MN-GPT</h1>
+    <p class="text-lg text-gray-700 mb-6">منصة إدارة البرومبتات الذكية</p>
+    
+    <div class="bg-white shadow overflow-hidden sm:rounded-lg p-6 max-w-md mx-auto">
+      <p class="mb-4">تم تسجيل دخولك كـ:</p>
+      <p id="userEmail" class="font-semibold text-indigo-600 mb-6"></p>
+      
+      <h3 class="text-lg font-semibold text-gray-800 mb-4">إحصائيات زيارتك</h3>
+      <ul id="visitDetails" class="space-y-2 divide-y divide-gray-200"></ul>
+      
+      <div class="mt-6">
+        <a href="index.html" class="btn-primary inline-block bg-indigo-600 hover:bg-indigo-700 text-white py-2 px-4 rounded">الدخول إلى لوحة التحكم</a>
+      </div>
     </div>
+  </main>
 
-    <!-- أزرار التنقل -->
-    <div class="flex flex-col sm:flex-row gap-3 mt-6">
-      <a href="index.html" class="btn-primary block text-center py-2 px-4 rounded bg-indigo-600 hover:bg-indigo-700 text-white transition">الدخول إلى لوحة التحكم</a>
-      <a href="login.html" class="block text-center py-2 px-4 rounded bg-red-100 text-red-600 hover:bg-red-200 transition">تسجيل الخروج</a>
-    </div>
-  </div>
-
-  <!-- Footer -->
-  <footer class="mt-8 text-center text-sm text-gray-500">
+  <footer class="bg-white border-t border-gray-200 text-center py-4 text-sm text-gray-500">
     &copy; {{ new Date().getFullYear() }} MN-GPT. جميع الحقوق محفوظة.
   </footer>
-</div>
 
-<script>
-  // التحقق من تسجيل الدخول
-  const isLoggedIn = localStorage.getItem('isLoggedIn');
-  if (!isLoggedIn) {
-    alert('يجب تسجيل الدخول أولاً');
-    window.location.href = 'login.html';
-  }
+  <script>
+    const isLoggedIn = localStorage.getItem('isLoggedIn');
+    const userEmail = localStorage.getItem('userEmail');
 
-  // عرض البريد الإلكتروني للمستخدم
-  const userEmail = localStorage.getItem('userEmail');
-  document.getElementById('userEmail').textContent = userEmail;
+    if (!isLoggedIn) {
+      alert('يجب تسجيل الدخول أولاً');
+      window.location.href = 'login.html';
+    }
 
-  // استرجاع إحصائيات الزيارة
-  const userVisits = JSON.parse(localStorage.getItem('userVisits')) || {};
-  const statsList = document.getElementById('statsList');
+    document.getElementById('userEmail').textContent = userEmail;
 
-  if (userVisits[userEmail]) {
-    Object.entries(userVisits[userEmail]).forEach(([category, visits]) => {
-      const lastVisit = new Date(visits[visits.length - 1]).toLocaleString('ar-SA');
-      const li = document.createElement('li');
-      li.className = 'bg-gray-50 p-4 rounded shadow-sm flex justify-between items-center';
-      li.innerHTML = `
-        <div class="flex flex-col">
-          <strong class="text-gray-800">${category}</strong>
-          <small class="text-gray-500">عدد الزيارات: ${visits.length} مرة</small>
-          <small class="text-gray-500">آخر زيارة: ${lastVisit}</small>
-        </div>
-        <a href="category-prompts.html?category=${encodeURIComponent(category)}" class="text-indigo-600 hover:text-indigo-800 underline">عرض القسم</a>
-      `;
-      statsList.appendChild(li);
-    });
-  } else {
-    const empty = document.createElement('li');
-    empty.textContent = 'لم تقم بزيارة أي أقسام بعد.';
-    empty.className = 'text-center py-4 text-gray-500';
-    statsList.appendChild(empty);
-  }
-</script>
+    // استرجاع إحصائيات الزيارة
+    const visitDetails = document.getElementById('visitDetails');
+    const userVisits = JSON.parse(localStorage.getItem('userVisits')) || {};
+    const visitsForUser = userVisits[userEmail] || {};
+
+    if (Object.keys(visitsForUser).length === 0) {
+      const empty = document.createElement('li');
+      empty.textContent = 'لم تقم بزيارة أي أقسام بعد.';
+      empty.className = 'text-center py-2 text-gray-500';
+      visitDetails.appendChild(empty);
+    } else {
+      Object.entries(visitsForUser).forEach(([category, visits]) => {
+        const li = document.createElement('li');
+        li.className = 'py-2 flex justify-between items-center';
+        li.innerHTML = `
+          <div class="text-left">
+            <strong>${category}</strong><br/>
+            <small class="text-gray-600">عدد الزيارات: ${visits.length}</small><br/>
+            <small class="text-gray-600">آخر زيارة: ${new Date(visits[visits.length - 1]).toLocaleString('ar-SA')}</small>
+          </div>
+          <a href="category-prompts.html?category=${encodeURIComponent(category)}" class="text-indigo-600 hover:text-indigo-800 underline">عرض القسم</a>
+        `;
+        visitDetails.appendChild(li);
+      });
+    }
+  </script>
 </body>
 </html>
