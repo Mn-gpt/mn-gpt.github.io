@@ -1,10 +1,8 @@
-<DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Prompt Manager - MN.gpt</title>
-
   <!-- React + ReactDOM -->
   <script src="https://unpkg.com/react@18/umd/react.development.js"  crossorigin></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"  crossorigin></script>
@@ -19,7 +17,7 @@
     }
   </style>
 </head>
-<body class="bg-gray-50 min-h-screen">
+<body class="p-6 bg-gray-50 min-h-screen">
 
 <div id="root"></div>
 
@@ -41,18 +39,27 @@
     // 🔽 تحديد نوع المستخدم
     const isUserAdmin = localStorage.getItem('isAdmin') === 'true';
 
-    // 🔽 تحميل البيانات من localStorage
+    // 🔽 تحميل البيانات من db.json
     useEffect(() => {
-      const savedPrompts = JSON.parse(localStorage.getItem('prompts')) || [
-        { id: 1, text: 'اشرح مفهوم الذكاء الاصطناعي بطريقة بسيطة.', category: 'تعليمي', tokens: 23 },
-        { id: 2, text: 'اكتب قصة قصيرة عن رحلة إلى الفضاء.', category: 'إبداعي', tokens: 45 },
-        { id: 3, text: 'ما هو تأثير التكنولوجيا على التعليم؟', category: 'تحليل بيانات', tokens: 18 },
-        { id: 4, text: 'اشرح كيف تعمل خوارزميات التعلم العميق.', category: 'تعليمي', tokens: 37 },
-        { id: 5, text: 'اكتب برنامجًا بلغة جافاسكربت لحساب العوامل.', category: 'برمجة', tokens: 41 },
-      ];
-      const savedCategories = JSON.parse(localStorage.getItem('categories')) || ['عام', 'تعليمي', 'إبداعي', 'تحليل بيانات', 'برمجة'];
-      setPrompts(savedPrompts);
-      setCategories(savedCategories);
+      fetch('db.json')
+        .then(res => res.json())
+        .then(data => {
+          setPrompts(data.prompts);
+          setCategories(data.categories);
+        })
+        .catch(err => {
+          console.error("فشل تحميل البيانات من db.json");
+          const savedPrompts = JSON.parse(localStorage.getItem('prompts')) || [
+            { id: 1, text: 'اشرح مفهوم الذكاء الاصطناعي بطريقة بسيطة.', category: 'تعليمي', tokens: 23 },
+            { id: 2, text: 'اكتب قصة قصيرة عن رحلة إلى الفضاء.', category: 'إبداعي', tokens: 45 },
+            { id: 3, text: 'ما هو تأثير التكنولوجيا على التعليم؟', category: 'تحليل بيانات', tokens: 18 },
+            { id: 4, text: 'اشرح كيف تعمل خوارزميات التعلم العميق.', category: 'تعليمي', tokens: 37 },
+            { id: 5, text: 'اكتب برنامجًا بلغة جافاسكربت لحساب العوامل.', category: 'برمجة', tokens: 41 },
+          ];
+          const savedCategories = ['عام', 'تعليمي', 'إبداعي', 'تحليل بيانات', 'برمجة'];
+          setPrompts(savedPrompts);
+          setCategories(savedCategories);
+        });
     }, []);
 
     // 📦 حفظ البيانات في localStorage
@@ -192,13 +199,8 @@
 
     // 📋 نسخ نص البرومبت
     const copyPromptText = (text) => {
-      try {
-        navigator.clipboard.writeText(text.trim());
-        alert("✅ تم نسخ البرومبت!");
-      } catch (err) {
-        console.error("فشل النسخ:", err);
-        alert("❌ فشل النسخ، يرجى المحاولة مرة أخرى.");
-      }
+      navigator.clipboard.writeText(text);
+      alert("تم نسخ البرومبت!");
     };
 
     // 💡 عرض لوحة التحكم للمستخدم العادي أو المسؤول
@@ -215,7 +217,7 @@
           {/* رسالة للمستخدم العادي */}
           {!isUserAdmin && (
             <div className="bg-yellow-100 text-yellow-800 p-3 rounded text-sm">
-              ⚠️ ملاحظة: أنت مستخدم عادي، يمكنك فقط النقر على القسم لرؤية البرومبتات ولا يمكنك التعديل.
+              ⚠️ ملاحظة: أنت مستخدم عادي، يمكنك فقط النقر على القسم لرؤية البرومبتات.
             </div>
           )}
 
@@ -400,14 +402,12 @@
                       >
                         نسخ
                       </button>
-                      {isUserAdmin && (
-                        <button
-                          onClick={() => handleDeletePrompt(prompt.id)}
-                          className="text-red-600 hover:text-red-800 transition"
-                        >
-                          حذف
-                        </button>
-                      )}
+                      <button
+                        onClick={() => handleDeletePrompt(prompt.id)}
+                        className="text-red-600 hover:text-red-800 transition"
+                      >
+                        حذف
+                      </button>
                     </div>
                   </div>
                 </li>
@@ -419,7 +419,7 @@
 
           {/* Pagination Controls */}
           {filteredPrompts.length > itemsPerPage && (
-            <div className="flex justify-center space-x-2 space-x-reverse mt-6">
+            <div className="flex justify-center space-x-2 rtl:space-x-reverse mt-6">
               <button
                 onClick={goToPrevious}
                 disabled={currentPage === 1}
@@ -482,7 +482,7 @@
                     ) : (
                       <>
                         <span>{cat}</span>
-                        <div className="flex space-x-2 space-x-reverse">
+                        <div className="flex space-x-2 rtl:space-x-reverse">
                           <button
                             onClick={() => handleStartEditCategory(cat)}
                             className="text-yellow-600 hover:text-yellow-800"
@@ -511,11 +511,11 @@
     };
 
     return (
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="container mx-auto max-w-6xl">
         {/* Header */}
         <header className="flex justify-between items-center pb-6 border-b border-gray-200 mb-6">
           <h1 className="text-3xl font-bold text-indigo-700">{signature}</h1>
-          <div className="space-x-4 space-x-reverse">
+          <div className="space-x-4 rtl:space-x-reverse">
             <a href="welcome.html" className="text-indigo-600 hover:text-indigo-800 underline">الترحيب</a>
             <a href="login.html" className="text-gray-700 hover:text-indigo-600">تسجيل الخروج</a>
           </div>
