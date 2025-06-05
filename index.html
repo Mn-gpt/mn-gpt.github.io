@@ -34,7 +34,7 @@
     const [editCategoryName, setEditCategoryName] = useState('');
     const [signature] = useState('MN.gpt');
 
-    // 🔽 تحميل البيانات من localStorage عند التهيئة
+    // 🔽 تحميل البيانات من localStorage
     useEffect(() => {
       const savedPrompts = JSON.parse(localStorage.getItem('prompts')) || [
         { id: 1, text: 'اشرح مفهوم الذكاء الاصطناعي بطريقة بسيطة.', category: 'تعليمي', tokens: 23 },
@@ -59,12 +59,15 @@
     const handleAddPrompt = (e) => {
       e.preventDefault();
       if (!newPrompt.text || !newPrompt.category) return;
+
       const promptToAdd = { ...newPrompt, id: Date.now() };
       const updatedPrompts = [...prompts, promptToAdd];
       const updatedCategories = categories.includes(newPrompt.category) ? categories : [...categories, newPrompt.category];
+
       setPrompts(updatedPrompts);
       setCategories(updatedCategories);
       saveToLocalStorage(updatedPrompts, updatedCategories);
+
       setNewPrompt({ text: '', category: '', tokens: 0 });
     };
 
@@ -114,10 +117,10 @@
       saveToLocalStorage(updatedPrompts, updatedCategories);
     };
 
-    // 🧮 تقدير عدد التوكيانات بناءً على النص
+    // 🧮 حساب التوكيانات المتوقعة
     const estimateTokens = (text) => {
       const words = text.trim().split(/\s+/).length;
-      return Math.ceil(words * 1.25); // تقدير أن كل 4 كلمات ≈ 5 توكيانات
+      return Math.ceil(words * 1.25);
     };
 
     // 📊 إحصاءات الأقسام
@@ -179,7 +182,7 @@
                     <td className="px-6 py-4 whitespace-nowrap">{category}</td>
                     <td className="px-6 py-4 whitespace-nowrap">{data.count}</td>
                     <td className="px-6 py-4 whitespace-nowrap">{data.totalTokens}</td>
-                    <td className="px-6 py-4 whitespace-nowrap">{data.averageTokens} توكيان</td>
+                    <td className="px-6 py-4 whitespace-nowrap">{data.averageTokens}</td>
                   </tr>
                 ))}
               </tbody>
@@ -234,7 +237,12 @@
                 placeholder="مثال: اشرح مفهوم الذكاء الاصطناعي..."
                 value={newPrompt.text}
                 onChange={(e) => {
-                  setNewPrompt({...newPrompt, text: e.target.value});
+                  const text = e.target.value;
+                  setNewPrompt({
+                    ...newPrompt,
+                    text,
+                    tokens: estimateTokens(text) // ✅ هنا يتم التقدير التلقائي
+                  });
                 }}
                 className="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
               ></textarea>
@@ -256,19 +264,17 @@
                 ))}
               </select>
 
-              <label className="block text-sm font-medium text-gray-700 mt-4">عدد التوكيانات</label>
+              {/* (اختياري) يمكن إخفاء هذا الحقل إن كان العدد متوقعاً فقط */}
               <input
-                type="number"
-                placeholder="عدد التوكيانات"
+                type="hidden"  // 👈 أو استخدم type="number" لإظهاره كحقول ممكن تعديله
                 value={newPrompt.tokens}
                 onChange={(e) => setNewPrompt({...newPrompt, tokens: parseInt(e.target.value) || 0})}
-                className="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
               />
 
               <div className="flex flex-wrap gap-3 pt-2">
                 <button
                   type="submit"
-                  className="inline-flex justify-center items-center px-4 py-3 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none transition"
+                  className="inline-flex justify-center items-center px-4 py-3 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 transition"
                 >
                   إضافة برومبت
                 </button>
@@ -276,7 +282,7 @@
                   type="button"
                   onClick={handleAddCategory}
                   disabled={!newPrompt.category.trim() || categories.includes(newPrompt.category)}
-                  className={`inline-flex justify-center items-center px-4 py-3 border border-transparent text-sm font-medium rounded-md shadow-sm text-white focus:outline-none transition ${
+                  className={`inline-flex justify-center items-center px-4 py-3 border border-transparent text-sm font-medium rounded-md shadow-sm text-white transition ${
                     categories.includes(newPrompt.category)
                       ? 'bg-gray-400 cursor-not-allowed'
                       : 'bg-blue-600 hover:bg-blue-700'
@@ -362,7 +368,6 @@
     );
   }
 
-  // Render App
   ReactDOM.createRoot(document.getElementById('root')).render(<App />);
 </script>
 </body>
