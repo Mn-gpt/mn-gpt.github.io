@@ -24,9 +24,8 @@
   const { useState, useEffect } = React;
 
   function App() {
-    // 🔒 حالة المستخدم
+    // 🔐 حالة المستخدم
     const isUserAdmin = localStorage.getItem('isAdmin') === 'true';
-    const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
 
     // 📋 بيانات الصفحة
     const [activeTab, setActiveTab] = useState('dashboard');
@@ -40,13 +39,12 @@
     const [itemsPerPage] = useState(4);
     const [signature] = useState('MN.gpt');
 
+    // 📦 Modal للبرومبتات
+    const [showModal, setShowModal] = useState(false);
+    const [selectedCategory, setSelectedCategory] = useState('');
+
     // 🔽 تحميل البيانات من localStorage عند التهيئة
     useEffect(() => {
-      if (!isLoggedIn) {
-        window.location.href = 'login.html';
-        return;
-      }
-
       const savedPrompts = JSON.parse(localStorage.getItem('prompts')) || [
         { id: 1, text: 'اشرح مفهوم الذكاء الاصطناعي بطريقة بسيطة.', category: 'تعليمي', tokens: 23 },
         { id: 2, text: 'اكتب قصة قصيرة عن رحلة إلى الفضاء.', category: 'إبداعي', tokens: 45 },
@@ -184,12 +182,19 @@
       alert("✅ تم نسخ البرومبت!");
     };
 
+    // 📂 عرض Modal للبرومبتات
+    const openPromptModal = (category) => {
+      setSelectedCategory(category);
+      setShowModal(true);
+    };
+
     // 💡 عرض لوحة التحكم
     const renderDashboard = () => {
       const stats = getCategoryStats();
       const totalPrompts = prompts.length;
       const totalTokens = prompts.reduce((sum, p) => sum + p.tokens, 0);
       const averageTokens = totalPrompts > 0 ? Math.round(totalTokens / totalPrompts) : 0;
+
       return (
         <div className="space-y-6">
           <h2 className="text-2xl font-bold text-gray-800">لوحة التحكم</h2>
@@ -217,6 +222,7 @@
                   <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">عدد البرومبتات</th>
                   <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">إجمالي tokens</th>
                   <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">متوسط tokens</th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">الإجراءات</th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
@@ -226,6 +232,30 @@
                     <td className="px-6 py-4 whitespace-nowrap">{data.count}</td>
                     <td className="px-6 py-4 whitespace-nowrap">{data.totalTokens}</td>
                     <td className="px-6 py-4 whitespace-nowrap">{data.averageTokens}</td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <button
+                        onClick={() => openPromptModal(category)}
+                        className="text-blue-600 hover:text-blue-800 mr-2"
+                      >
+                        عرض
+                      </button>
+                      {isUserAdmin && (
+                        <>
+                          <button
+                            onClick={() => handleStartEditCategory(category)}
+                            className="text-yellow-600 hover:text-yellow-800 mx-2"
+                          >
+                            تعديل
+                          </button>
+                          <button
+                            onClick={() => handleDeleteCategory(category)}
+                            className="text-red-600 hover:text-red-800 mx-2"
+                          >
+                            حذف
+                          </button>
+                        </>
+                      )}
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -500,6 +530,40 @@
         <footer className="mt-10 pt-6 border-t border-gray-200 text-center text-sm text-gray-500">
           &copy; {new Date().getFullYear()} {signature}. جميع الحقوق محفوظة.
         </footer>
+
+        {/* Modal لعرض البرومبتات */}
+        {showModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg shadow-lg w-full max-w-2xl max-h-[80vh] overflow-y-auto p-6 relative">
+              <button
+                onClick={() => setShowModal(false)}
+                className="absolute top-3 right-3 text-gray-500 hover:text-gray-800"
+              >
+                &times;
+              </button>
+              <h3 className="text-xl font-bold mb-4">برومبتات قسم "{selectedCategory}"</h3>
+              <ul className="space-y-3">
+                {prompts
+                  .filter(p => p.category === selectedCategory)
+                  .map(prompt => (
+                    <li key={prompt.id} className="bg-gray-50 p-3 rounded shadow-sm">
+                      <p className="font-medium">{prompt.text}</p>
+                      <div className="mt-2 flex justify-between text-sm text-gray-500">
+                        <span>Tokens: {prompt.tokens}</span>
+                        <button
+                          onClick={() => copyPromptText(prompt.text)}
+                          className="text-blue-600 hover:text-blue-800"
+                        >
+                          نسخ
+                        </button>
+                      </div>
+                    </li>
+                  ))
+                }
+              </ul>
+            </div>
+          </div>
+        )}
       </div>
     );
   }
