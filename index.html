@@ -38,10 +38,10 @@
     const [itemsPerPage] = useState(4);
     const [signature] = useState('MN.gpt');
 
-    // تحديد نوع المستخدم
+    // 🔽 تحديد نوع المستخدم
     const isUserAdmin = localStorage.getItem('isAdmin') === 'true';
 
-    // تحميل البيانات من localStorage
+    // 🔽 تحميل البيانات من localStorage
     useEffect(() => {
       const savedPrompts = JSON.parse(localStorage.getItem('prompts')) || [
         { id: 1, text: 'اشرح مفهوم الذكاء الاصطناعي بطريقة بسيطة.', category: 'تعليمي', tokens: 23 },
@@ -55,33 +55,35 @@
       setCategories(savedCategories);
     }, []);
 
-    // حفظ البيانات في localStorage
+    // 📦 حفظ البيانات في localStorage
     const saveToLocalStorage = (updatedPrompts, updatedCategories) => {
       localStorage.setItem('prompts', JSON.stringify(updatedPrompts));
       localStorage.setItem('categories', JSON.stringify(updatedCategories));
     };
 
-    // إضافة برومبت جديد
+    // ➕ إضافة برومبت جديد
     const handleAddPrompt = (e) => {
       e.preventDefault();
       if (!newPrompt.text || !newPrompt.category) return;
       const promptToAdd = { ...newPrompt, id: Date.now() };
       const updatedPrompts = [...prompts, promptToAdd];
-      const updatedCategories = categories.includes(newPrompt.category) ? categories : [...categories, newPrompt.category];
+      const updatedCategories = categories.includes(newPrompt.category)
+        ? categories
+        : [...categories, newPrompt.category];
       setPrompts(updatedPrompts);
       setCategories(updatedCategories);
       saveToLocalStorage(updatedPrompts, updatedCategories);
       setNewPrompt({ text: '', category: '', tokens: 0 });
     };
 
-    // حذف برومبت
+    // ❌ حذف برومبت
     const handleDeletePrompt = (id) => {
       const updatedPrompts = prompts.filter(prompt => prompt.id !== id);
       setPrompts(updatedPrompts);
       saveToLocalStorage(updatedPrompts, categories);
     };
 
-    // إضافة قسم جديد
+    // ➕ إضافة قسم جديد
     const handleAddCategory = () => {
       if (!newPrompt.category.trim()) return;
       if (categories.includes(newPrompt.category)) {
@@ -93,7 +95,7 @@
       saveToLocalStorage(prompts, updatedCategories);
     };
 
-    // تعديل اسم القسم
+    // ✏️ تعديل اسم القسم
     const handleStartEditCategory = (category) => {
       setEditingCategory(category);
       setEditCategoryName(category);
@@ -114,7 +116,7 @@
       saveToLocalStorage(updatedPrompts, updatedCategories);
     };
 
-    // حذف قسم
+    // ❌ حذف قسم
     const handleDeleteCategory = (categoryToDelete) => {
       if (!window.confirm(`هل أنت متأكد من حذف القسم "${categoryToDelete}" وجميع البرومبتات المرتبطة به؟`)) return;
       const updatedPrompts = prompts.filter(p => p.category !== categoryToDelete);
@@ -124,7 +126,7 @@
       saveToLocalStorage(updatedPrompts, updatedCategories);
     };
 
-    // البحث والفرز
+    // 🔍 البحث والفرز
     const filteredPrompts = prompts.filter(prompt =>
       prompt.text.toLowerCase().includes(searchTerm.toLowerCase()) ||
       prompt.category.toLowerCase().includes(searchTerm.toLowerCase())
@@ -134,7 +136,6 @@
     const indexOfFirstItem = indexOfLastItem - itemsPerPage;
     const currentPrompts = filteredPrompts.slice(indexOfFirstItem, indexOfLastItem);
 
-    // التنقل بين الصفحات
     const goToPrevious = () => {
       if (currentPage > 1) setCurrentPage(currentPage - 1);
     };
@@ -145,7 +146,9 @@
       }
     };
 
-    // إحصاءات الأقسام
+    const paginate = (pageNumber) => setCurrentPage(pageNumber);
+
+    // 📊 إحصاءات الأقسام
     const getCategoryStats = () => {
       const stats = {};
       categories.forEach(category => {
@@ -160,7 +163,7 @@
       return stats;
     };
 
-    // تصدير البرومبتات إلى Markdown
+    // 💾 تصدير البرومبتات إلى Markdown
     const exportPromptsToMarkdown = () => {
       let markdown = '# 📝 قائمة البرومبتات\n';
       const groupedByCategory = {};
@@ -168,12 +171,14 @@
         if (!groupedByCategory[prompt.category]) groupedByCategory[prompt.category] = [];
         groupedByCategory[prompt.category].push(prompt);
       });
+
       Object.entries(groupedByCategory).forEach(([category, promptList]) => {
         markdown += `## 📁 القسم: ${category}\n`;
         promptList.forEach((prompt, index) => {
           markdown += `${index + 1}. **[${prompt.category}]** ${prompt.text}\n   - \`ID: ${prompt.id}\`\n   - \`tokens: ${prompt.tokens}\`\n`;
         });
       });
+
       const blob = new Blob([markdown], { type: 'text/markdown' });
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
@@ -185,13 +190,13 @@
       URL.revokeObjectURL(url);
     };
 
-    // نسخ النص
+    // 📋 نسخ نص البرومبت
     const copyPromptText = (text) => {
       navigator.clipboard.writeText(text);
       alert("تم نسخ البرومبت!");
     };
 
-    // عرض لوحة التحكم
+    // 💡 عرض لوحة التحكم
     const renderDashboard = () => {
       const stats = getCategoryStats();
       const totalPrompts = prompts.length;
@@ -201,6 +206,7 @@
       return (
         <div className="space-y-6">
           <h2 className="text-2xl font-bold text-gray-800">لوحة التحكم</h2>
+
           {/* Cards */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="bg-white p-6 rounded-lg shadow-md">
@@ -216,6 +222,7 @@
               <p className="text-3xl font-bold text-green-600">{averageTokens} token</p>
             </div>
           </div>
+
           {/* Table of Category Stats */}
           <div className="bg-white rounded-lg shadow-md overflow-hidden">
             <table className="min-w-full divide-y divide-gray-200">
@@ -286,16 +293,17 @@
 
         {/* Tab Content */}
         {activeTab === 'dashboard' && renderDashboard()}
+
         {activeTab === 'prompts' && (
           <div className="space-y-6">
-            <h2 className="text-2xl font-bold text-gray-800">إدارة البرومبتات</h2>
             {/* رسالة للمستخدم العادي */}
             {!isUserAdmin && (
               <div className="bg-yellow-100 text-yellow-800 p-3 rounded text-sm">
                 ⚠️ ملاحظة: أنت مستخدم عادي، يمكنك فقط نسخ البرومبتات ولا يمكنك إضافة أو تعديل أو حذف أي شيء.
               </div>
             )}
-            {/* Search Bar */}
+
+            {/* شريط البحث */}
             <div className="mb-4">
               <input
                 type="text"
@@ -308,7 +316,8 @@
                 className="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
               />
             </div>
-            {/* Form لإضافة برومبت */}
+
+            {/* نموذج إضافة برومبت (متاح فقط للمسؤول) */}
             {isUserAdmin && (
               <form onSubmit={handleAddPrompt} className="bg-white p-6 rounded-lg shadow-md space-y-4">
                 <label className="block text-sm font-medium text-gray-700">نص البرومبت</label>
@@ -374,14 +383,16 @@
             )}
 
             {/* زر التصدير */}
-            <div className="flex justify-end">
-              <button
-                onClick={exportPromptsToMarkdown}
-                className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded text-sm"
-              >
-                📥 تصدير إلى Markdown
-              </button>
-            </div>
+            {isUserAdmin && (
+              <div className="flex justify-end">
+                <button
+                  onClick={exportPromptsToMarkdown}
+                  className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded text-sm"
+                >
+                  📥 تصدير إلى Markdown
+                </button>
+              </div>
+            )}
 
             {/* قائمة البرومبتات */}
             <ul className="divide-y divide-gray-200">
@@ -421,21 +432,29 @@
               )}
             </ul>
 
-            {/* Pagination Controls */}
+            {/* أزرار التنقل بين الصفحات */}
             {filteredPrompts.length > itemsPerPage && (
               <div className="flex justify-center space-x-2 space-x-reverse mt-6">
                 <button
                   onClick={goToPrevious}
                   disabled={currentPage === 1}
-                  className={`px-4 py-2 rounded ${currentPage === 1 ? 'bg-gray-200 text-gray-500 cursor-not-allowed' : 'bg-indigo-100 text-indigo-700 hover:bg-indigo-200'}`}
+                  className={`px-4 py-2 rounded ${
+                    currentPage === 1
+                      ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
+                      : 'bg-indigo-100 text-indigo-700 hover:bg-indigo-200'
+                  }`}
                 >
                   السابق
                 </button>
-                {Array.from({ length: Math.ceil(filteredPrompts.length / itemsPerPage) }, (_, i) => (
+                {Array.from({ length: Math.ceil(filteredPrompts.length / itemsPerPage) }).map((_, i) => (
                   <button
                     key={i + 1}
-                    onClick={() => setCurrentPage(i + 1)}
-                    className={`px-4 py-2 rounded ${currentPage === i + 1 ? 'bg-indigo-600 text-white' : 'bg-white text-indigo-600 border border-indigo-600 hover:bg-indigo-50'}`}
+                    onClick={() => paginate(i + 1)}
+                    className={`px-4 py-2 rounded ${
+                      currentPage === i + 1
+                        ? 'bg-indigo-600 text-white'
+                        : 'bg-white text-indigo-600 border border-indigo-600 hover:bg-indigo-50'
+                    }`}
                   >
                     {i + 1}
                   </button>
@@ -443,7 +462,11 @@
                 <button
                   onClick={goToNext}
                   disabled={currentPage === Math.ceil(filteredPrompts.length / itemsPerPage)}
-                  className={`px-4 py-2 rounded ${currentPage === Math.ceil(filteredPrompts.length / itemsPerPage) ? 'bg-gray-200 text-gray-500 cursor-not-allowed' : 'bg-indigo-100 text-indigo-700 hover:bg-indigo-200'}`}
+                  className={`px-4 py-2 rounded ${
+                    currentPage === Math.ceil(filteredPrompts.length / itemsPerPage)
+                      ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
+                      : 'bg-indigo-100 text-indigo-700 hover:bg-indigo-200'
+                  }`}
                 >
                   التالي
                 </button>
