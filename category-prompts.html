@@ -1,0 +1,74 @@
+<DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <title>برومبتات القسم - MN.gpt</title>
+  <script src="https://cdn.tailwindcss.com"></script> 
+</head>
+<body class="bg-gray-50 min-h-screen flex flex-col">
+
+<nav class="bg-white shadow-sm">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="flex justify-between h-16 items-center">
+      <span class="text-xl font-bold text-indigo-600">MN-GPT</span>
+      <div class="space-x-4 space-x-reverse">
+        <a href="index.html" class="text-gray-700 hover:text-indigo-600">الرئيسية</a>
+        <a href="login.html" class="text-gray-700 hover:text-indigo-600">تسجيل الخروج</a>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<main class="flex-grow max-w-7xl mx-auto px-4 py-8">
+  <div class="bg-white shadow overflow-hidden sm:rounded-lg mb-8">
+    <div class="px-4 py-5 sm:px-6">
+      <h1 class="text-2xl leading-6 font-bold text-gray-900">برومبتات القسم: <span id="categoryName" class="text-indigo-600"></span></h1>
+    </div>
+    <div class="border-t border-gray-200 px-4 py-5 sm:p-6">
+      <ul class="divide-y divide-gray-200">
+        <!-- سيتم ملؤها ديناميكياً -->
+      </ul>
+    </div>
+  </div>
+</main>
+
+<script>
+  const urlParams = new URLSearchParams(window.location.search);
+  const categoryName = urlParams.get('category');
+  document.getElementById('categoryName').textContent = categoryName;
+
+  const prompts = JSON.parse(localStorage.getItem('prompts')) || [
+    { id: 1, text: 'اشرح مفهوم الذكاء الاصطناعي بطريقة بسيطة.', category: 'تعليمي', tokens: 23 },
+    { id: 2, text: 'اكتب قصة قصيرة عن رحلة إلى الفضاء.', category: 'إبداعي', tokens: 45 },
+    { id: 3, text: 'ما هو تأثير التكنولوجيا على التعليم؟', category: 'تحليل بيانات', tokens: 18 },
+    { id: 4, text: 'اشرح كيف تعمل خوارزميات التعلم العميق.', category: 'تعليمي', tokens: 37 },
+    { id: 5, text: 'اكتب برنامجًا بلغة جافاسكربت لحساب العوامل.', category: 'برمجة', tokens: 41 },
+  ];
+
+  const filteredPrompts = prompts.filter(p => p.category === categoryName);
+  const list = document.querySelector('ul');
+
+  filteredPrompts.forEach(prompt => {
+    const li = document.createElement('li');
+    li.className = 'bg-white p-4 rounded shadow mb-3 hover:bg-gray-50 transition';
+    li.innerHTML = `
+      <div class="flex justify-between items-start">
+        <div class="pr-4">
+          <p class="font-medium">${prompt.text}</p>
+          <div class="mt-2 text-sm text-gray-500">
+            <span>ID: \`${prompt.id}\`</span> • <span>Tokens: \`${prompt.tokens}\`</span>
+          </div>
+        </div>
+        <button onclick="copyPrompt('${prompt.text}')" class="text-blue-600 hover:text-blue-800 transition">نسخ</button>
+      </div>
+    `;
+    list.appendChild(li);
+  });
+
+  function copyPrompt(text) {
+    navigator.clipboard.writeText(text);
+    alert("تم نسخ البرومبت!");
+  }
+</script>
+</body>
+</html>
