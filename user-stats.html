@@ -1,0 +1,72 @@
+<DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <title>إحصائيات المستخدم - MN.gpt</title>
+  <script src="https://cdn.tailwindcss.com"></script> 
+  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Tajawal', sans-serif;
+      background-color: #f9fafb; 
+      color: #1f2937;
+    }
+  </style>
+</head>
+<body class="bg-gray-50 min-h-screen flex flex-col">
+
+<nav class="bg-white shadow-sm">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="flex justify-between h-16 items-center">
+      <span class="text-xl font-bold text-indigo-600">MN-GPT</span>
+      <div class="space-x-4 rtl:space-x-reverse">
+        <a href="admin-dashboard.html" class="text-gray-700 hover:text-indigo-600">لوحة المسؤول</a>
+        <a href="login.html" class="text-gray-700 hover:text-indigo-600">تسجيل الخروج</a>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<main class="flex-grow max-w-7xl mx-auto px-4 py-8">
+  <div class="bg-white shadow overflow-hidden sm:rounded-lg p-6">
+    <h1 class="text-2xl font-bold text-gray-900">إحصائيات المستخدم</h1>
+    <p class="mt-2">البريد الإلكتروني: <span id="userEmail" class="text-indigo-600"></span></p>
+
+    <ul id="visitDetailsList" class="mt-6 divide-y divide-gray-200">
+      <!-- سيتم ملؤها ديناميكياً -->
+    </ul>
+  </div>
+</main>
+
+<script>
+  const urlParams = new URLSearchParams(window.location.search);
+  const userEmail = urlParams.get('user') || 'user@gmail.com';
+  document.getElementById('userEmail').textContent = userEmail;
+
+  const visitDetailsList = document.getElementById('visitDetailsList');
+  const userVisits = JSON.parse(localStorage.getItem('userVisits')) || {};
+
+  if (userVisits[userEmail]) {
+    Object.entries(userVisits[userEmail]).forEach(([category, visits]) => {
+      const lastVisit = new Date(visits[visits.length - 1]).toLocaleString('ar-SA');
+      const li = document.createElement('li');
+      li.className = 'py-4 flex justify-between items-start';
+      li.innerHTML = `
+        <div>
+          <strong class="text-gray-800">${category}</strong><br/>
+          <small class="text-gray-500">عدد الزيارات: ${visits.length}</small><br/>
+          <small class="text-gray-500">آخر زيارة: ${lastVisit}</small>
+        </div>
+        <a href="category-prompts.html?category=${encodeURIComponent(category)}" class="text-blue-600 hover:text-blue-800 underline">عرض القسم</a>
+      `;
+      visitDetailsList.appendChild(li);
+    });
+  } else {
+    const empty = document.createElement('li');
+    empty.textContent = 'لا توجد زيارات لهذا المستخدم.';
+    empty.className = 'text-center py-4 text-gray-500';
+    visitDetailsList.appendChild(empty);
+  }
+</script>
+</body>
+</html>
