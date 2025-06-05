@@ -1,14 +1,10 @@
-<DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>برومبتات القسم - MN.gpt</title>
-
-  <!-- TailwindCSS -->
   <script src="https://cdn.tailwindcss.com"></script> 
-  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;600&display=swap" rel="stylesheet" />
-
+  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;600&display=swap" rel="stylesheet">
   <style>
     body {
       font-family: 'Tajawal', sans-serif;
@@ -17,14 +13,13 @@
     }
   </style>
 </head>
-<body class="bg-gray-50 min-h-screen">
+<body class="bg-gray-50 min-h-screen flex flex-col">
 
-<!-- Navigation -->
 <nav class="bg-white shadow-sm">
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
     <div class="flex justify-between h-16 items-center">
       <span class="text-xl font-bold text-indigo-600">MN-GPT</span>
-      <div class="space-x-4 space-x-reverse">
+      <div class="space-x-4 rtl:space-x-reverse">
         <a href="welcome.html" class="text-gray-700 hover:text-indigo-600">الرئيسية</a>
         <a href="login.html" class="text-gray-700 hover:text-indigo-600">تسجيل الخروج</a>
       </div>
@@ -32,37 +27,24 @@
   </div>
 </nav>
 
-<!-- Main Content -->
-<main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-  <div class="bg-white shadow overflow-hidden sm:rounded-lg mb-8 p-6">
-    <h1 class="text-2xl font-bold text-gray-900">
-      برومبتات القسم: <span id="categoryName" class="text-indigo-600"></span>
-    </h1>
-    
-    <!-- إحصائيات الزيارة -->
-    <div class="mt-4 bg-blue-50 text-blue-800 p-4 rounded-md">
-      <p>لقد زرت هذا القسم <span id="visitCount" class="font-medium">0</span> مرة.</p>
-      <p class="mt-2">آخر زيارة لك كانت في <span id="lastVisitTime" class="font-medium">لم تُسجل بعد</span></p>
+<main class="flex-grow max-w-7xl mx-auto px-4 py-8">
+  <div class="bg-white shadow overflow-hidden sm:rounded-lg mb-8">
+    <div class="px-4 py-5 sm:px-6">
+      <h1 class="text-2xl leading-6 font-bold text-gray-900">برومبتات القسم: <span id="categoryName" class="text-indigo-600"></span></h1>
     </div>
-
-    <!-- قائمة البرومبتات -->
-    <ul id="promptsList" class="divide-y divide-gray-200 mt-6">
-      <!-- سيتم ملؤها ديناميكياً -->
-    </ul>
+    <div class="border-t border-gray-200 px-4 py-5 sm:p-6">
+      <ul class="divide-y divide-gray-200">
+        <!-- سيتم ملؤها ديناميكياً -->
+      </ul>
+    </div>
   </div>
 </main>
-
-<!-- Footer -->
-<footer class="bg-white border-t border-gray-200 text-center py-4 text-sm text-gray-500">
-  &copy; {{ new Date().getFullYear() }} MN-GPT. جميع الحقوق محفوظة.
-</footer>
 
 <script>
   const urlParams = new URLSearchParams(window.location.search);
   const categoryName = urlParams.get('category');
   document.getElementById('categoryName').textContent = categoryName;
 
-  // البيانات التجريبية
   const prompts = JSON.parse(localStorage.getItem('prompts')) || [
     { id: 1, text: 'اشرح مفهوم الذكاء الاصطناعي بطريقة بسيطة.', category: 'تعليمي', tokens: 23 },
     { id: 2, text: 'اكتب قصة قصيرة عن رحلة إلى الفضاء.', category: 'إبداعي', tokens: 45 },
@@ -71,46 +53,8 @@
     { id: 5, text: 'اكتب برنامجًا بلغة جافاسكربت لحساب العوامل.', category: 'برمجة', tokens: 41 },
   ];
 
-  // تسجيل الزيارة للمستخدم الحالي
-  const userEmail = localStorage.getItem('userEmail') || 'guest';
-
-  function recordVisit() {
-    let visits = JSON.parse(localStorage.getItem('userVisits')) || {};
-    
-    if (!visits[userEmail]) {
-      visits[userEmail] = {};
-    }
-
-    if (!visits[userEmail][categoryName]) {
-      visits[userEmail][categoryName] = [];
-    }
-
-    const now = new Date().toISOString();
-    visits[userEmail][categoryName].push(now);
-
-    localStorage.setItem('userVisits', JSON.stringify(visits));
-    return visits[userEmail][categoryName];
-  }
-
-  // تحديث عدد الزيارات + وقت الزيارة الأخيرة
-  function updateVisitStats() {
-    const visitLog = JSON.parse(localStorage.getItem('userVisits')) || {};
-    const userVisits = visitLog[userEmail] || {};
-    const categoryVisits = userVisits[categoryName] || [];
-
-    document.getElementById('visitCount').textContent = categoryVisits.length;
-
-    if (categoryVisits.length > 0) {
-      const lastVisit = new Date(categoryVisits[categoryVisits.length - 1]).toLocaleString('ar-SA');
-      document.getElementById('lastVisitTime').textContent = lastVisit;
-    } else {
-      document.getElementById('lastVisitTime').textContent = 'لا توجد زيارات سابقة';
-    }
-  }
-
-  // عرض البرومبتات
   const filteredPrompts = prompts.filter(p => p.category === categoryName);
-  const list = document.querySelector('#promptsList');
+  const list = document.querySelector('ul');
 
   if (filteredPrompts.length > 0) {
     filteredPrompts.forEach(prompt => {
@@ -124,35 +68,21 @@
               <span>ID: \`${prompt.id}\`</span> • <span>Tokens: \`${prompt.tokens}\`</span>
             </div>
           </div>
-          <button onclick="copyPrompt('${prompt.text.replace(/'/g, "\\'")}')"
-                  class="text-blue-600 hover:text-blue-800 transition">
-            نسخ
-          </button>
+          <button onclick="copyPrompt('${prompt.text}')" class="text-blue-600 hover:text-blue-800 transition">نسخ</button>
         </div>
       `;
       list.appendChild(li);
     });
   } else {
     const empty = document.createElement('li');
-    empty.className = 'text-center py-4 text-gray-500 bg-red-50 text-red-600 rounded-md';
+    empty.className = 'text-center py-4 text-gray-500';
     empty.textContent = 'لا توجد برومبتات مضافة لهذا القسم.';
     list.appendChild(empty);
   }
 
-  // تنفيذ تسجيل الزيارة + تحديث الإحصائيات
-  if (categoryName) {
-    recordVisit();
-    updateVisitStats();
-  }
-
-  // وظيفة النسخ
   function copyPrompt(text) {
-    navigator.clipboard.writeText(text.trim()).then(() => {
-      alert("✅ تم نسخ البرومبت!");
-    }).catch(err => {
-      console.error("❌ فشل النسخ:", err);
-      alert("فشل نسخ النص، يرجى المحاولة مرة أخرى.");
-    });
+    navigator.clipboard.writeText(text);
+    alert("تم نسخ البرومبت!");
   }
 </script>
 </body>
