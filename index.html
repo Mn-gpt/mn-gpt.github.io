@@ -25,8 +25,11 @@
 
 <script type="text/babel">
   const { useState, useEffect } = React;
-
-  function App() {
+const [subcategories, setSubcategories] = useState({
+  // مثال:
+  // 'تعليمي': ['علوم', 'رياضيات'],
+});
+  function App() 
     const [activeTab, setActiveTab] = useState('dashboard');
     const [prompts, setPrompts] = useState([]);
     const [categories, setCategories] = useState([]);
@@ -54,7 +57,43 @@
       setPrompts(savedPrompts);
       setCategories(savedCategories);
     }, []);
+// إنشاء قوالب للأقسام الفرعية عند التحميل الأولي
+useEffect(() => {
+  fetch('db.json')
+    .then(res => res.json())
+    .then(data => {
+      setPrompts(data.prompts);
+      setCategories(data.categories);
 
+      // إنشاء الأقسام الفرعية افتراضيًا فارغة
+      const initialSubcategories = {};
+      data.categories.forEach(cat => {
+        initialSubcategories[cat] = [];
+      });
+      setSubcategories(initialSubcategories);
+    })
+    .catch(err => {
+      console.error("فشل تحميل البيانات من db.json");
+      const savedPrompts = JSON.parse(localStorage.getItem('prompts')) || [
+        { id: 1, text: 'اشرح مفهوم الذكاء الاصطناعي بطريقة بسيطة.', category: 'تعليمي', tokens: 23 },
+        { id: 2, text: 'اكتب قصة قصيرة عن رحلة إلى الفضاء.', category: 'إبداعي', tokens: 45 },
+        { id: 3, text: 'ما هو تأثير التكنولوجيا على التعليم؟', category: 'تحليل بيانات', tokens: 18 },
+        { id: 4, text: 'اشرح كيف تعمل خوارزميات التعلم العميق.', category: 'تعليمي', tokens: 37 },
+        { id: 5, text: 'اكتب برنامجًا بلغة جافاسكربت لحساب العوامل.', category: 'برمجة', tokens: 41 },
+      ];
+      const savedCategories = ['عام', 'تعليمي', 'إبداعي', 'تحليل بيانات', 'برمجة'];
+      
+      setPrompts(savedPrompts);
+      setCategories(savedCategories);
+
+      // إنشاء الأقسام الفرعية افتراضيًا فارغة
+      const initialSubcategories = {};
+      savedCategories.forEach(cat => {
+        initialSubcategories[cat] = [];
+      });
+      setSubcategories(initialSubcategories);
+    });
+}, []);
     // 📦 حفظ البيانات في localStorage
     const saveToLocalStorage = (updatedPrompts, updatedCategories) => {
       localStorage.setItem('prompts', JSON.stringify(updatedPrompts));
@@ -375,22 +414,38 @@
           </div>
 
           {/* قائمة البرومبتات */}
+{/* عرض البرومبتات في بطاقات */}
 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
   {currentPrompts.length > 0 ? (
     currentPrompts.map(prompt => (
-      <div key={prompt.id} className="bg-white p-4 rounded shadow hover:bg-gray-50 transition">
-        <p className="font-medium">[{prompt.category}] {prompt.text}</p>
-        <div className="mt-2 text-sm text-gray-500">
-          <span>ID: `{prompt.id}`</span> • <span>Tokens: `{prompt.tokens}`</span>
+      <div
+        key={prompt.id}
+        className="bg-white p-4 rounded-lg shadow hover:shadow-md transition border-l-4 border-indigo-500"
+      >
+        <div className="font-semibold text-indigo-700 mb-2">[{prompt.category}]</div>
+        <p className="text-gray-800 mb-4 line-clamp-3">{prompt.text}</p>
+        <div className="flex justify-between items-center text-xs text-gray-500">
+          <span>ID: `{prompt.id}`</span>
+          <span>Tokens: `{prompt.tokens}`</span>
         </div>
-        <div className="flex justify-end space-x-2 rtl:space-x-reverse mt-2">
-          <button onClick={() => copyPromptText(prompt.text)} className="text-blue-600 hover:text-blue-800">نسخ</button>
-          <button onClick={() => handleDeletePrompt(prompt.id)} className="text-red-600 hover:text-red-800">حذف</button>
+        <div className="mt-4 flex justify-end space-x-3 rtl:space-x-reverse">
+          <button
+            onClick={() => copyPromptText(prompt.text)}
+            className="text-blue-600 hover:text-blue-800 transition"
+          >
+            نسخ
+          </button>
+          <button
+            onClick={() => handleDeletePrompt(prompt.id)}
+            className="text-red-600 hover:text-red-800 transition"
+          >
+            حذف
+          </button>
         </div>
       </div>
     ))
   ) : (
-    <p className="col-span-full text-center py-4 text-gray-500">لا توجد برومبتات مضافة بعد.</p>
+    <p className="col-span-full text-center py-6 text-gray-500">لا توجد برومبتات مضافة بعد.</p>
   )}
 </div>
           {/* أزرار التنقل بين الصفحات */}
@@ -483,7 +538,80 @@
         </div>
       );
     };
+{/* إدارة الأقسام الفرعية */}
+{isUserAdmin && (
+  <div className="mt-8">
+    <h3 className="text-xl font-semibold text-gray-800 mb-4">إدارة الأقسام الفرعية</h3>
+    
+    {/* اختيار القسم الرئيسي */}
+    <div className="mb-4">
+      <label className="block text-sm font-medium text-gray-700 mb-1">اختر القسم الرئيسي</label>
+      <select
+        value={newPrompt.category}
+        onChange={(e) => setNewPrompt({ ...newPrompt, category: e.target.value })}
+        className="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
+      >
+        <option value="">اختر قسمًا رئيسيًا</option>
+        {categories.map((cat, idx) => (
+          <option key={idx} value={cat}>{cat}</option>
+        ))}
+      </select>
+    </div>
 
+    {/* إضافة قسم فرعي */}
+    <div className="mb-4">
+      <label className="block text-sm font-medium text-gray-700 mb-1">اسم القسم الفرعي</label>
+      <input
+        type="text"
+        placeholder="مثال: رياضيات"
+        value={newSubcategory}
+        onChange={(e) => setNewSubcategory(e.target.value)}
+        className="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
+      />
+    </div>
+
+    <button
+      onClick={handleAddSubcategory}
+      disabled={!newPrompt.category || !newSubcategory.trim() || subcategories[newPrompt.category]?.includes(newSubcategory)}
+      className={`px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded ${
+        !newPrompt.category || !newSubcategory.trim() || subcategories[newPrompt.category]?.includes(newSubcategory)
+          ? 'opacity-50 cursor-not-allowed'
+          : ''
+      }`}
+    >
+      إضافة قسم فرعي
+    </button>
+
+    {/* عرض الأقسام الفرعية */}
+    <div className="mt-6 space-y-4">
+      {categories.map(category => (
+        <div key={category} className="border-b pb-4">
+          <h4 className="font-bold text-gray-800 mb-2">{category}</h4>
+          <ul className="flex flex-wrap gap-2">
+            {subcategories[category]?.length > 0 ? (
+              subcategories[category].map(sub => (
+                <li
+                  key={sub}
+                  className="bg-gray-100 text-gray-800 px-3 py-1 rounded-full flex items-center space-x-2 rtl:space-x-reverse"
+                >
+                  <span>{sub}</span>
+                  <button
+                    onClick={() => handleDeleteSubcategory(category, sub)}
+                    className="text-red-500 hover:text-red-700"
+                  >
+                    ×
+                  </button>
+                </li>
+              ))
+            ) : (
+              <span className="text-gray-400 text-sm">لا توجد أقسام فرعية</span>
+            )}
+          </ul>
+        </div>
+      ))}
+    </div>
+  </div>
+)}
     return (
       <div className="container mx-auto max-w-6xl">
         {/* Header */}
