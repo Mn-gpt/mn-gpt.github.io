@@ -39,13 +39,11 @@
       &copy; {{new Date().getFullYear()}} MN.gpt. جميع الحقوق محفوظة.
     </footer>
   </div>
-
-  <script>
-    // تنفيذ تسجيل الخروج
-    document.addEventListener("DOMContentLoaded", function () {
-      localStorage.removeItem("isAdmin"); // حذف صلاحية المسؤول
-      console.log("تم تسجيل الخروج");
-    });
-  </script>
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    localStorage.removeItem("loggedInUser");
+    console.log("تم تسجيل الخروج");
+  });
+</script>
 </body>
 </html>
