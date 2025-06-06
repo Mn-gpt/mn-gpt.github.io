@@ -25,7 +25,24 @@
 
 <script type="text/babel">
   const { useState, useEffect } = React;
+function App() {
+  const [prompts, setPrompts] = useState([...]);
+  // ...
 
+  const handleSaveNewPrompt = (newPrompt) => {
+    const updatedPrompts = [...prompts, newPrompt];
+    setPrompts(updatedPrompts);
+    localStorage.setItem('prompts', JSON.stringify(updatedPrompts));
+  };
+
+  return (
+    <div className="container">
+      {/* ... */}
+      {isUserAdmin && <PrompticaEditor onSavePrompt={handleSaveNewPrompt} />}
+      {/* ... */}
+    </div>
+  );
+}
   function App() {
     const [activeTab, setActiveTab] = useState('dashboard');
     const [prompts, setPrompts] = useState([]);
