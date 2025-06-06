@@ -25,24 +25,7 @@
 
 <script type="text/babel">
   const { useState, useEffect } = React;
-function App() {
-  const [prompts, setPrompts] = useState([...]);
-  // ...
 
-  const handleSaveNewPrompt = (newPrompt) => {
-    const updatedPrompts = [...prompts, newPrompt];
-    setPrompts(updatedPrompts);
-    localStorage.setItem('prompts', JSON.stringify(updatedPrompts));
-  };
-
-  return (
-    <div className="container">
-      {/* ... */}
-      {isUserAdmin && <PrompticaEditor onSavePrompt={handleSaveNewPrompt} />}
-      {/* ... */}
-    </div>
-  );
-}
   function App() {
     const [activeTab, setActiveTab] = useState('dashboard');
     const [prompts, setPrompts] = useState([]);
@@ -247,53 +230,53 @@ function App() {
             </div>
           </div>
 
-          {/* قائمة الأقسام للمستخدم العادي */}
-          {!isUserAdmin ? (
-            <div>
-              <h3 className="text-xl font-semibold text-gray-800 mb-4">الأقسام المتاحة</h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                {categories.map(cat => (
-                  <a
-                    key={cat}
-                    href={`category-prompts.html?category=${encodeURIComponent(cat)}`}
-                    className="bg-white p-4 rounded shadow hover:bg-gray-50 transition flex justify-between items-center"
-                  >
-                    <span className="font-medium text-indigo-600">{cat}</span>
-                    <svg className="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
-                    </svg>
-                  </a>
-                ))}
-                {categories.length === 0 && (
-                  <p className="text-gray-500">لا توجد أقسام مضافة بعد.</p>
-                )}
-              </div>
-            </div>
-          ) : (
-            // Table of Category Stats للمسؤول فقط
-            <div className="bg-white rounded-lg shadow-md overflow-hidden">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">القسم</th>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">عدد البرومبتات</th>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">إجمالي tokens</th>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">متوسط tokens</th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {Object.entries(stats).map(([category, data]) => (
-                    <tr key={category} className="hover:bg-gray-50">
-                      <td className="px-6 py-4 whitespace-nowrap">{category}</td>
-                      <td className="px-6 py-4 whitespace-nowrap">{data.count}</td>
-                      <td className="px-6 py-4 whitespace-nowrap">{data.totalTokens}</td>
-                      <td className="px-6 py-4 whitespace-nowrap">{data.averageTokens}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
+   {/* قائمة الأقسام للمستخدم العادي */}
+{!isUserAdmin ? (
+  <div>
+    <h3 className="text-xl font-semibold text-gray-800 mb-4">الأقسام المتاحة</h3>
+    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+      {categories.map(cat => (
+        <a
+          key={cat}
+          href={`category-prompts.html?category=${encodeURIComponent(cat)}`}
+          className="bg-white p-4 rounded shadow hover:bg-gray-50 transition flex justify-between items-center"
+        >
+          <span className="font-medium text-indigo-600">{cat}</span>
+          <svg className="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
+          </svg>
+        </a>
+      ))}
+      {categories.length === 0 && (
+        <p className="text-gray-500">لا توجد أقسام مضافة بعد.</p>
+      )}
+    </div>
+  </div>
+) : (
+  // الجدول العادي للمسؤول
+  <div className="bg-white rounded-lg shadow-md overflow-hidden">
+    <table className="min-w-full divide-y divide-gray-200">
+      <thead className="bg-gray-50">
+        <tr>
+          <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">القسم</th>
+          <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">عدد البرومبتات</th>
+          <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">إجمالي tokens</th>
+          <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">متوسط tokens</th>
+        </tr>
+      </thead>
+      <tbody className="bg-white divide-y divide-gray-200">
+        {Object.entries(stats).map(([category, data]) => (
+          <tr key={category} className="hover:bg-gray-50">
+            <td className="px-6 py-4 whitespace-nowrap">{category}</td>
+            <td className="px-6 py-4 whitespace-nowrap">{data.count}</td>
+            <td className="px-6 py-4 whitespace-nowrap">{data.totalTokens}</td>
+            <td className="px-6 py-4 whitespace-nowrap">{data.averageTokens}</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </div>
+)}
         </div>
       );
     };
@@ -380,16 +363,7 @@ function App() {
               </button>
             </div>
           </form>
-{/* زر إضافة برومبت متقدم */}
-<div className="flex justify-start mb-4">
-  <button
-    type="button"
-    onClick={() => setShowAdvancedPrompt(true)}
-    className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded text-sm"
-  >
-    ➕ إضافة برومبت متقدم
-  </button>
-</div>
+
           {/* زر التصدير */}
           <div className="flex justify-end">
             <button
@@ -524,76 +498,7 @@ function App() {
         </div>
       );
     };
-// 🔧 مكون محرر Promptica داخل React
-function PrompticaEditor({ onSavePrompt }) {
-  const [form, setForm] = useState({
-    name: '',
-    category: '',
-    usage: '',
-    keywords: '',
-    text: ''
-  });
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setForm(prev => ({ ...prev, [name]: value }));
-  };
-
-  const handleSave = () => {
-    if (!form.text || !form.category) {
-      alert('يرجى ملء الحقول الأساسية');
-      return;
-    }
-    const newPrompt = {
-      id: Date.now(),
-      text: form.text,
-      category: form.category,
-      tokens: Math.ceil(form.text.split(/\s+/).length * 1.25)
-    };
-    onSavePrompt(newPrompt);
-    setForm({ name: '', category: '', usage: '', keywords: '', text: '' });
-    setShowAdvancedPrompt(false); // إغلاق النافذة بعد الحفظ
-  };
-
-  return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white p-6 rounded shadow-lg w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-        <div className="flex justify-between items-center mb-4">
-          <h3 className="text-xl font-bold">🛠️ إنشاء برومبت جديد</h3>
-          <button onClick={() => setShowAdvancedPrompt(false)} className="text-gray-500 hover:text-gray-800">×</button>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm">🆔 اسم البرومبت</label>
-            <input name="name" value={form.name} onChange={handleChange} className="w-full p-2 border rounded" placeholder="مثال: خطة تسويق ذكية" />
-          </div>
-          <div>
-            <label className="block text-sm">📁 التصنيف</label>
-            <input name="category" value={form.category} onChange={handleChange} className="w-full p-2 border rounded" placeholder="مثال: تسويق" />
-          </div>
-          <div>
-            <label className="block text-sm">🏷️ كلمات مفتاحية</label>
-            <input name="keywords" value={form.keywords} onChange={handleChange} className="w-full p-2 border rounded" placeholder="منتج، خطة، AI" />
-          </div>
-          <div>
-            <label className="block text-sm">📌 الاستخدام</label>
-            <input name="usage" value={form.usage} onChange={handleChange} className="w-full p-2 border rounded" placeholder="تحليل أو تسويق أو قصة..." />
-          </div>
-        </div>
-
-        <div className="mt-4">
-          <label className="block text-sm">🧠 نص البرومبت</label>
-          <textarea name="text" value={form.text} onChange={handleChange} rows="5" className="w-full p-2 border rounded" placeholder="اكتب نص البرومبت هنا..."></textarea>
-        </div>
-
-        <div className="flex justify-end mt-4">
-          <button onClick={handleSave} className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded">💾 حفظ البرومبت</button>
-        </div>
-      </div>
-    </div>
-  );
-}
     return (
       <div className="container mx-auto max-w-6xl">
         {/* Header */}
@@ -653,10 +558,4 @@ function PrompticaEditor({ onSavePrompt }) {
   ReactDOM.createRoot(document.getElementById('root')).render(<App />);
 </script>
 </body>
-</html>
-</html>
-</html>
-</html>
-</html>
-</html>
 </html>
