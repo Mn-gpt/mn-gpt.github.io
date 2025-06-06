@@ -1,89 +1,136 @@
-<!DOCTYPE html>
+<DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8" />
   <title>برومبتات القسم - MN.gpt</title>
-  <script src="https://cdn.tailwindcss.com"></script> 
-  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;600&display=swap" rel="stylesheet">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <!-- React + ReactDOM -->
+  <script src="https://unpkg.com/react@18/umd/react.development.js"  crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"  crossorigin></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script> 
+  <!-- Tailwind CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"  rel="stylesheet">
   <style>
     body {
-      font-family: 'Tajawal', sans-serif;
-      background-color: #f9fafb; 
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f9fafb;
       color: #1f2937;
+      line-height: 1.8;
+    }
+    .container {
+      max-width: 100%;
+      padding: 1rem;
+      margin: auto;
     }
   </style>
 </head>
-<body class="bg-gray-50 min-h-screen flex flex-col">
+<body class="min-h-screen bg-gray-50">
+<div id="root"></div>
 
-<nav class="bg-white shadow-sm">
-  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-    <div class="flex justify-between h-16 items-center">
-      <span class="text-xl font-bold text-indigo-600">MN-GPT</span>
-      <div class="space-x-4 rtl:space-x-reverse">
-        <a href="welcome.html" class="text-gray-700 hover:text-indigo-600">الرئيسية</a>
-        <a href="login.html" class="text-gray-700 hover:text-indigo-600">تسجيل الخروج</a>
-      </div>
-    </div>
-  </div>
-</nav>
+<script type="text/babel">
+  const { useState, useEffect } = React;
 
-<main class="flex-grow max-w-7xl mx-auto px-4 py-8">
-  <div class="bg-white shadow overflow-hidden sm:rounded-lg mb-8">
-    <div class="px-4 py-5 sm:px-6">
-      <h1 class="text-2xl leading-6 font-bold text-gray-900">برومبتات القسم: <span id="categoryName" class="text-indigo-600"></span></h1>
-    </div>
-    <div class="border-t border-gray-200 px-4 py-5 sm:p-6">
-      <ul class="divide-y divide-gray-200">
-        <!-- سيتم ملؤها ديناميكياً -->
-      </ul>
-    </div>
-  </div>
-</main>
+  function CategoryPrompts() {
+    const [categoryName, setCategoryName] = useState('');
+    const [prompts, setPrompts] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
 
-<script>
-  const urlParams = new URLSearchParams(window.location.search);
-  const categoryName = urlParams.get('category');
-  document.getElementById('categoryName').textContent = categoryName;
+    // استخراج اسم القسم من URL
+    useEffect(() => {
+      const urlParams = new URLSearchParams(window.location.search);
+      const categoryFromURL = decodeURIComponent(urlParams.get('category'));
 
-  const prompts = JSON.parse(localStorage.getItem('prompts')) || [
-    { id: 1, text: 'اشرح مفهوم الذكاء الاصطناعي بطريقة بسيطة.', category: 'تعليمي', tokens: 23 },
-    { id: 2, text: 'اكتب قصة قصيرة عن رحلة إلى الفضاء.', category: 'إبداعي', tokens: 45 },
-    { id: 3, text: 'ما هو تأثير التكنولوجيا على التعليم؟', category: 'تحليل بيانات', tokens: 18 },
-    { id: 4, text: 'اشرح كيف تعمل خوارزميات التعلم العميق.', category: 'تعليمي', tokens: 37 },
-    { id: 5, text: 'اكتب برنامجًا بلغة جافاسكربت لحساب العوامل.', category: 'برمجة', tokens: 41 },
-  ];
+      if (!categoryFromURL) {
+        setError("لم يتم تحديد القسم");
+        setLoading(false);
+        return;
+      }
 
-  const filteredPrompts = prompts.filter(p => p.category === categoryName);
-  const list = document.querySelector('ul');
+      setCategoryName(categoryFromURL);
 
-  if (filteredPrompts.length > 0) {
-    filteredPrompts.forEach(prompt => {
-      const li = document.createElement('li');
-      li.className = 'bg-white p-4 rounded shadow mb-3 hover:bg-gray-50 transition';
-      li.innerHTML = `
-        <div class="flex justify-between items-start">
-          <div class="pr-4">
-            <p class="font-medium">${prompt.text}</p>
-            <div class="mt-2 text-sm text-gray-500">
-              <span>ID: \`${prompt.id}\`</span> • <span>Tokens: \`${prompt.tokens}\`</span>
-            </div>
-          </div>
-          <button onclick="copyPrompt('${prompt.text}')" class="text-blue-600 hover:text-blue-800 transition">نسخ</button>
+      // تحميل البيانات
+      fetch('db.json')
+        .then(res => res.json())
+        .then(data => {
+          const filteredPrompts = data.prompts.filter(p => p.category === categoryFromURL);
+          setPrompts(filteredPrompts);
+          setLoading(false);
+        })
+        .catch(err => {
+          console.error("فشل تحميل البيانات:", err);
+          setError("فشل تحميل البيانات من db.json");
+          setLoading(false);
+        });
+    }, []);
+
+    if (loading) {
+      return (
+        <div className="container text-center py-10">
+          <p className="text-lg">جاري التحميل...</p>
         </div>
-      `;
-      list.appendChild(li);
-    });
-  } else {
-    const empty = document.createElement('li');
-    empty.className = 'text-center py-4 text-gray-500';
-    empty.textContent = 'لا توجد برومبتات مضافة لهذا القسم.';
-    list.appendChild(empty);
+      );
+    }
+
+    if (error) {
+      return (
+        <div className="container text-center py-10">
+          <p className="text-red-600">{error}</p>
+          <a href="index.html" className="text-indigo-600 hover:underline mt-4 inline-block">العودة إلى لوحة التحكم</a>
+        </div>
+      );
+    }
+
+    if (prompts.length === 0) {
+      return (
+        <div className="container text-center py-10">
+          <p className="text-lg text-gray-600">لا توجد برومبتات في هذا القسم.</p>
+          <a href="index.html" className="text-indigo-600 hover:underline mt-4 inline-block">العودة إلى لوحة التحكم</a>
+        </div>
+      );
+    }
+
+    return (
+      <div className="container">
+        {/* Header */}
+        <header className="flex justify-between items-center pb-4 border-b border-gray-200 mb-4">
+          <h1 className="text-2xl sm:text-3xl font-bold text-indigo-700">MN.gpt</h1>
+          <a href="index.html" className="text-indigo-600 hover:text-indigo-800 underline">لوحة التحكم</a>
+        </header>
+
+        <h2 className="text-xl sm:text-2xl font-bold text-gray-800 mb-4">برومبتات القسم: {categoryName}</h2>
+
+        {/* قائمة البرومبتات */}
+        <ul className="space-y-4">
+          {prompts.map(prompt => (
+            <li key={prompt.id} className="bg-white p-4 rounded shadow hover:bg-gray-50 transition">
+              <div className="flex justify-between items-start">
+                <div>
+                  <p className="font-medium">[{prompt.category}] {prompt.text}</p>
+                  <div className="mt-2 text-sm text-gray-500">
+                    <span>ID: `{prompt.id}`</span> • <span>Tokens: `{prompt.tokens}`</span>
+                  </div>
+                </div>
+              </div>
+            </li>
+          ))}
+        </ul>
+
+        {/* زر العودة */}
+        <div className="mt-6 text-center">
+          <a href="index.html" className="text-indigo-600 hover:underline">العودة إلى لوحة التحكم</a>
+        </div>
+
+        {/* Footer */}
+        <footer className="mt-8 pt-4 border-t border-gray-200 text-center text-sm text-gray-500">
+          &copy; {new Date().getFullYear()} MN.gpt. جميع الحقوق محفوظة.
+        </footer>
+      </div>
+    );
   }
 
-  function copyPrompt(text) {
-    navigator.clipboard.writeText(text);
-    alert("تم نسخ البرومبت!");
-  }
+  // Render
+  ReactDOM.createRoot(document.getElementById('root')).render(<CategoryPrompts />);
 </script>
 </body>
 </html>
