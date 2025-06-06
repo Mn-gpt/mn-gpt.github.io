@@ -612,12 +612,12 @@ if (isUserAdmin) {
   const root = ReactDOM.createRoot(document.getElementById('root'));
   root.render(<App />);
 </script>
-
-<!-- Dynamic Logout Script -->
 <script>
   document.addEventListener("DOMContentLoaded", function () {
     const logoutLink = document.getElementById("logoutLink");
+    const authLinksContainer = document.getElementById('authLinks');
 
+    // إذا كان المستخدم مسؤولًا، نضيف زر "تسجيل الخروج"
     if (logoutLink) {
       logoutLink.addEventListener("click", function (e) {
         e.preventDefault();
@@ -626,17 +626,74 @@ if (isUserAdmin) {
         tempMessage.textContent = "جارٍ تسجيل الخروج...";
         tempMessage.className = "text-green-600 font-medium ml-2";
 
-        const authLinks = document.getElementById("authLinks");
-        authLinks.innerHTML = "";
-        authLinks.appendChild(tempMessage);
+        authLinksContainer.innerHTML = "";
+        authLinksContainer.appendChild(tempMessage);
 
         setTimeout(() => {
-          localStorage.removeItem("isAdmin");
+          localStorage.removeItem("loggedInUser");
           window.location.href = "logout.html";
         }, 1500);
       });
     }
+
+    // إظهار/إخفاء خيارات الإدارة بناءً على حالة المستخدم
+    const loggedInUser = JSON.parse(localStorage.getItem('loggedInUser'));
+    const isUserAdmin = loggedInUser && loggedInUser.role === 'admin';
+
+    // تحديث روابط المصادقة
+    if (!isUserAdmin) {
+      const loginLink = document.createElement('a');
+      loginLink.href = "login.html";
+      loginLink.className = "text-gray-700 hover:text-indigo-600";
+      loginLink.textContent = "تسجيل الدخول";
+
+      authLinksContainer.innerHTML = "";
+      authLinksContainer.appendChild(loginLink);
+
+      // إضافة رابط الترحيب
+      const welcomeLink = document.createElement('a');
+      welcomeLink.href = "welcome.html";
+      welcomeLink.className = "text-indigo-600 hover:text-indigo-800 underline mr-4";
+      welcomeLink.textContent = "الترحيب";
+
+      authLinksContainer.appendChild(welcomeLink);
+    } else {
+      const logoutLinkNew = document.createElement('a');
+      logoutLinkNew.href = "#";
+      logoutLinkNew.id = "dynamicLogoutLink";
+      logoutLinkNew.className = "text-gray-700 hover:text-indigo-600";
+      logoutLinkNew.textContent = "تسجيل الخروج";
+
+      authLinksContainer.innerHTML = "";
+      authLinksContainer.appendChild(logoutLinkNew);
+
+      // إعادة تنفيذ نفس الوظيفة للزر الجديد
+      logoutLinkNew.addEventListener("click", function (e) {
+        e.preventDefault();
+
+        const tempMessage = document.createElement("span");
+        tempMessage.textContent = "جارٍ تسجيل الخروج...";
+        tempMessage.className = "text-green-600 font-medium ml-2";
+
+        authLinksContainer.innerHTML = "";
+        authLinksContainer.appendChild(tempMessage);
+
+        setTimeout(() => {
+          localStorage.removeItem("loggedInUser");
+          window.location.href = "logout.html";
+        }, 1500);
+      });
+
+      // إضافة رابط الترحيب
+      const welcomeLink = document.createElement('a');
+      welcomeLink.href = "welcome.html";
+      welcomeLink.className = "text-indigo-600 hover:text-indigo-800 underline mr-4";
+      welcomeLink.textContent = "الترحيب";
+
+      authLinksContainer.appendChild(welcomeLink);
+    }
   });
 </script>
+
 </body>
 </html>
