@@ -554,11 +554,11 @@ if (isUserAdmin) {
         {/* Header */}
         <header className="flex justify-between items-center pb-4 border-b border-gray-200 mb-4">
           <h1 className="text-2xl sm:text-3xl font-bold text-indigo-700">{signature}</h1>
-          <div id="authLinks" className="space-x-4 rtl:space-x-reverse">
+          <div id="authLinks" class="space-x-4 rtl:space-x-reverse">
   {!isUserAdmin ? (
     <a href="login.html" className="text-gray-700 hover:text-indigo-600">تسجيل الدخول</a>
   ) : (
-    <a href="admin-login.html" className="text-gray-700 hover:text-indigo-600">تسجيل الخروج</a>
+    <a href="#" id="logoutLink" className="text-gray-700 hover:text-indigo-600">تسجيل الخروج</a>
   )}
   <a href="welcome.html" className="text-indigo-600 hover:text-indigo-800 underline">الترحيب</a>
 </div>
@@ -669,41 +669,9 @@ if (isUserAdmin) {
 </script>
 <script>
   document.addEventListener("DOMContentLoaded", function () {
-    const loggedInUser = JSON.parse(localStorage.getItem('loggedInUser'));
-    const isUserAdmin = loggedInUser && loggedInUser.role === 'admin';
+    const logoutLink = document.getElementById("logoutLink");
 
-    const authLinksContainer = document.getElementById('authLinks');
-    authLinksContainer.innerHTML = "";
-
-    if (!isUserAdmin) {
-      const loginLink = document.createElement('a');
-      loginLink.href = "login.html";
-      loginLink.className = "text-gray-700 hover:text-indigo-600";
-      loginLink.textContent = "تسجيل الدخول";
-
-      const welcomeLink = document.createElement('a');
-      welcomeLink.href = "welcome.html";
-      welcomeLink.className = "text-indigo-600 hover:text-indigo-800 underline mr-4";
-      welcomeLink.textContent = "الترحيب";
-
-      authLinksContainer.appendChild(loginLink);
-      authLinksContainer.appendChild(welcomeLink);
-    } else {
-      const logoutLink = document.createElement('a');
-      logoutLink.href = "#";
-      logoutLink.id = "dynamicLogoutLink";
-      logoutLink.className = "text-gray-700 hover:text-indigo-600";
-      logoutLink.textContent = "تسجيل الخروج";
-
-      const welcomeLink = document.createElement('a');
-      welcomeLink.href = "welcome.html";
-      welcomeLink.className = "text-indigo-600 hover:text-indigo-800 underline mr-4";
-      welcomeLink.textContent = "الترحيب";
-
-      authLinksContainer.appendChild(logoutLink);
-      authLinksContainer.appendChild(welcomeLink);
-
-      // إعادة تنفيذ نفس الوظيفة للزر الجديد
+    if (logoutLink) {
       logoutLink.addEventListener("click", function (e) {
         e.preventDefault();
 
@@ -711,8 +679,9 @@ if (isUserAdmin) {
         tempMessage.textContent = "جارٍ تسجيل الخروج...";
         tempMessage.className = "text-green-600 font-medium ml-2";
 
-        authLinksContainer.innerHTML = "";
-        authLinksContainer.appendChild(tempMessage);
+        const authLinks = document.getElementById("authLinks");
+        authLinks.innerHTML = "";
+        authLinks.appendChild(tempMessage);
 
         setTimeout(() => {
           localStorage.removeItem("loggedInUser");
@@ -722,6 +691,5 @@ if (isUserAdmin) {
     }
   });
 </script>
-
 </body>
 </html>
