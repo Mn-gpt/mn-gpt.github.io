@@ -95,20 +95,20 @@ useEffect(() => {
       setPrompts(data.prompts);
       setCategories(data.categories);
 
-      // [الكود الإضافي هنا] - إنشاء بيانات افتراضية للمستخدم المسؤول
+      // [إضافة المستخدم المسؤول هنا]
       const users = JSON.parse(localStorage.getItem('users')) || [];
+      const adminExists = users.some(u => u.username === 'admin');
 
-      if (users.length === 0) {
-        // لا يوجد مستخدمين، سنقوم بإضافة مسؤول افتراضي
-        const defaultAdmin = {
+      if (!adminExists) {
+        users.push({
           username: 'admin',
           email: 'admin@example.com',
-          password: btoa('123456'), // تشفير بسيط باستخدام Base64
+          password: btoa('123456'),
           role: 'admin',
           timestamp: new Date().getTime()
-        };
+        });
 
-        localStorage.setItem('users', JSON.stringify([defaultAdmin]));
+        localStorage.setItem('users', JSON.stringify(users));
         localStorage.setItem('loggedInUser', JSON.stringify({
           username: 'admin',
           role: 'admin',
@@ -116,12 +116,13 @@ useEffect(() => {
         }));
         localStorage.setItem('isAdmin', 'true');
 
-        alert("تم إنشاء حساب المسؤول الافتراضي: \nاسم المستخدم: admin\nكلمة المرور: 123456");
+        alert("تم استعادة حساب المسؤول بنجاح!\nاسم المستخدم: admin\nكلمة المرور: 123456");
       }
 
     })
     .catch(err => {
       console.error("فشل تحميل البيانات من db.json");
+
       const savedPrompts = JSON.parse(localStorage.getItem('prompts')) || [
         { id: 1, text: 'اشرح مفهوم الذكاء الاصطناعي بطريقة بسيطة.', category: 'تعليمي', tokens: 23 },
         { id: 2, text: 'اكتب قصة قصيرة عن رحلة إلى الفضاء.', category: 'إبداعي', tokens: 45 },
@@ -130,22 +131,24 @@ useEffect(() => {
         { id: 5, text: 'اكتب برنامجًا بلغة جافاسكربت لحساب العوامل.', category: 'برمجة', tokens: 41 },
       ];
       const savedCategories = ['عام', 'تعليمي', 'إبداعي', 'تحليل بيانات', 'برمجة'];
+
       setPrompts(savedPrompts);
       setCategories(savedCategories);
 
-      // [الكود الاختباري هنا] - إنشاء حساب مسؤول في حالة عدم وجود بيانات
+      // [إضافة المستخدم المسؤول هنا أيضًا عند فشل db.json]
       const users = JSON.parse(localStorage.getItem('users')) || [];
+      const adminExists = users.some(u => u.username === 'admin');
 
-      if (users.length === 0) {
-        const defaultAdmin = {
+      if (!adminExists) {
+        users.push({
           username: 'admin',
           email: 'admin@example.com',
           password: btoa('123456'),
           role: 'admin',
           timestamp: new Date().getTime()
-        };
+        });
 
-        localStorage.setItem('users', JSON.stringify([defaultAdmin]));
+        localStorage.setItem('users', JSON.stringify(users));
         localStorage.setItem('loggedInUser', JSON.stringify({
           username: 'admin',
           role: 'admin',
@@ -153,7 +156,7 @@ useEffect(() => {
         }));
         localStorage.setItem('isAdmin', 'true');
 
-        alert("تم إنشاء حساب المسؤول الافتراضي:\nاسم المستخدم: admin\nكلمة المرور: 123456");
+        alert("تم استعادة حساب المسؤول بنجاح!\nاسم المستخدم: admin\nكلمة المرور: 123456");
       }
     });
 }, []);
