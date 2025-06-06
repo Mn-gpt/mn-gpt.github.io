@@ -3,22 +3,77 @@
 <head>
   <meta charset="UTF-8" />
   <title>Prompt Manager - MN.gpt</title>
+
+  <!-- Meta for Responsive Design -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="HandheldFriendly" content="true">
+  <meta name="MobileOptimized" content="width">
+
   <!-- React + ReactDOM -->
   <script src="https://unpkg.com/react@18/umd/react.development.js"  crossorigin></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"  crossorigin></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script> 
+
+  <!-- Tailwind CSS CDN -->
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"  rel="stylesheet" />
-  <link rel="stylesheet" href="style.css">
+
+  <!-- Internal CSS for Mobile Optimization -->
   <style>
+    html {
+      font-size: 16px;
+    }
+
+    @media (max-width: 640px) {
+      html {
+        font-size: 17px;
+      }
+
+      .text-sm {
+        font-size: 1rem;
+      }
+
+      .text-base {
+        font-size: 1.125rem;
+      }
+
+      .text-lg {
+        font-size: 1.25rem;
+      }
+
+      .container {
+        width: 100%;
+        max-width: 100%;
+        padding: 1rem;
+      }
+
+      .card,
+      .bg-white {
+        padding: 1rem !important;
+      }
+    }
+
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       background-color: #f9fafb;
       color: #1f2937;
+      line-height: 1.8;
+      margin: 0;
+      padding: 0.5rem;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 100%;
+      padding: 1rem;
+      margin: auto;
+    }
+
+    h1, h2, h3, h4, h5, h6 {
+      font-weight: bold;
     }
   </style>
 </head>
-<body class="p-6 bg-gray-50 min-h-screen">
-
+<body class="min-h-screen bg-gray-50">
 <div id="root"></div>
 
 <script type="text/babel">
@@ -36,10 +91,10 @@
     const [itemsPerPage] = useState(4);
     const [signature] = useState('MN.gpt');
 
-    // 🔽 تحديد نوع المستخدم
+    // تحديد نوع المستخدم
     const isUserAdmin = localStorage.getItem('isAdmin') === 'true';
 
-    // 🔽 تحميل البيانات من db.json
+    // تحميل البيانات من db.json أو localStorage
     useEffect(() => {
       fetch('db.json')
         .then(res => res.json())
@@ -62,13 +117,13 @@
         });
     }, []);
 
-    // 📦 حفظ البيانات في localStorage
+    // حفظ البيانات في localStorage
     const saveToLocalStorage = (updatedPrompts, updatedCategories) => {
       localStorage.setItem('prompts', JSON.stringify(updatedPrompts));
       localStorage.setItem('categories', JSON.stringify(updatedCategories));
     };
 
-    // ➕ إضافة برومبت جديد
+    // إضافة برومبت جديد
     const handleAddPrompt = (e) => {
       e.preventDefault();
       if (!newPrompt.text || !newPrompt.category) return;
@@ -83,14 +138,14 @@
       setNewPrompt({ text: '', category: '', tokens: 0 });
     };
 
-    // ❌ حذف برومبت
+    // حذف برومبت
     const handleDeletePrompt = (id) => {
       const updatedPrompts = prompts.filter(prompt => prompt.id !== id);
       setPrompts(updatedPrompts);
       saveToLocalStorage(updatedPrompts, categories);
     };
 
-    // ➕ إضافة قسم جديد
+    // إضافة قسم جديد
     const handleAddCategory = () => {
       if (!newPrompt.category.trim()) return;
       if (categories.includes(newPrompt.category)) {
@@ -102,7 +157,7 @@
       saveToLocalStorage(prompts, updatedCategories);
     };
 
-    // ✏️ تعديل اسم القسم
+    // تعديل اسم القسم
     const handleStartEditCategory = (category) => {
       setEditingCategory(category);
       setEditCategoryName(category);
@@ -123,7 +178,7 @@
       saveToLocalStorage(updatedPrompts, updatedCategories);
     };
 
-    // ❌ حذف قسم
+    // حذف قسم
     const handleDeleteCategory = (categoryToDelete) => {
       if (!window.confirm(`هل أنت متأكد من حذف القسم "${categoryToDelete}" وجميع البرومبتات المرتبطة به؟`)) return;
       const updatedPrompts = prompts.filter(p => p.category !== categoryToDelete);
@@ -133,7 +188,7 @@
       saveToLocalStorage(updatedPrompts, updatedCategories);
     };
 
-    // 🔍 البحث والفرز
+    // البحث والفرز
     const filteredPrompts = prompts.filter(prompt =>
       prompt.text.toLowerCase().includes(searchTerm.toLowerCase()) ||
       prompt.category.toLowerCase().includes(searchTerm.toLowerCase())
@@ -155,7 +210,7 @@
 
     const paginate = (pageNumber) => setCurrentPage(pageNumber);
 
-    // 📊 إحصاءات الأقسام
+    // إحصاءات الأقسام
     const getCategoryStats = () => {
       const stats = {};
       categories.forEach(category => {
@@ -170,7 +225,7 @@
       return stats;
     };
 
-    // 💾 تصدير البرومبتات إلى Markdown
+    // تصدير البرومبتات إلى Markdown
     const exportPromptsToMarkdown = () => {
       let markdown = '# 📝 قائمة البرومبتات\n';
       const groupedByCategory = {};
@@ -178,14 +233,12 @@
         if (!groupedByCategory[prompt.category]) groupedByCategory[prompt.category] = [];
         groupedByCategory[prompt.category].push(prompt);
       });
-
       Object.entries(groupedByCategory).forEach(([category, promptList]) => {
         markdown += `## 📁 القسم: ${category}\n`;
         promptList.forEach((prompt, index) => {
           markdown += `${index + 1}. **[${prompt.category}]** ${prompt.text}\n   - \`ID: ${prompt.id}\`\n   - \`tokens: ${prompt.tokens}\`\n`;
         });
       });
-
       const blob = new Blob([markdown], { type: 'text/markdown' });
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
@@ -197,13 +250,13 @@
       URL.revokeObjectURL(url);
     };
 
-    // 📋 نسخ نص البرومبت
+    // نسخ نص البرومبت
     const copyPromptText = (text) => {
       navigator.clipboard.writeText(text);
       alert("تم نسخ البرومبت!");
     };
 
-    // 💡 عرض لوحة التحكم للمستخدم العادي أو المسؤول
+    // عرض لوحة التحكم
     const renderDashboard = () => {
       const stats = getCategoryStats();
       const totalPrompts = prompts.length;
@@ -212,26 +265,26 @@
 
       return (
         <div className="space-y-6">
-          <h2 className="text-2xl font-bold text-gray-800">لوحة التحكم</h2>
+          <h2 className="text-2xl sm:text-3xl font-bold text-gray-800">لوحة التحكم</h2>
 
           {/* رسالة للمستخدم العادي */}
           {!isUserAdmin && (
-            <div className="bg-yellow-100 text-yellow-800 p-3 rounded text-sm">
+            <div className="bg-yellow-100 text-yellow-800 p-4 rounded text-sm">
               ⚠️ ملاحظة: أنت مستخدم عادي، يمكنك فقط النقر على القسم لرؤية البرومبتات.
             </div>
           )}
 
           {/* Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="bg-white p-6 rounded-lg shadow-md">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3 sm:gap-6">
+            <div className="bg-white p-4 sm:p-6 rounded-lg shadow-md">
               <h3 className="text-lg font-semibold text-gray-700 mb-2">عدد البرومبتات</h3>
               <p className="text-3xl font-bold text-indigo-600">{totalPrompts}</p>
             </div>
-            <div className="bg-white p-6 rounded-lg shadow-md">
+            <div className="bg-white p-4 sm:p-6 rounded-lg shadow-md">
               <h3 className="text-lg font-semibold text-gray-700 mb-2">عدد الكلمات (tokens)</h3>
               <p className="text-3xl font-bold text-blue-600">{totalTokens}</p>
             </div>
-            <div className="bg-white p-6 rounded-lg shadow-md">
+            <div className="bg-white p-4 sm:p-6 rounded-lg shadow-md">
               <h3 className="text-lg font-semibold text-gray-700 mb-2">متوسط tokens</h3>
               <p className="text-3xl font-bold text-green-600">{averageTokens} token</p>
             </div>
@@ -241,7 +294,7 @@
           {!isUserAdmin ? (
             <div>
               <h3 className="text-xl font-semibold text-gray-800 mb-4">الأقسام المتاحة</h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 gap-4">
                 {categories.map(cat => (
                   <a
                     key={cat}
@@ -255,7 +308,7 @@
                   </a>
                 ))}
                 {categories.length === 0 && (
-                  <p className="text-gray-500">لا توجد أقسام مضافة بعد.</p>
+                  <p className="text-gray-500 text-center py-4">لا توجد أقسام مضافة بعد.</p>
                 )}
               </div>
             </div>
@@ -265,19 +318,19 @@
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
                   <tr>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">القسم</th>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">عدد البرومبتات</th>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">إجمالي tokens</th>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">متوسط tokens</th>
+                    <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">القسم</th>
+                    <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">عدد البرومبتات</th>
+                    <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">إجمالي tokens</th>
+                    <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">متوسط tokens</th>
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
                   {Object.entries(stats).map(([category, data]) => (
                     <tr key={category} className="hover:bg-gray-50">
-                      <td className="px-6 py-4 whitespace-nowrap">{category}</td>
-                      <td className="px-6 py-4 whitespace-nowrap">{data.count}</td>
-                      <td className="px-6 py-4 whitespace-nowrap">{data.totalTokens}</td>
-                      <td className="px-6 py-4 whitespace-nowrap">{data.averageTokens}</td>
+                      <td className="px-4 py-4 whitespace-nowrap">{category}</td>
+                      <td className="px-4 py-4 whitespace-nowrap">{data.count}</td>
+                      <td className="px-4 py-4 whitespace-nowrap">{data.totalTokens}</td>
+                      <td className="px-4 py-4 whitespace-nowrap">{data.averageTokens}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -288,11 +341,11 @@
       );
     };
 
-    // 💡 إدارة البرومبتات (للمسؤول فقط)
+    // إدارة البرومبتات (للمسؤول فقط)
     const renderPromptsManagement = () => {
       return (
         <div className="space-y-6">
-          <h2 className="text-2xl font-bold text-gray-800">إدارة البرومبتات</h2>
+          <h2 className="text-2xl sm:text-3xl font-bold text-gray-800">إدارة البرومبتات</h2>
 
           {/* شريط البحث */}
           <div className="mb-4">
@@ -309,7 +362,7 @@
           </div>
 
           {/* Form لإضافة برومبت */}
-          <form onSubmit={handleAddPrompt} className="bg-white p-6 rounded-lg shadow-md space-y-4">
+          <form onSubmit={handleAddPrompt} className="bg-white p-4 sm:p-6 rounded-lg shadow-md space-y-4">
             <label className="block text-sm font-medium text-gray-700">نص البرومبت</label>
             <textarea
               rows="4"
@@ -328,6 +381,7 @@
             <div className="text-sm text-gray-600">
               عدد tokens المتوقعة: <strong>{Math.ceil(newPrompt.text.split(/\s+/).length * 1.25)}</strong>
             </div>
+
             <label className="block text-sm font-medium text-gray-700 mt-4">القسم</label>
             <select
               value={newPrompt.category}
@@ -339,6 +393,7 @@
                 <option key={idx} value={cat}>{cat}</option>
               ))}
             </select>
+
             <div className="mt-4">
               <label className="block text-sm font-medium text-gray-700">أدخل اسم قسم جديد (اختياري)</label>
               <input
@@ -349,6 +404,7 @@
                 className="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
               />
             </div>
+
             <div className="flex flex-wrap gap-3 pt-2">
               <button
                 type="submit"
@@ -395,7 +451,7 @@
                         <span>ID: `{prompt.id}`</span> • <span>Tokens: `{prompt.tokens}`</span>
                       </div>
                     </div>
-                    <div className="flex space-x-2 space-x-reverse">
+                    <div className="flex space-x-2 rtl:space-x-reverse">
                       <button
                         onClick={() => copyPromptText(prompt.text)}
                         className="text-blue-600 hover:text-blue-800 transition"
@@ -511,10 +567,10 @@
     };
 
     return (
-      <div className="container mx-auto max-w-6xl">
+      <div className="container">
         {/* Header */}
-        <header className="flex justify-between items-center pb-6 border-b border-gray-200 mb-6">
-          <h1 className="text-3xl font-bold text-indigo-700">{signature}</h1>
+        <header className="flex justify-between items-center pb-4 border-b border-gray-200 mb-4">
+          <h1 className="text-2xl sm:text-3xl font-bold text-indigo-700">{signature}</h1>
           <div className="space-x-4 rtl:space-x-reverse">
             <a href="welcome.html" className="text-indigo-600 hover:text-indigo-800 underline">الترحيب</a>
             <a href="login.html" className="text-gray-700 hover:text-indigo-600">تسجيل الخروج</a>
@@ -522,13 +578,13 @@
         </header>
 
         {/* Tabs Navigation */}
-        <div className="flex space-x-4 rtl:space-x-reverse mb-6 border-b border-gray-200">
+        <div className="flex space-x-4 rtl:space-x-reverse mb-4 border-b border-gray-200 overflow-x-auto">
           <button
             onClick={() => {
               setActiveTab('dashboard');
               setCurrentPage(1);
             }}
-            className={`py-2 px-4 font-medium ${
+            className={`py-2 px-4 font-medium whitespace-nowrap ${
               activeTab === 'dashboard'
                 ? 'border-b-2 border-indigo-600 text-indigo-600'
                 : 'text-gray-600'
@@ -542,7 +598,7 @@
                 setActiveTab('prompts');
                 setCurrentPage(1);
               }}
-              className={`py-2 px-4 font-medium ${
+              className={`py-2 px-4 font-medium whitespace-nowrap ${
                 activeTab === 'prompts'
                   ? 'border-b-2 border-indigo-600 text-indigo-600'
                   : 'text-gray-600'
@@ -558,7 +614,7 @@
         {activeTab === 'prompts' && isUserAdmin && renderPromptsManagement()}
 
         {/* Footer */}
-        <footer className="mt-10 pt-6 border-t border-gray-200 text-center text-sm text-gray-500">
+        <footer className="mt-8 pt-4 border-t border-gray-200 text-center text-sm text-gray-500">
           &copy; {new Date().getFullYear()} {signature}. جميع الحقوق محفوظة.
         </footer>
       </div>
