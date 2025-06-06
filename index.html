@@ -560,7 +560,12 @@ if (isUserAdmin) {
   ) : (
     <a href="#" id="logoutLink" className="text-gray-700 hover:text-indigo-600">تسجيل الخروج</a>
   )}
+  <div className="space-x-4 rtl:space-x-reverse">
   <a href="welcome.html" className="text-indigo-600 hover:text-indigo-800 underline">الترحيب</a>
+  {isUserAdmin && (
+    <a href="profile.html" className="text-gray-700 hover:text-indigo-600">الملف الشخصي</a>
+  )}
+</div>
 </div>
         </header>
 
@@ -685,6 +690,31 @@ if (isUserAdmin) {
 
         setTimeout(() => {
           localStorage.removeItem("loggedInUser");
+          window.location.href = "logout.html";
+        }, 1500);
+      });
+    }
+  });
+</script>
+  <script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const logoutLink = document.getElementById("logoutLink");
+    const authLinksContainer = document.getElementById('authLinks');
+
+    if (logoutLink) {
+      logoutLink.addEventListener("click", function (e) {
+        e.preventDefault();
+
+        const tempMessage = document.createElement("span");
+        tempMessage.textContent = "جارٍ تسجيل الخروج...";
+        tempMessage.className = "text-green-600 font-medium ml-2";
+
+        authLinksContainer.innerHTML = "";
+        authLinksContainer.appendChild(tempMessage);
+
+        setTimeout(() => {
+          localStorage.removeItem("loggedInUser");
+          localStorage.removeItem("isAdmin");
           window.location.href = "logout.html";
         }, 1500);
       });
