@@ -16,23 +16,28 @@
 </head>
 <body class="min-h-screen bg-gray-50 flex items-center justify-center px-4">
   <div class="w-full max-w-md bg-white p-6 rounded shadow-md">
-    <h1 class="text-2xl sm:text-3xl font-bold text-indigo-700 mb-6 text-center">تسجيل الدخول</h1>
-    
-    <form id="loginForm">
-      <div class="mb-4">
+    <h1 class="text-2xl sm:text-3xl font-bold text-indigo-700 mb-6 text-center">MN.gpt</h1>
+
+    <form id="loginForm" class="space-y-4">
+      <div>
         <label for="username" class="block text-sm font-medium text-gray-700 mb-1">اسم المستخدم</label>
         <input type="text" id="username" name="username" required
           class="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
           placeholder="أدخل اسم المستخدم" />
       </div>
-      
-      <div class="mb-6">
+
+      <div>
         <label for="password" class="block text-sm font-medium text-gray-700 mb-1">كلمة المرور</label>
         <input type="password" id="password" name="password" required
           class="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
           placeholder="أدخل كلمة المرور" />
       </div>
-      
+
+      <div class="flex items-center">
+        <input type="checkbox" id="rememberMe" name="rememberMe" class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded" />
+        <label for="rememberMe" class="mr-2 block text-sm text-gray-700">تذكرني</label>
+      </div>
+
       <button type="submit"
         class="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded transition">
         دخول
@@ -53,18 +58,39 @@
   </div>
 
   <script>
-    // محاكاة تسجيل الدخول
+    // تخزين بيانات المستخدم الافتراضية (في بيئة حقيقية، ستكون من الخادم)
+    const storedUsers = JSON.parse(localStorage.getItem('users')) || [
+      { username: 'admin', password: btoa('123456'), role: 'admin' },
+    ];
+
+    // عند تقديم النموذج
     document.getElementById('loginForm').addEventListener('submit', function(e) {
       e.preventDefault();
       const username = document.getElementById('username').value.trim();
       const password = document.getElementById('password').value.trim();
+      const rememberMe = document.getElementById('rememberMe').checked;
 
-      if (username && password) {
-        localStorage.setItem('isAdmin', 'true');
+      if (!username || !password) {
+        alert("يرجى إدخال اسم المستخدم وكلمة المرور.");
+        return;
+      }
+
+      const hashedPassword = btoa(password);
+      const user = storedUsers.find(u => u.username === username && u.password === hashedPassword);
+
+      if (user) {
+        // تسجيل الدخول ناجح
+        localStorage.setItem('loggedInUser', JSON.stringify({
+          username: user.username,
+          role: user.role,
+          timestamp: new Date().getTime(),
+          rememberMe
+        }));
+
         alert("تم تسجيل الدخول بنجاح!");
         window.location.href = 'index.html';
       } else {
-        alert("يرجى إدخال اسم المستخدم وكلمة المرور.");
+        alert("اسم المستخدم أو كلمة المرور غير صحيحة.");
       }
     });
   </script>
