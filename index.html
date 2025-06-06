@@ -89,27 +89,74 @@ if (isUserAdmin) {
 
     // تحميل البيانات
     useEffect(() => {
-      fetch('db.json')
-        .then(res => res.json())
-        .then(data => {
-          setPrompts(data.prompts);
-          setCategories(data.categories);
-        })
-        .catch(err => {
-          console.error("فشل تحميل db.json");
-          const savedPrompts = JSON.parse(localStorage.getItem('prompts')) || [
-            { id: 1, text: 'اشرح مفهوم الذكاء الاصطناعي بطريقة بسيطة.', category: 'تعليمي', tokens: 23 },
-            { id: 2, text: 'اكتب قصة قصيرة عن رحلة إلى الفضاء.', category: 'إبداعي', tokens: 45 },
-            { id: 3, text: 'ما هو تأثير التكنولوجيا على التعليم؟', category: 'تحليل بيانات', tokens: 18 },
-            { id: 4, text: 'اشرح كيف تعمل خوارزميات التعلم العميق.', category: 'تعليمي', tokens: 37 },
-            { id: 5, text: 'اكتب برنامجًا بلغة جافاسكربت لحساب العوامل.', category: 'برمجة', tokens: 41 },
-          ];
-          const savedCategories = ['عام', 'تعليمي', 'إبداعي', 'تحليل بيانات', 'برمجة'];
-          setPrompts(savedPrompts);
-          setCategories(savedCategories);
-        });
-    }, []);
+  fetch('db.json')
+    .then(res => res.json())
+    .then(data => {
+      setPrompts(data.prompts);
+      setCategories(data.categories);
 
+      // [الكود الإضافي هنا] - إنشاء بيانات افتراضية للمستخدم المسؤول
+      const users = JSON.parse(localStorage.getItem('users')) || [];
+
+      if (users.length === 0) {
+        // لا يوجد مستخدمين، سنقوم بإضافة مسؤول افتراضي
+        const defaultAdmin = {
+          username: 'admin',
+          email: 'admin@example.com',
+          password: btoa('123456'), // تشفير بسيط باستخدام Base64
+          role: 'admin',
+          timestamp: new Date().getTime()
+        };
+
+        localStorage.setItem('users', JSON.stringify([defaultAdmin]));
+        localStorage.setItem('loggedInUser', JSON.stringify({
+          username: 'admin',
+          role: 'admin',
+          timestamp: new Date().getTime()
+        }));
+        localStorage.setItem('isAdmin', 'true');
+
+        alert("تم إنشاء حساب المسؤول الافتراضي: \nاسم المستخدم: admin\nكلمة المرور: 123456");
+      }
+
+    })
+    .catch(err => {
+      console.error("فشل تحميل البيانات من db.json");
+      const savedPrompts = JSON.parse(localStorage.getItem('prompts')) || [
+        { id: 1, text: 'اشرح مفهوم الذكاء الاصطناعي بطريقة بسيطة.', category: 'تعليمي', tokens: 23 },
+        { id: 2, text: 'اكتب قصة قصيرة عن رحلة إلى الفضاء.', category: 'إبداعي', tokens: 45 },
+        { id: 3, text: 'ما هو تأثير التكنولوجيا على التعليم؟', category: 'تحليل بيانات', tokens: 18 },
+        { id: 4, text: 'اشرح كيف تعمل خوارزميات التعلم العميق.', category: 'تعليمي', tokens: 37 },
+        { id: 5, text: 'اكتب برنامجًا بلغة جافاسكربت لحساب العوامل.', category: 'برمجة', tokens: 41 },
+      ];
+      const savedCategories = ['عام', 'تعليمي', 'إبداعي', 'تحليل بيانات', 'برمجة'];
+      setPrompts(savedPrompts);
+      setCategories(savedCategories);
+
+      // [الكود الاختباري هنا] - إنشاء حساب مسؤول في حالة عدم وجود بيانات
+      const users = JSON.parse(localStorage.getItem('users')) || [];
+
+      if (users.length === 0) {
+        const defaultAdmin = {
+          username: 'admin',
+          email: 'admin@example.com',
+          password: btoa('123456'),
+          role: 'admin',
+          timestamp: new Date().getTime()
+        };
+
+        localStorage.setItem('users', JSON.stringify([defaultAdmin]));
+        localStorage.setItem('loggedInUser', JSON.stringify({
+          username: 'admin',
+          role: 'admin',
+          timestamp: new Date().getTime()
+        }));
+        localStorage.setItem('isAdmin', 'true');
+
+        alert("تم إنشاء حساب المسؤول الافتراضي:\nاسم المستخدم: admin\nكلمة المرور: 123456");
+      }
+    });
+}, []);
     // حفظ البيانات في localStorage
     const saveToLocalStorage = (updatedPrompts, updatedCategories) => {
       localStorage.setItem('prompts', JSON.stringify(updatedPrompts));
