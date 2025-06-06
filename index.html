@@ -2,41 +2,25 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8" />
-  <title>MN.gpt - لوحة التحكم</title>
-  <!-- Meta for Responsive Design -->
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <meta name="HandheldFriendly" content="true">
-  <meta name="MobileOptimized" content="width">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Prompt Manager - MN.gpt</title>
 
   <!-- React + ReactDOM -->
   <script src="https://unpkg.com/react@18/umd/react.development.js"  crossorigin></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"  crossorigin></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script> 
-
-  <!-- Tailwind CSS -->
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"  rel="stylesheet" />
 
-  <!-- Internal Styles -->
   <style>
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       background-color: #f9fafb;
       color: #1f2937;
-      line-height: 1.8;
-    }
-    .container {
-      max-width: 100%;
-      padding: 1rem;
-      margin: auto;
-    }
-    @media (max-width: 640px) {
-      html {
-        font-size: 17px;
-      }
     }
   </style>
 </head>
-<body class="min-h-screen bg-gray-50">
+<body class="p-6 bg-gray-50 min-h-screen">
+
 <div id="root"></div>
 
 <script type="text/babel">
@@ -52,77 +36,13 @@
     const [searchTerm, setSearchTerm] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage] = useState(4);
-    const signature = 'MN.gpt';
+    const [signature] = useState('MN.gpt');
 
-// تحديد نوع المستخدم
-const loggedInUser = JSON.parse(localStorage.getItem('loggedInUser'));
-const isUserAdmin = loggedInUser && loggedInUser.role === 'admin';
+    // 🔽 تحديد نوع المستخدم
+    const isUserAdmin = localStorage.getItem('isAdmin') === 'true';
 
-// عرض زر "تسجيل الخروج" فقط للمستخدمين المسجلين
-if (isUserAdmin) {
-  const logoutLink = document.createElement('a');
-  logoutLink.href = "#";
-  logoutLink.className = "text-gray-700 hover:text-indigo-600";
-  logoutLink.textContent = "تسجيل الخروج";
-
-  logoutLink.addEventListener("click", function (e) {
-    e.preventDefault();
-
-    const tempMessage = document.createElement("span");
-    tempMessage.textContent = "جارٍ تسجيل الخروج...";
-    tempMessage.className = "text-green-600 font-medium ml-2";
-
-    const authLinks = document.getElementById('authLinks');
-    authLinks.innerHTML = "";
-    authLinks.appendChild(tempMessage);
-
-    setTimeout(() => {
-      localStorage.removeItem("loggedInUser");
-      window.location.href = "logout.html";
-    }, 1500);
-  });
-
-  const authLinksContainer = document.getElementById('authLinks');
-  authLinksContainer.innerHTML = ""; // تنظيف الروابط القديمة
-  authLinksContainer.appendChild(logoutLink);
-}
-
-    // تحميل البيانات
-useEffect(() => {
-  fetch('db.json')
-    .then(res => res.json())
-    .then(data => {
-      setPrompts(data.prompts);
-      setCategories(data.categories);
-
-      // [إضافة المستخدم المسؤول هنا]
-      const users = JSON.parse(localStorage.getItem('users')) || [];
-      const adminExists = users.some(u => u.username === 'admin');
-
-      if (!adminExists) {
-        users.push({
-          username: 'admin',
-          email: 'admin@example.com',
-          password: btoa('123456'),
-          role: 'admin',
-          timestamp: new Date().getTime()
-        });
-
-        localStorage.setItem('users', JSON.stringify(users));
-        localStorage.setItem('loggedInUser', JSON.stringify({
-          username: 'admin',
-          role: 'admin',
-          timestamp: new Date().getTime()
-        }));
-        localStorage.setItem('isAdmin', 'true');
-
-        alert("تم استعادة حساب المسؤول بنجاح!\nاسم المستخدم: admin\nكلمة المرور: 123456");
-      }
-
-    })
-    .catch(err => {
-      console.error("فشل تحميل البيانات من db.json");
-
+    // 🔽 تحميل البيانات من localStorage
+    useEffect(() => {
       const savedPrompts = JSON.parse(localStorage.getItem('prompts')) || [
         { id: 1, text: 'اشرح مفهوم الذكاء الاصطناعي بطريقة بسيطة.', category: 'تعليمي', tokens: 23 },
         { id: 2, text: 'اكتب قصة قصيرة عن رحلة إلى الفضاء.', category: 'إبداعي', tokens: 45 },
@@ -130,43 +50,18 @@ useEffect(() => {
         { id: 4, text: 'اشرح كيف تعمل خوارزميات التعلم العميق.', category: 'تعليمي', tokens: 37 },
         { id: 5, text: 'اكتب برنامجًا بلغة جافاسكربت لحساب العوامل.', category: 'برمجة', tokens: 41 },
       ];
-      const savedCategories = ['عام', 'تعليمي', 'إبداعي', 'تحليل بيانات', 'برمجة'];
-
+      const savedCategories = JSON.parse(localStorage.getItem('categories')) || ['عام', 'تعليمي', 'إبداعي', 'تحليل بيانات', 'برمجة'];
       setPrompts(savedPrompts);
       setCategories(savedCategories);
+    }, []);
 
-      // [إضافة المستخدم المسؤول هنا أيضًا عند فشل db.json]
-      const users = JSON.parse(localStorage.getItem('users')) || [];
-      const adminExists = users.some(u => u.username === 'admin');
-
-      if (!adminExists) {
-        users.push({
-          username: 'admin',
-          email: 'admin@example.com',
-          password: btoa('123456'),
-          role: 'admin',
-          timestamp: new Date().getTime()
-        });
-
-        localStorage.setItem('users', JSON.stringify(users));
-        localStorage.setItem('loggedInUser', JSON.stringify({
-          username: 'admin',
-          role: 'admin',
-          timestamp: new Date().getTime()
-        }));
-        localStorage.setItem('isAdmin', 'true');
-
-        alert("تم استعادة حساب المسؤول بنجاح!\nاسم المستخدم: admin\nكلمة المرور: 123456");
-      }
-    });
-}, []);
-    // حفظ البيانات في localStorage
+    // 📦 حفظ البيانات في localStorage
     const saveToLocalStorage = (updatedPrompts, updatedCategories) => {
       localStorage.setItem('prompts', JSON.stringify(updatedPrompts));
       localStorage.setItem('categories', JSON.stringify(updatedCategories));
     };
 
-    // إضافة برومبت جديد
+    // ➕ إضافة برومبت جديد
     const handleAddPrompt = (e) => {
       e.preventDefault();
       if (!newPrompt.text || !newPrompt.category) return;
@@ -181,14 +76,14 @@ useEffect(() => {
       setNewPrompt({ text: '', category: '', tokens: 0 });
     };
 
-    // حذف برومبت
+    // ❌ حذف برومبت
     const handleDeletePrompt = (id) => {
       const updatedPrompts = prompts.filter(prompt => prompt.id !== id);
       setPrompts(updatedPrompts);
       saveToLocalStorage(updatedPrompts, categories);
     };
 
-    // إضافة قسم جديد
+    // ➕ إضافة قسم جديد
     const handleAddCategory = () => {
       if (!newPrompt.category.trim()) return;
       if (categories.includes(newPrompt.category)) {
@@ -200,7 +95,7 @@ useEffect(() => {
       saveToLocalStorage(prompts, updatedCategories);
     };
 
-    // تعديل اسم القسم
+    // ✏️ تعديل اسم القسم
     const handleStartEditCategory = (category) => {
       setEditingCategory(category);
       setEditCategoryName(category);
@@ -221,7 +116,7 @@ useEffect(() => {
       saveToLocalStorage(updatedPrompts, updatedCategories);
     };
 
-    // حذف قسم
+    // ❌ حذف قسم
     const handleDeleteCategory = (categoryToDelete) => {
       if (!window.confirm(`هل أنت متأكد من حذف القسم "${categoryToDelete}" وجميع البرومبتات المرتبطة به؟`)) return;
       const updatedPrompts = prompts.filter(p => p.category !== categoryToDelete);
@@ -231,7 +126,7 @@ useEffect(() => {
       saveToLocalStorage(updatedPrompts, updatedCategories);
     };
 
-    // البحث والفرز
+    // 🔍 البحث والفرز
     const filteredPrompts = prompts.filter(prompt =>
       prompt.text.toLowerCase().includes(searchTerm.toLowerCase()) ||
       prompt.category.toLowerCase().includes(searchTerm.toLowerCase())
@@ -253,7 +148,7 @@ useEffect(() => {
 
     const paginate = (pageNumber) => setCurrentPage(pageNumber);
 
-    // إحصاءات الأقسام
+    // 📊 إحصاءات الأقسام
     const getCategoryStats = () => {
       const stats = {};
       categories.forEach(category => {
@@ -268,7 +163,7 @@ useEffect(() => {
       return stats;
     };
 
-    // تصدير البرومبتات إلى Markdown
+    // 💾 تصدير البرومبتات إلى Markdown
     const exportPromptsToMarkdown = () => {
       let markdown = '# 📝 قائمة البرومبتات\n';
       const groupedByCategory = {};
@@ -284,7 +179,7 @@ useEffect(() => {
         });
       });
 
-      const blob = new Blob([markdown], { type: 'text/plain' });
+      const blob = new Blob([markdown], { type: 'text/markdown' });
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
@@ -295,13 +190,13 @@ useEffect(() => {
       URL.revokeObjectURL(url);
     };
 
-    // نسخ نص البرومبت
+    // 📋 نسخ نص البرومبت
     const copyPromptText = (text) => {
       navigator.clipboard.writeText(text);
       alert("تم نسخ البرومبت!");
     };
 
-    // عرض لوحة التحكم
+    // 💡 عرض لوحة التحكم للمستخدم العادي أو المسؤول
     const renderDashboard = () => {
       const stats = getCategoryStats();
       const totalPrompts = prompts.length;
@@ -310,33 +205,36 @@ useEffect(() => {
 
       return (
         <div className="space-y-6">
-          <h2 className="text-2xl sm:text-3xl font-bold text-gray-800">لوحة التحكم</h2>
+          <h2 className="text-2xl font-bold text-gray-800">لوحة التحكم</h2>
+
           {/* رسالة للمستخدم العادي */}
           {!isUserAdmin && (
-            <div className="bg-yellow-100 text-yellow-800 p-4 rounded text-sm">
+            <div className="bg-yellow-100 text-yellow-800 p-3 rounded text-sm">
               ⚠️ ملاحظة: أنت مستخدم عادي، يمكنك فقط النقر على القسم لرؤية البرومبتات.
             </div>
           )}
+
           {/* Cards */}
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3 sm:gap-6">
-            <div className="bg-white p-4 sm:p-6 rounded-lg shadow-md">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="bg-white p-6 rounded-lg shadow-md">
               <h3 className="text-lg font-semibold text-gray-700 mb-2">عدد البرومبتات</h3>
               <p className="text-3xl font-bold text-indigo-600">{totalPrompts}</p>
             </div>
-            <div className="bg-white p-4 sm:p-6 rounded-lg shadow-md">
+            <div className="bg-white p-6 rounded-lg shadow-md">
               <h3 className="text-lg font-semibold text-gray-700 mb-2">عدد الكلمات (tokens)</h3>
               <p className="text-3xl font-bold text-blue-600">{totalTokens}</p>
             </div>
-            <div className="bg-white p-4 sm:p-6 rounded-lg shadow-md">
+            <div className="bg-white p-6 rounded-lg shadow-md">
               <h3 className="text-lg font-semibold text-gray-700 mb-2">متوسط tokens</h3>
               <p className="text-3xl font-bold text-green-600">{averageTokens} token</p>
             </div>
           </div>
+
           {/* قائمة الأقسام للمستخدم العادي */}
           {!isUserAdmin ? (
             <div>
               <h3 className="text-xl font-semibold text-gray-800 mb-4">الأقسام المتاحة</h3>
-              <div className="grid grid-cols-1 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                 {categories.map(cat => (
                   <a
                     key={cat}
@@ -350,7 +248,7 @@ useEffect(() => {
                   </a>
                 ))}
                 {categories.length === 0 && (
-                  <p className="text-gray-500 text-center py-4">لا توجد أقسام مضافة بعد.</p>
+                  <p className="text-gray-500">لا توجد أقسام مضافة بعد.</p>
                 )}
               </div>
             </div>
@@ -360,19 +258,19 @@ useEffect(() => {
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
                   <tr>
-                    <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">القسم</th>
-                    <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">عدد البرومبتات</th>
-                    <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">إجمالي tokens</th>
-                    <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">متوسط tokens</th>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">القسم</th>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">عدد البرومبتات</th>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">إجمالي tokens</th>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">متوسط tokens</th>
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
                   {Object.entries(stats).map(([category, data]) => (
                     <tr key={category} className="hover:bg-gray-50">
-                      <td className="px-4 py-4 whitespace-nowrap">{category}</td>
-                      <td className="px-4 py-4 whitespace-nowrap">{data.count}</td>
-                      <td className="px-4 py-4 whitespace-nowrap">{data.totalTokens}</td>
-                      <td className="px-4 py-4 whitespace-nowrap">{data.averageTokens}</td>
+                      <td className="px-6 py-4 whitespace-nowrap">{category}</td>
+                      <td className="px-6 py-4 whitespace-nowrap">{data.count}</td>
+                      <td className="px-6 py-4 whitespace-nowrap">{data.totalTokens}</td>
+                      <td className="px-6 py-4 whitespace-nowrap">{data.averageTokens}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -383,11 +281,12 @@ useEffect(() => {
       );
     };
 
-    // إدارة البرومبتات (للمسؤول فقط)
+    // 💡 إدارة البرومبتات (للمسؤول فقط)
     const renderPromptsManagement = () => {
       return (
         <div className="space-y-6">
-          <h2 className="text-2xl sm:text-3xl font-bold text-gray-800">إدارة البرومبتات</h2>
+          <h2 className="text-2xl font-bold text-gray-800">إدارة البرومبتات</h2>
+
           {/* شريط البحث */}
           <div className="mb-4">
             <input
@@ -401,8 +300,9 @@ useEffect(() => {
               className="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
             />
           </div>
+
           {/* Form لإضافة برومبت */}
-          <form onSubmit={handleAddPrompt} className="bg-white p-4 sm:p-6 rounded-lg shadow-md space-y-4">
+          <form onSubmit={handleAddPrompt} className="bg-white p-6 rounded-lg shadow-md space-y-4">
             <label className="block text-sm font-medium text-gray-700">نص البرومبت</label>
             <textarea
               rows="4"
@@ -463,17 +363,17 @@ useEffect(() => {
               </button>
             </div>
           </form>
+
           {/* زر التصدير */}
-          {isUserAdmin && (
-            <div className="flex justify-end">
-              <button
-                onClick={exportPromptsToMarkdown}
-                className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded text-sm"
-              >
-                📥 تصدير إلى Markdown
-              </button>
-            </div>
-          )}
+          <div className="flex justify-end">
+            <button
+              onClick={exportPromptsToMarkdown}
+              className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded text-sm"
+            >
+              📥 تصدير إلى Markdown
+            </button>
+          </div>
+
           {/* قائمة البرومبتات */}
           <ul className="divide-y divide-gray-200">
             {currentPrompts.length > 0 ? (
@@ -486,7 +386,7 @@ useEffect(() => {
                         <span>ID: `{prompt.id}`</span> • <span>Tokens: `{prompt.tokens}`</span>
                       </div>
                     </div>
-                    <div className="flex space-x-2 rtl:space-x-reverse">
+                    <div className="flex space-x-2 space-x-reverse">
                       <button
                         onClick={() => copyPromptText(prompt.text)}
                         className="text-blue-600 hover:text-blue-800 transition"
@@ -507,9 +407,10 @@ useEffect(() => {
               <li className="text-center py-4 text-gray-500">لا توجد برومبتات مضافة بعد</li>
             )}
           </ul>
-          {/* Pagination Controls */}
+
+          {/* أزرار التنقل بين الصفحات */}
           {filteredPrompts.length > itemsPerPage && (
-            <div className="flex justify-center space-x-2 rtl:space-x-reverse mt-6">
+            <div className="flex justify-center space-x-2 space-x-reverse mt-6">
               <button
                 onClick={goToPrevious}
                 disabled={currentPage === 1}
@@ -547,86 +448,76 @@ useEffect(() => {
               </button>
             </div>
           )}
+
           {/* قائمة الأقسام */}
-          {isUserAdmin && (
-            <div className="mt-8">
-              <h3 className="text-xl font-semibold text-gray-800 mb-4">الأقسام</h3>
-              <ul className="space-y-2">
-                {categories.map(cat => (
-                  <li key={cat} className="bg-gray-50 p-3 rounded flex justify-between items-center hover:bg-gray-100 transition">
-                    {editingCategory === cat ? (
-                      <>
-                        <input
-                          className="border p-1 rounded w-full"
-                          value={editCategoryName}
-                          onChange={(e) => setEditCategoryName(e.target.value)}
-                        />
+          <div className="mt-8">
+            <h3 className="text-xl font-semibold text-gray-800 mb-4">الأقسام</h3>
+            <ul className="space-y-2">
+              {categories.map(cat => (
+                <li key={cat} className="bg-gray-50 p-3 rounded flex justify-between items-center hover:bg-gray-100 transition">
+                  {editingCategory === cat ? (
+                    <>
+                      <input
+                        className="border p-1 rounded w-full"
+                        value={editCategoryName}
+                        onChange={(e) => setEditCategoryName(e.target.value)}
+                      />
+                      <button
+                        onClick={handleUpdateCategory}
+                        className="text-green-600 mr-2"
+                      >
+                        حفظ
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <span>{cat}</span>
+                      <div className="flex space-x-2 space-x-reverse">
                         <button
-                          onClick={handleUpdateCategory}
-                          className="text-green-600 mr-2"
+                          onClick={() => handleStartEditCategory(cat)}
+                          className="text-yellow-600 hover:text-yellow-800"
                         >
-                          حفظ
+                          تعديل
                         </button>
-                      </>
-                    ) : (
-                      <>
-                        <span>{cat}</span>
-                        <div className="flex space-x-2 rtl:space-x-reverse">
-                          <button
-                            onClick={() => handleStartEditCategory(cat)}
-                            className="text-yellow-600 hover:text-yellow-800"
-                          >
-                            تعديل
-                          </button>
-                          <button
-                            onClick={() => handleDeleteCategory(cat)}
-                            className="text-red-600 hover:text-red-800"
-                          >
-                            حذف
-                          </button>
-                        </div>
-                      </>
-                    )}
-                  </li>
-                ))}
-                {categories.length === 0 && (
-                  <li className="text-center py-2 text-gray-500">لا توجد أقسام مضافة بعد.</li>
-                )}
-              </ul>
-            </div>
-          )}
+                        <button
+                          onClick={() => handleDeleteCategory(cat)}
+                          className="text-red-600 hover:text-red-800"
+                        >
+                          حذف
+                        </button>
+                      </div>
+                    </>
+                  )}
+                </li>
+              ))}
+              {categories.length === 0 && (
+                <li className="text-center py-2 text-gray-500">لا توجد أقسام مضافة بعد.</li>
+              )}
+            </ul>
+          </div>
         </div>
       );
     };
 
     return (
-      <div className="container">
+      <div className="container mx-auto max-w-6xl">
         {/* Header */}
-        <header className="flex justify-between items-center pb-4 border-b border-gray-200 mb-4">
-          <h1 className="text-2xl sm:text-3xl font-bold text-indigo-700">{signature}</h1>
-          <div id="authLinks" class="space-x-4 rtl:space-x-reverse">
-  {!isUserAdmin ? (
-    <a href="login.html" className="text-gray-700 hover:text-indigo-600">تسجيل الدخول</a>
-  ) : (
-    <a href="#" id="logoutLink" className="text-gray-700 hover:text-indigo-600">تسجيل الخروج</a>
-  )}
-  <div className="space-x-4 rtl:space-x-reverse">
-  <a href="welcome.html" className="text-indigo-600 hover:text-indigo-800 underline">الترحيب</a>
-  {isUserAdmin && (
-    <a href="profile.html" className="text-gray-700 hover:text-indigo-600">الملف الشخصي</a>
-  )}
-</div>
-</div>
+        <header className="flex justify-between items-center pb-6 border-b border-gray-200 mb-6">
+          <h1 className="text-3xl font-bold text-indigo-700">{signature}</h1>
+          <div className="space-x-4 space-x-reverse">
+            <a href="welcome.html" className="text-indigo-600 hover:text-indigo-800 underline">الترحيب</a>
+            <a href="login.html" className="text-gray-700 hover:text-indigo-600">تسجيل الخروج</a>
+          </div>
         </header>
 
         {/* Tabs Navigation */}
-        <div className="flex space-x-4 rtl:space-x-reverse mb-4 border-b border-gray-200 overflow-x-auto">
+        <div className="flex space-x-4 rtl:space-x-reverse mb-6 border-b border-gray-200">
           <button
             onClick={() => {
               setActiveTab('dashboard');
               setCurrentPage(1);
             }}
-            className={`py-2 px-4 font-medium whitespace-nowrap ${
+            className={`py-2 px-4 font-medium ${
               activeTab === 'dashboard'
                 ? 'border-b-2 border-indigo-600 text-indigo-600'
                 : 'text-gray-600'
@@ -640,7 +531,7 @@ useEffect(() => {
                 setActiveTab('prompts');
                 setCurrentPage(1);
               }}
-              className={`py-2 px-4 font-medium whitespace-nowrap ${
+              className={`py-2 px-4 font-medium ${
                 activeTab === 'prompts'
                   ? 'border-b-2 border-indigo-600 text-indigo-600'
                   : 'text-gray-600'
@@ -656,7 +547,7 @@ useEffect(() => {
         {activeTab === 'prompts' && isUserAdmin && renderPromptsManagement()}
 
         {/* Footer */}
-        <footer className="mt-8 pt-4 border-t border-gray-200 text-center text-sm text-gray-500">
+        <footer className="mt-10 pt-6 border-t border-gray-200 text-center text-sm text-gray-500">
           &copy; {new Date().getFullYear()} {signature}. جميع الحقوق محفوظة.
         </footer>
       </div>
@@ -664,112 +555,13 @@ useEffect(() => {
   }
 
   // Render App
-  const root = ReactDOM.createRoot(document.getElementById('root'));
-  root.render(<App />);
-</script>
-  <script>
-  document.addEventListener("DOMContentLoaded", function () {
-    const loggedInUser = JSON.parse(localStorage.getItem('loggedInUser'));
-    const isUserAdmin = loggedInUser && loggedInUser.role === 'admin';
-
-    const authLinksContainer = document.getElementById('authLinks');
-    authLinksContainer.innerHTML = "";
-
-    if (!isUserAdmin) {
-      const loginLink = document.createElement('a');
-      loginLink.href = "login.html";
-      loginLink.className = "text-gray-700 hover:text-indigo-600";
-      loginLink.textContent = "تسجيل الدخول";
-
-      const welcomeLink = document.createElement('a');
-      welcomeLink.href = "welcome.html";
-      welcomeLink.className = "text-indigo-600 hover:text-indigo-800 underline mr-4";
-      welcomeLink.textContent = "الترحيب";
-
-      authLinksContainer.appendChild(loginLink);
-      authLinksContainer.appendChild(welcomeLink);
-    } else {
-      const logoutLink = document.createElement('a');
-      logoutLink.href = "#";
-      logoutLink.id = "dynamicLogoutLink";
-      logoutLink.className = "text-gray-700 hover:text-indigo-600";
-      logoutLink.textContent = "تسجيل الخروج";
-
-      const welcomeLink = document.createElement('a');
-      welcomeLink.href = "welcome.html";
-      welcomeLink.className = "text-indigo-600 hover:text-indigo-600 underline mr-4";
-      welcomeLink.textContent = "الترحيب";
-
-      authLinksContainer.appendChild(logoutLink);
-      authLinksContainer.appendChild(welcomeLink);
-
-      logoutLink.addEventListener("click", function (e) {
-        e.preventDefault();
-
-        const tempMessage = document.createElement("span");
-        tempMessage.textContent = "جارٍ تسجيل الخروج...";
-        tempMessage.className = "text-green-600 font-medium ml-2";
-
-        authLinksContainer.innerHTML = "";
-        authLinksContainer.appendChild(tempMessage);
-
-        setTimeout(() => {
-          localStorage.removeItem("loggedInUser");
-          localStorage.removeItem("isAdmin");
-          window.location.href = "logout.html";
-        }, 1500);
-      });
-    }
-  });
-</script>
-<script>
-  document.addEventListener("DOMContentLoaded", function () {
-    const logoutLink = document.getElementById("logoutLink");
-
-    if (logoutLink) {
-      logoutLink.addEventListener("click", function (e) {
-        e.preventDefault();
-
-        const tempMessage = document.createElement("span");
-        tempMessage.textContent = "جارٍ تسجيل الخروج...";
-        tempMessage.className = "text-green-600 font-medium ml-2";
-
-        const authLinks = document.getElementById("authLinks");
-        authLinks.innerHTML = "";
-        authLinks.appendChild(tempMessage);
-
-        setTimeout(() => {
-          localStorage.removeItem("loggedInUser");
-          window.location.href = "logout.html";
-        }, 1500);
-      });
-    }
-  });
-</script>
-  <script>
-  document.addEventListener("DOMContentLoaded", function () {
-    const logoutLink = document.getElementById("logoutLink");
-    const authLinksContainer = document.getElementById('authLinks');
-
-    if (logoutLink) {
-      logoutLink.addEventListener("click", function (e) {
-        e.preventDefault();
-
-        const tempMessage = document.createElement("span");
-        tempMessage.textContent = "جارٍ تسجيل الخروج...";
-        tempMessage.className = "text-green-600 font-medium ml-2";
-
-        authLinksContainer.innerHTML = "";
-        authLinksContainer.appendChild(tempMessage);
-
-        setTimeout(() => {
-          localStorage.removeItem("loggedInUser");
-          localStorage.removeItem("isAdmin");
-          window.location.href = "logout.html";
-        }, 1500);
-      });
-    }
-  });
+  ReactDOM.createRoot(document.getElementById('root')).render(<App />);
 </script>
 </body>
+</html>
+</html>
+</html>
+</html>
+</html>
+</html>
 </html>
