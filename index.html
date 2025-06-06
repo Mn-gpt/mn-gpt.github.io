@@ -612,6 +612,61 @@ if (isUserAdmin) {
   const root = ReactDOM.createRoot(document.getElementById('root'));
   root.render(<App />);
 </script>
+  <script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const loggedInUser = JSON.parse(localStorage.getItem('loggedInUser'));
+    const isUserAdmin = loggedInUser && loggedInUser.role === 'admin';
+
+    const authLinksContainer = document.getElementById('authLinks');
+    authLinksContainer.innerHTML = "";
+
+    if (!isUserAdmin) {
+      const loginLink = document.createElement('a');
+      loginLink.href = "login.html";
+      loginLink.className = "text-gray-700 hover:text-indigo-600";
+      loginLink.textContent = "تسجيل الدخول";
+
+      const welcomeLink = document.createElement('a');
+      welcomeLink.href = "welcome.html";
+      welcomeLink.className = "text-indigo-600 hover:text-indigo-800 underline mr-4";
+      welcomeLink.textContent = "الترحيب";
+
+      authLinksContainer.appendChild(loginLink);
+      authLinksContainer.appendChild(welcomeLink);
+    } else {
+      const logoutLink = document.createElement('a');
+      logoutLink.href = "#";
+      logoutLink.id = "dynamicLogoutLink";
+      logoutLink.className = "text-gray-700 hover:text-indigo-600";
+      logoutLink.textContent = "تسجيل الخروج";
+
+      const welcomeLink = document.createElement('a');
+      welcomeLink.href = "welcome.html";
+      welcomeLink.className = "text-indigo-600 hover:text-indigo-600 underline mr-4";
+      welcomeLink.textContent = "الترحيب";
+
+      authLinksContainer.appendChild(logoutLink);
+      authLinksContainer.appendChild(welcomeLink);
+
+      logoutLink.addEventListener("click", function (e) {
+        e.preventDefault();
+
+        const tempMessage = document.createElement("span");
+        tempMessage.textContent = "جارٍ تسجيل الخروج...";
+        tempMessage.className = "text-green-600 font-medium ml-2";
+
+        authLinksContainer.innerHTML = "";
+        authLinksContainer.appendChild(tempMessage);
+
+        setTimeout(() => {
+          localStorage.removeItem("loggedInUser");
+          localStorage.removeItem("isAdmin");
+          window.location.href = "logout.html";
+        }, 1500);
+      });
+    }
+  });
+</script>
 <script>
   document.addEventListener("DOMContentLoaded", function () {
     const loggedInUser = JSON.parse(localStorage.getItem('loggedInUser'));
