@@ -54,8 +54,38 @@
     const [itemsPerPage] = useState(4);
     const signature = 'MN.gpt';
 
-    // تحديد نوع المستخدم
-    const isUserAdmin = localStorage.getItem('isAdmin') === 'true';
+// تحديد نوع المستخدم
+const loggedInUser = JSON.parse(localStorage.getItem('loggedInUser'));
+const isUserAdmin = loggedInUser && loggedInUser.role === 'admin';
+
+// عرض زر "تسجيل الخروج" فقط للمستخدمين المسجلين
+if (isUserAdmin) {
+  const logoutLink = document.createElement('a');
+  logoutLink.href = "#";
+  logoutLink.className = "text-gray-700 hover:text-indigo-600";
+  logoutLink.textContent = "تسجيل الخروج";
+
+  logoutLink.addEventListener("click", function (e) {
+    e.preventDefault();
+
+    const tempMessage = document.createElement("span");
+    tempMessage.textContent = "جارٍ تسجيل الخروج...";
+    tempMessage.className = "text-green-600 font-medium ml-2";
+
+    const authLinks = document.getElementById('authLinks');
+    authLinks.innerHTML = "";
+    authLinks.appendChild(tempMessage);
+
+    setTimeout(() => {
+      localStorage.removeItem("loggedInUser");
+      window.location.href = "logout.html";
+    }, 1500);
+  });
+
+  const authLinksContainer = document.getElementById('authLinks');
+  authLinksContainer.innerHTML = ""; // تنظيف الروابط القديمة
+  authLinksContainer.appendChild(logoutLink);
+}
 
     // تحميل البيانات
     useEffect(() => {
@@ -524,14 +554,14 @@
         {/* Header */}
         <header className="flex justify-between items-center pb-4 border-b border-gray-200 mb-4">
           <h1 className="text-2xl sm:text-3xl font-bold text-indigo-700">{signature}</h1>
-          <div id="authLinks" className="space-x-4 rtl:space-x-reverse">
-            {!isUserAdmin ? (
-              <a href="login.html" className="text-gray-700 hover:text-indigo-600">تسجيل الدخول</a>
-            ) : (
-              <a href="#" id="logoutLink" className="text-gray-700 hover:text-indigo-600">تسجيل الخروج</a>
-            )}
-            <a href="welcome.html" className="text-indigo-600 hover:text-indigo-800 underline">الترحيب</a>
-          </div>
+          <div id="authLinks" class="space-x-4 rtl:space-x-reverse">
+  {!isUserAdmin ? (
+    <a href="login.html" className="text-gray-700 hover:text-indigo-600">تسجيل الدخول</a>
+  ) : (
+    <a href="#" id="logoutLink" className="text-gray-700 hover:text-indigo-600">تسجيل الخروج</a>
+  )}
+  <a href="welcome.html" className="text-indigo-600 hover:text-indigo-800 underline">الترحيب</a>
+</div>
         </header>
 
         {/* Tabs Navigation */}
