@@ -1,0 +1,64 @@
+// 🔧 مكون محرر Promptica داخل React
+function PrompticaEditor({ onSavePrompt }) {
+  const [form, setForm] = React.useState({
+    name: '',
+    category: '',
+    usage: '',
+    keywords: '',
+    text: ''
+  });
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setForm(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleSave = () => {
+    if (!form.text || !form.category) {
+      alert('يرجى ملء الحقول الأساسية');
+      return;
+    }
+    const newPrompt = {
+      id: Date.now(),
+      text: form.text,
+      category: form.category,
+      tokens: Math.ceil(form.text.split(/\s+/).length * 1.25)
+    };
+    onSavePrompt(newPrompt);
+    setForm({ name: '', category: '', usage: '', keywords: '', text: '' });
+  };
+
+  return (
+    <div className="bg-purple-50 p-6 mt-6 rounded shadow-lg border border-purple-200">
+      <h3 className="text-lg font-bold text-purple-700 mb-4">🛠️ محرر Promptica</h3>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label className="block text-sm">🆔 اسم البرومبت</label>
+          <input name="name" value={form.name} onChange={handleChange} className="w-full p-2 border rounded" placeholder="مثال: خطة تسويق ذكية" />
+        </div>
+        <div>
+          <label className="block text-sm">📁 التصنيف</label>
+          <input name="category" value={form.category} onChange={handleChange} className="w-full p-2 border rounded" placeholder="مثال: تسويق" />
+        </div>
+        <div>
+          <label className="block text-sm">🏷️ كلمات مفتاحية</label>
+          <input name="keywords" value={form.keywords} onChange={handleChange} className="w-full p-2 border rounded" placeholder="منتج، خطة، AI" />
+        </div>
+        <div>
+          <label className="block text-sm">📌 الاستخدام</label>
+          <input name="usage" value={form.usage} onChange={handleChange} className="w-full p-2 border rounded" placeholder="تحليل أو تسويق أو قصة..." />
+        </div>
+      </div>
+
+      <div className="mt-4">
+        <label className="block text-sm">🧠 نص البرومبت</label>
+        <textarea name="text" value={form.text} onChange={handleChange} rows="5" className="w-full p-2 border rounded" placeholder="اكتب نص البرومبت الكامل هنا..."></textarea>
+      </div>
+
+      <div className="flex justify-end mt-4">
+        <button onClick={handleSave} className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded">💾 حفظ البرومبت</button>
+      </div>
+    </div>
+  );
+}
