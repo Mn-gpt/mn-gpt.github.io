@@ -94,5 +94,14 @@
       }
     });
   </script>
+  <script>
+  document.addEventListener("DOMContentLoaded", function () {
+    document.querySelector('a[href="#"]').addEventListener("click", function (e) {
+      e.preventDefault();
+      const adminEmail = 'admin@example.com'; // استبدل بهذا البريد الحقيقي
+      window.location.href = `mailto:${adminEmail}?subject=طلب%20تسجيل%20مسؤول&body=مرحبًا،%20أرغب%20في%20الحصول%20على%20صلاحية%20المسؤول.`;
+    });
+  });
+</script>
 </body>
 </html>
