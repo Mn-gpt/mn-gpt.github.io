@@ -478,13 +478,25 @@ function App() {
   return (
     <div className="container mx-auto max-w-6xl">
       {/* Header */}
-      <header className="flex justify-between items-center pb-6 border-b border-gray-200 mb-6">
-        <h1 className="text-3xl font-bold text-indigo-700">{signature}</h1>
-        <div className="space-x-4 rtl:space-x-reverse">
-          <a href="welcome.html" className="text-indigo-600 hover:text-indigo-800 underline">الترحيب</a>
-          <a href="login.html" className="text-gray-700 hover:text-indigo-600">تسجيل الخروج</a>
-        </div>
-      </header>
+<!-- Banner -->
+<div class="mb-6">
+  <img src="banner.jpg" alt="بانير موقع Promptica" class="w-full h-auto rounded-lg shadow-md">
+</div>
+
+<!-- Header -->
+<header className="flex justify-between items-center pb-4 border-b border-gray-200 mb-6">
+  <h1 className="flex items-center text-3xl font-bold text-indigo-700">
+    <img src="logo.png" alt="شعار Promptica" className="w-8 h-8 mr-2" />
+    Promptica
+  </h1>
+  <div className="space-x-4 rtl:space-x-reverse">
+    <a href="welcome.html" className="text-indigo-600 hover:text-indigo-800 underline">الترحيب</a>
+    <a href="#" onClick={() => {
+      localStorage.removeItem("loggedInUser");
+      window.location.href = "logout.html";
+    }} className="text-gray-700 hover:text-indigo-600">تسجيل الخروج</a>
+  </div>
+</header>
       {/* Tabs Navigation */}
       <div className="flex space-x-4 rtl:space-x-reverse mb-6 border-b border-gray-200">
         <button
