@@ -38,21 +38,45 @@
     const [itemsPerPage] = useState(4);
     const [signature] = useState('MN.gpt');
 
-    // 🔽 تحديد نوع المستخدم
+    // تحديد نوع المستخدم
     const isUserAdmin = localStorage.getItem('isAdmin') === 'true';
 
-    // 🔽 تحميل البيانات من localStorage
+    // ألوان الأقسام
+    const categoryColors = {
+      'عام': 'bg-gray-50 border-gray-400',
+      'تعليمي': 'bg-blue-50 border-blue-400',
+      'إبداعي': 'bg-purple-50 border-purple-400',
+      'تحليل بيانات': 'bg-green-50 border-green-400',
+      'برمجة': 'bg-red-50 border-red-400'
+    };
+
+    // الأقسام الفرعية
+    const subCategories = {
+      'تعليمي': ['رياضيات', 'فيزياء', 'علوم'],
+      'برمجة': ['JavaScript', 'Python', 'Java'],
+      'تحليل بيانات': ['Excel', 'SQL', 'Data Science'],
+      'إبداعي': ['قصص', 'شعر', 'كتابة إبداعية'],
+      'عام': []
+    };
+
+    // تحميل البيانات
     useEffect(() => {
-      const savedPrompts = JSON.parse(localStorage.getItem('prompts')) || [
-        { id: 1, text: 'اشرح مفهوم الذكاء الاصطناعي بطريقة بسيطة.', category: 'تعليمي', tokens: 23 },
-        { id: 2, text: 'اكتب قصة قصيرة عن رحلة إلى الفضاء.', category: 'إبداعي', tokens: 45 },
-        { id: 3, text: 'ما هو تأثير التكنولوجيا على التعليم؟', category: 'تحليل بيانات', tokens: 18 },
-        { id: 4, text: 'اشرح كيف تعمل خوارزميات التعلم العميق.', category: 'تعليمي', tokens: 37 },
-        { id: 5, text: 'اكتب برنامجًا بلغة جافاسكربت لحساب العوامل.', category: 'برمجة', tokens: 41 },
-      ];
-      const savedCategories = JSON.parse(localStorage.getItem('categories')) || ['عام', 'تعليمي', 'إبداعي', 'تحليل بيانات', 'برمجة'];
-      setPrompts(savedPrompts);
-      setCategories(savedCategories);
+      fetch('db.json')
+        .then(res => res.json())
+        .then(data => {
+          setPrompts(data.prompts);
+          setCategories(data.categories);
+        })
+        .catch(err => {
+          console.error("فشل تحميل البيانات من db.json");
+          const savedPrompts = JSON.parse(localStorage.getItem('prompts')) || [
+            { id: 1, text: 'اشرح مفهوم الذكاء الاصطناعي بطريقة بسيطة.', category: 'تعليمي', tokens: 23 },
+            { id: 2, text: 'اكتب قصة قصيرة عن رحلة إلى الفضاء.', category: 'إبداعي', tokens: 45 }
+          ];
+          const savedCategories = ['عام', 'تعليمي', 'إبداعي', 'تحليل بيانات', 'برمجة'];
+          setPrompts(savedPrompts);
+          setCategories(savedCategories);
+        });
     }, []);
 
     // 📦 حفظ البيانات في localStorage
