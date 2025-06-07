@@ -1,4 +1,4 @@
-<DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8" />
@@ -42,7 +42,7 @@
       const [signature] = useState('MN.gpt');
 
       // تحديد نوع المستخدم
-      const isUserAdmin = localStorage.getItem('isAdmin') === 'true';
+      const isUserAdmin = true; // ← تم تعطيل التحقق مؤقتًا
 
       // تحميل البيانات
       useEffect(() => {
@@ -515,7 +515,7 @@
             <h1 className="text-3xl font-bold text-indigo-700">{signature}</h1>
             <div className="space-x-4 rtl:space-x-reverse">
               <a href="welcome.html" className="text-indigo-600 hover:text-indigo-800 underline">الترحيب</a>
-              <a href="login.html" className="text-gray-700 hover:text-indigo-600">تسجيل الخروج</a>
+              <a href="#" className="text-gray-700 hover:text-indigo-600">اختبار</a>
             </div>
           </header>
 
@@ -553,7 +553,6 @@
 
           {/* Tab Content */}
           {activeTab === 'dashboard' && renderDashboard()}
-          {activeTab === 'prompts' && isUserAdmin && renderPromptsManagement()}
 
           {/* Footer */}
           <footer className="mt-10 pt-6 border-t border-gray-200 text-center text-sm text-gray-500">
