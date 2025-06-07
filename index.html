@@ -60,11 +60,7 @@ const [subCategories, setSubCategories] = useState({});
         { id: 4, text: 'اشرح كيف تعمل خوارزميات التعلم العميق.', category: 'تعليمي', tokens: 37 },
         { id: 5, text: 'اكتب برنامجًا بلغة جافاسكربت لحساب العوامل.', category: 'برمجة', tokens: 41 },
       ];
-// تحميل الأقسام الفرعية من localStorage
-useEffect(() => {
-  const savedSubCategories = JSON.parse(localStorage.getItem('subCategories')) || {};
-  setSubCategories(savedSubCategories);
-}, []);
+
       const savedCategories = JSON.parse(localStorage.getItem('categories')) || ['عام', 'تعليمي', 'إبداعي', 'تحليل بيانات', 'برمجة'];
 
       const savedSubCategories = JSON.parse(localStorage.getItem('subCategories')) || {
@@ -168,38 +164,6 @@ useEffect(() => {
 
     // ❌ حذف قسم
     const handleDeleteCategory = (categoryToDelete) => {
-    // ➕ إضافة قسم فرعي
-const handleAddSubCategory = () => {
-  if (!newPrompt.category || !newSubCategory) return;
-
-  const updatedSubCategories = { ...subCategories };
-
-  if (!updatedSubCategories[newPrompt.category]) {
-    updatedSubCategories[newPrompt.category] = [];
-  }
-
-  if (!updatedSubCategories[newPrompt.category].includes(newSubCategory)) {
-    updatedSubCategories[newPrompt.category].push(newSubCategory);
-    setSubCategories(updatedSubCategories);
-    localStorage.setItem('subCategories', JSON.stringify(updatedSubCategories));
-    alert(`✅ تم إضافة "${newSubCategory}" إلى القسم "${newPrompt.category}"`);
-  } else {
-    alert("⚠️ هذا القسم الفرعي موجود بالفعل!");
-  }
-
-  setNewSubCategory('');
-};
-
-// ❌ حذف قسم فرعي
-const handleDeleteSubCategory = (mainCategory, subCategory) => {
-  if (!window.confirm(`هل أنت متأكد من حذف "${subCategory}" من القسم "${mainCategory}"؟`)) return;
-
-  const updatedSubCategories = { ...subCategories };
-  updatedSubCategories[mainCategory] = updatedSubCategories[mainCategory].filter(s => s !== subCategory);
-
-  setSubCategories(updatedSubCategories);
-  localStorage.setItem('subCategories', JSON.stringify(updatedSubCategories));
-};
       if (!window.confirm(`هل أنت متأكد من حذف القسم "${categoryToDelete}" وجميع البرومبتات المرتبطة به؟`)) return;
 
       const updatedPrompts = prompts.filter(p => p.category !== categoryToDelete);
