@@ -1,15 +1,11 @@
-<DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8" />
   <title>برومبتات القسم - MN.gpt</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <!-- React + ReactDOM -->
-  <script src="https://unpkg.com/react@18/umd/react.development.js"  crossorigin></script>
-  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"  crossorigin></script>
-  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script> 
   <!-- Tailwind CSS -->
-  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"  rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"  rel="stylesheet" />
   <style>
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -17,120 +13,74 @@
       color: #1f2937;
       line-height: 1.8;
     }
-    .container {
-      max-width: 100%;
-      padding: 1rem;
-      margin: auto;
-    }
   </style>
 </head>
-<body class="min-h-screen bg-gray-50">
-<div id="root"></div>
+<body class="min-h-screen bg-gray-50 flex items-center justify-center px-4">
+  <div class="w-full max-w-3xl mx-auto">
+    <header class="flex justify-between items-center pb-4 border-b border-gray-200 mb-6">
+      <h1 class="text-2xl sm:text-3xl font-bold text-indigo-700">MN.gpt</h1>
+      <a href="index.html" class="text-sm text-indigo-600 hover:text-indigo-800 underline">العودة إلى لوحة التحكم</a>
+    </header>
 
-<script type="text/babel">
-  const { useState, useEffect } = React;
+    <main id="content" class="bg-white p-6 rounded shadow-md space-y-6">
+      <h2 id="categoryTitle" class="text-xl font-bold text-gray-800 mb-4">جاري التحميل...</h2>
+      <ul id="promptsList" class="space-y-4">
+        <!-- سيتم ملؤها ديناميكيًا -->
+      </ul>
+    </main>
 
-  function CategoryPrompts() {
-    const [categoryName, setCategoryName] = useState('');
-    const [prompts, setPrompts] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
+    <footer class="mt-8 pt-4 border-t border-gray-200 text-center text-sm text-gray-500 mt-6">
+      &copy; {{new Date().getFullYear()}} MN.gpt. جميع الحقوق محفوظة.
+    </footer>
+  </div>
 
-    // استخراج اسم القسم من URL
-    useEffect(() => {
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
       const urlParams = new URLSearchParams(window.location.search);
       const categoryFromURL = decodeURIComponent(urlParams.get('category'));
 
+      const contentDiv = document.getElementById('content');
+      const titleDiv = document.getElementById('categoryTitle');
+      const listDiv = document.getElementById('promptsList');
+
       if (!categoryFromURL) {
-        setError("لم يتم تحديد القسم");
-        setLoading(false);
+        titleDiv.textContent = "لم يتم تحديد القسم";
+        listDiv.innerHTML = `<p class="text-gray-500 py-4">يرجى العودة إلى لوحة التحكم واختر قسمًا.</p>`;
         return;
       }
 
-      setCategoryName(categoryFromURL);
+      // محاولة تحميل البيانات من localStorage
+      const storedPrompts = JSON.parse(localStorage.getItem('prompts')) || [];
 
-      // تحميل البيانات
-      fetch('db.json')
-        .then(res => res.json())
-        .then(data => {
-          const filteredPrompts = data.prompts.filter(p => p.category === categoryFromURL);
-          setPrompts(filteredPrompts);
-          setLoading(false);
-        })
-        .catch(err => {
-          console.error("فشل تحميل البيانات:", err);
-          setError("فشل تحميل البيانات من db.json");
-          setLoading(false);
-        });
-    }, []);
+      if (storedPrompts.length === 0) {
+        titleDiv.textContent = `القسم: ${categoryFromURL}`;
+        listDiv.innerHTML = `<p class="text-gray-500 py-4">لا توجد برومبتات مُضافة لهذا القسم.</p>`;
+        return;
+      }
 
-    if (loading) {
-      return (
-        <div className="container text-center py-10">
-          <p className="text-lg">جاري التحميل...</p>
-        </div>
-      );
-    }
+      const filteredPrompts = storedPrompts.filter(p => p.category === categoryFromURL);
 
-    if (error) {
-      return (
-        <div className="container text-center py-10">
-          <p className="text-red-600">{error}</p>
-          <a href="index.html" className="text-indigo-600 hover:underline mt-4 inline-block">العودة إلى لوحة التحكم</a>
-        </div>
-      );
-    }
+      if (filteredPrompts.length === 0) {
+        titleDiv.textContent = `لا توجد برومبتات في "${categoryFromURL}"`;
+        listDiv.innerHTML = `<p class="text-gray-500 py-4">لا توجد برومبتات مضافة في هذا القسم.</p>`;
+        return;
+      }
 
-    if (prompts.length === 0) {
-      return (
-        <div className="container text-center py-10">
-          <p className="text-lg text-gray-600">لا توجد برومبتات في هذا القسم.</p>
-          <a href="index.html" className="text-indigo-600 hover:underline mt-4 inline-block">العودة إلى لوحة التحكم</a>
-        </div>
-      );
-    }
+      titleDiv.textContent = `برومبتات القسم: ${categoryFromURL}`;
 
-    return (
-      <div className="container">
-        {/* Header */}
-        <header className="flex justify-between items-center pb-4 border-b border-gray-200 mb-4">
-          <h1 className="text-2xl sm:text-3xl font-bold text-indigo-700">MN.gpt</h1>
-          <a href="index.html" className="text-indigo-600 hover:text-indigo-800 underline">لوحة التحكم</a>
-        </header>
-
-        <h2 className="text-xl sm:text-2xl font-bold text-gray-800 mb-4">برومبتات القسم: {categoryName}</h2>
-
-        {/* قائمة البرومبتات */}
-        <ul className="space-y-4">
-          {prompts.map(prompt => (
-            <li key={prompt.id} className="bg-white p-4 rounded shadow hover:bg-gray-50 transition">
-              <div className="flex justify-between items-start">
-                <div>
-                  <p className="font-medium">[{prompt.category}] {prompt.text}</p>
-                  <div className="mt-2 text-sm text-gray-500">
-                    <span>ID: `{prompt.id}`</span> • <span>Tokens: `{prompt.tokens}`</span>
-                  </div>
-                </div>
-              </div>
-            </li>
-          ))}
-        </ul>
-
-        {/* زر العودة */}
-        <div className="mt-6 text-center">
-          <a href="index.html" className="text-indigo-600 hover:underline">العودة إلى لوحة التحكم</a>
-        </div>
-
-        {/* Footer */}
-        <footer className="mt-8 pt-4 border-t border-gray-200 text-center text-sm text-gray-500">
-          &copy; {new Date().getFullYear()} MN.gpt. جميع الحقوق محفوظة.
-        </footer>
-      </div>
-    );
-  }
-
-  // Render
-  ReactDOM.createRoot(document.getElementById('root')).render(<CategoryPrompts />);
-</script>
+      // عرض البرومبتات
+      filteredPrompts.forEach(prompt => {
+        const li = document.createElement('li');
+        li.className = "bg-white p-4 rounded shadow hover:bg-gray-50 transition";
+        li.innerHTML = `
+          <div class="font-medium">[${prompt.category}] ${prompt.text}</div>
+          <div class="mt-2 text-sm text-gray-500">
+            <span>ID: \`${prompt.id}\`</span> • <span>Tokens: \`${prompt.tokens}\`</span>
+          </div>
+        `;
+        listDiv.appendChild(li);
+      });
+    });
+  </script>
 </body>
 </html>
