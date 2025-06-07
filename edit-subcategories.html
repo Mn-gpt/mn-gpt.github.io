@@ -115,46 +115,51 @@
 
     // عرض الأقسام الفرعية
     function renderSubCategories() {
-      const listContainer = document.getElementById("subCategoriesDisplay");
-      listContainer.innerHTML = "";
+  const listContainer = document.getElementById("subCategoriesList");
+  listContainer.innerHTML = "";
 
-      const storedSubCategories = JSON.parse(localStorage.getItem('subCategories')) || {};
-      const storedCategories = JSON.parse(localStorage.getItem('categories')) || [];
+  const storedSubCategories = JSON.parse(localStorage.getItem('subCategories')) || {};
+  const storedCategories = Object.keys(storedSubCategories);
 
-      storedCategories.forEach(mainCat => {
-        const subs = storedSubCategories[mainCat] || [];
+  // عرض الأقسام الرئيسية مع فرعياتها
+  storedCategories.forEach(mainCat => {
+    const subs = storedSubCategories[mainCat] || [];
 
-        // عنوان القسم الرئيسي
-        const liHeader = document.createElement("li");
-        liHeader.className = "font-semibold text-indigo-700 mt-4";
-        liHeader.textContent = mainCat;
-        listContainer.appendChild(liHeader);
+    // عنوان القسم الرئيسي
+    const mainCategoryHeader = document.createElement("h3");
+    mainCategoryHeader.className = "font-bold text-indigo-700 mt-6 mb-2";
+    mainCategoryHeader.textContent = `📁 ${mainCat}`;
+    listContainer.appendChild(mainCategoryHeader);
 
-        // قائمة الأقسام الفرعية
-        const ul = document.createElement("ul");
-        ul.className = "pl-5 space-y-1";
+    if (subs.length === 0) {
+      const noSubs = document.createElement("p");
+      noSubs.className = "text-sm text-gray-500 ml-6";
+      noSubs.textContent = "لا توجد أقسام فرعية.";
+      listContainer.appendChild(noSubs);
+      return;
+    }
 
-        if (subs.length > 0) {
-          subs.forEach((sub, idx) => {
-            const li = document.createElement("li");
-            li.className = "text-sm text-gray-800 flex justify-between items-center";
-            li.innerHTML = `
-              <span>${sub}</span>
-              <button data-category="${mainCat}" data-subcategory="${sub}"
-                class="text-xs text-red-600 hover:text-red-800">حذف</button>
-            `;
-            ul.appendChild(li);
-          });
-        } else {
-          const li = document.createElement("li");
-          li.className = "text-sm text-gray-400";
-          li.textContent = "لا توجد أقسام فرعية.";
-          ul.appendChild(li);
-        }
+    // قائمة الأقسام الفرعية
+    const ul = document.createElement("ul");
+    ul.className = "space-y-1 ml-6";
 
-        listContainer.appendChild(ul);
-      });
+    subs.forEach((sub, idx) => {
+      const li = document.createElement("li");
+      li.className = "bg-white p-3 rounded shadow-sm hover:shadow-md transition flex justify-between items-center";
+      li.innerHTML = `
+        <span class="flex items-center">
+          <span class="w-2 h-2 bg-purple-300 rounded-full inline-block mr-2"></span>
+          <span class="text-sm text-gray-800">${sub}</span>
+        </span>
+        <button data-category="${mainCat}" data-subcategory="${sub}"
+          class="text-xs text-red-600 hover:text-red-800">حذف</button>
+      `;
+      ul.appendChild(li);
+    });
 
+    listContainer.appendChild(ul);
+  });
+}
       // إضافة أحداث لزر "حذف"
       document.querySelectorAll("[data-subcategory]").forEach(btn => {
         btn.addEventListener("click", function () {
