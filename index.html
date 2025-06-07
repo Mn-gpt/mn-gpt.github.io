@@ -645,33 +645,7 @@ const handleDeleteSubCategory = (mainCategory, subCategory) => {
         </div>
       );
     };
-const handleUpdateCategory = () => {
-  if (!editCategoryName.trim()) return;
 
-  const updatedPrompts = prompts.map(p =>
-    p.category === editingCategory ? { ...p, category: editCategoryName } : p
-  );
-
-  // تحديث الأقسام الفرعية إن وُجدت
-  const updatedSubCategories = { ...subCategories };
-  if (updatedSubCategories[editingCategory]) {
-    updatedSubCategories[editCategoryName] = updatedSubCategories[editingCategory];
-    delete updatedSubCategories[editingCategory];
-  }
-
-  const updatedCategories = categories.map(cat =>
-    cat === editingCategory ? editCategoryName : cat
-  );
-
-  setPrompts(updatedPrompts);
-  setCategories(updatedCategories);
-  setSubCategories(updatedSubCategories);
-
-  setEditingCategory(null);
-  setEditCategoryName('');
-
-  saveToLocalStorage(updatedPrompts, updatedCategories, updatedSubCategories);
-};
     // Render Dashboard or Prompts Management
     return (
       <div className="container">
