@@ -28,15 +28,7 @@
   <script type="text/babel">
     const { useState, useEffect } = React;
 const [subCategories, setSubCategories] = useState({});
-// تحميل الأقسام الفرعية من localStorage
-const savedSubCategories = JSON.parse(localStorage.getItem('subCategories')) || {
-  'عام': [],
-  'تعليمي': ['رياضيات', 'فيزياء'],
-  'إبداعي': ['قصص', 'شعر'],
-  'تحليل بيانات': ['Excel', 'SQL'],
-  'برمجة': ['JavaScript', 'Python']
-};
-setSubCategories(savedSubCategories);
+
     function App() {
       const [activeTab, setActiveTab] = useState('dashboard');
       const [prompts, setPrompts] = useState([]);
