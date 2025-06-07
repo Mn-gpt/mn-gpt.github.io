@@ -1,0 +1,178 @@
+<DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <title>إدارة الأقسام الفرعية - MN.gpt</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <!-- Tailwind CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"  rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f9fafb;
+      color: #1f2937;
+    }
+  </style>
+</head>
+<body class="min-h-screen bg-gray-50 p-4">
+  <div class="max-w-4xl mx-auto">
+    <header class="flex justify-between items-center pb-4 border-b border-gray-200 mb-6">
+      <h1 class="text-2xl sm:text-3xl font-bold text-indigo-700">MN.gpt</h1>
+      <a href="index.html" class="text-sm text-gray-700 hover:text-indigo-600 underline">العودة إلى لوحة التحكم</a>
+    </header>
+
+    <section class="bg-white rounded-lg shadow-md p-6 space-y-6">
+      <h2 class="text-xl font-bold text-gray-800">إدارة الأقسام الفرعية</h2>
+
+      <p class="text-sm text-gray-600">أضف أو حذف الأقسام الفرعية لكل قسم رئيسي.</p>
+
+      <!-- Form لإضافة قسم فرعي -->
+      <form id="addSubCategoryForm" class="space-y-4">
+        <div>
+          <label for="mainCategory" class="block text-sm font-medium text-gray-700 mb-1">اختر القسم الرئيسي</label>
+          <select id="mainCategory" name="mainCategory" required
+            class="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500">
+            <option value="">اختر قسمًا رئيسيًا</option>
+          </select>
+        </div>
+
+        <div>
+          <label for="subCategoryName" class="block text-sm font-medium text-gray-700 mb-1">اسم القسم الفرعي</label>
+          <input type="text" id="subCategoryName" name="subCategoryName" required
+            placeholder="مثال: JavaScript"
+            class="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+        </div>
+
+        <button type="submit"
+          class="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded transition">
+          إضافة قسم فرعي
+        </button>
+      </form>
+
+      <!-- قائمة الأقسام الفرعية -->
+      <div id="subCategoriesList" class="mt-6 space-y-4">
+        <!-- سيتم تعبئتها ديناميكيًا -->
+      </div>
+    </section>
+
+    <footer class="mt-8 pt-4 border-t border-gray-200 text-center text-sm text-gray-500">
+      &copy; {{new Date().getFullYear()}} MN.gpt. جميع الحقوق محفوظة.
+    </footer>
+  </div>
+
+  <script>
+    // قراءة الأقسام من localStorage
+    const categories = JSON.parse(localStorage.getItem('categories')) || ['عام', 'تعليمي', 'إبداعي', 'تحليل بيانات', 'برمجة'];
+    const subCategories = JSON.parse(localStorage.getItem('subCategories')) || {};
+
+    // ملء قائمة الاختيار بالأقسام الرئيسية
+    const mainCategorySelect = document.getElementById("mainCategory");
+    categories.forEach(cat => {
+      const option = document.createElement("option");
+      option.value = cat;
+      option.textContent = cat;
+      mainCategorySelect.appendChild(option);
+    });
+
+    // تحديث قائمة الأقسام الفرعية عند تقديم النموذج
+    document.getElementById("addSubCategoryForm").addEventListener("submit", function(e) {
+      e.preventDefault();
+      const mainCatInput = document.getElementById("mainCategory");
+      const subCatInput = document.getElementById("subCategoryName");
+
+      const mainCategory = mainCatInput.value.trim();
+      const newSubCategory = subCatInput.value.trim();
+
+      if (!mainCategory || !newSubCategory) {
+        alert("يرجى ملء الحقول.");
+        return;
+      }
+
+      // التأكد من وجود القسم
+      if (!subCategories[mainCategory]) {
+        subCategories[mainCategory] = [];
+      }
+
+      // التحقق من عدم التكرار
+      if (subCategories[mainCategory].includes(newSubCategory)) {
+        alert("هذا القسم الفرعي موجود بالفعل.");
+        return;
+      }
+
+      // إضافة القسم الفرعي
+      subCategories[mainCategory].push(newSubCategory);
+
+      // حفظ البيانات
+      localStorage.setItem("subCategories", JSON.stringify(subCategories));
+
+      // إعادة تحميل القائمة
+      renderSubCategories();
+      subCatInput.value = "";
+    });
+
+    // عرض الأقسام الفرعية
+    function renderSubCategories() {
+      const listContainer = document.getElementById("subCategoriesList");
+      listContainer.innerHTML = "";
+
+      const storedSubCategories = JSON.parse(localStorage.getItem('subCategories')) || {};
+      const storedCategories = JSON.parse(localStorage.getItem('categories')) || [];
+
+      storedCategories.forEach(mainCat => {
+        const subs = storedSubCategories[mainCat] || [];
+
+        // عنوان القسم الرئيسي
+        const categoryHeader = document.createElement("h3");
+        categoryHeader.className = "font-semibold text-indigo-700 mt-6";
+        categoryHeader.textContent = mainCat;
+        listContainer.appendChild(categoryHeader);
+
+        // قائمة الأقسام الفرعية
+        const ul = document.createElement("ul");
+        ul.className = "grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 mt-2";
+
+        if (subs.length > 0) {
+          subs.forEach((sub, index) => {
+            const li = document.createElement("li");
+            li.className = "bg-gray-50 p-3 rounded flex justify-between items-center";
+            li.innerHTML = `
+              <span>${sub}</span>
+              <button data-category="${mainCat}" data-subcategory="${sub}"
+                class="text-red-600 hover:text-red-800 text-sm">حذف</button>
+            `;
+            ul.appendChild(li);
+          });
+        } else {
+          const li = document.createElement("li");
+          li.className = "text-sm text-gray-500";
+          li.textContent = "لا توجد أقسام فرعية مضافة بعد.";
+          ul.appendChild(li);
+        }
+
+        listContainer.appendChild(ul);
+      });
+
+      // إضافة أحداث لزر "حذف"
+      document.querySelectorAll("[data-subcategory]").forEach(btn => {
+        btn.addEventListener("click", function () {
+          const mainCat = this.getAttribute("data-category");
+          const subCat = this.getAttribute("data-subcategory");
+
+          if (!window.confirm(`هل أنت متأكد من حذف "${subCat}" من القسم "${mainCat}"؟`)) return;
+
+          // حذف القسم الفرعي
+          const updatedSubCategories = { ...storedSubCategories };
+          updatedSubCategories[mainCat] = updatedSubCategories[mainCat].filter(s => s !== subCat);
+          localStorage.setItem("subCategories", JSON.stringify(updatedSubCategories));
+          renderSubCategories(); // تحديث العرض
+        });
+      });
+    }
+
+    // أول تشغيل
+    window.onload = function () {
+      renderSubCategories();
+    };
+  </script>
+</body>
+</html>
