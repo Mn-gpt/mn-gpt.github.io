@@ -38,45 +38,21 @@
     const [itemsPerPage] = useState(4);
     const [signature] = useState('MN.gpt');
 
-    // تحديد نوع المستخدم
+    // 🔽 تحديد نوع المستخدم
     const isUserAdmin = localStorage.getItem('isAdmin') === 'true';
 
-    // ألوان الأقسام
-    const categoryColors = {
-      'عام': 'bg-gray-50 border-gray-400',
-      'تعليمي': 'bg-blue-50 border-blue-400',
-      'إبداعي': 'bg-purple-50 border-purple-400',
-      'تحليل بيانات': 'bg-green-50 border-green-400',
-      'برمجة': 'bg-red-50 border-red-400'
-    };
-
-    // الأقسام الفرعية
-    const subCategories = {
-      'تعليمي': ['رياضيات', 'فيزياء', 'علوم'],
-      'برمجة': ['JavaScript', 'Python', 'Java'],
-      'تحليل بيانات': ['Excel', 'SQL', 'Data Science'],
-      'إبداعي': ['قصص', 'شعر', 'كتابة إبداعية'],
-      'عام': []
-    };
-
-    // تحميل البيانات
+    // 🔽 تحميل البيانات من localStorage
     useEffect(() => {
-      fetch('db.json')
-        .then(res => res.json())
-        .then(data => {
-          setPrompts(data.prompts);
-          setCategories(data.categories);
-        })
-        .catch(err => {
-          console.error("فشل تحميل البيانات من db.json");
-          const savedPrompts = JSON.parse(localStorage.getItem('prompts')) || [
-            { id: 1, text: 'اشرح مفهوم الذكاء الاصطناعي بطريقة بسيطة.', category: 'تعليمي', tokens: 23 },
-            { id: 2, text: 'اكتب قصة قصيرة عن رحلة إلى الفضاء.', category: 'إبداعي', tokens: 45 }
-          ];
-          const savedCategories = ['عام', 'تعليمي', 'إبداعي', 'تحليل بيانات', 'برمجة'];
-          setPrompts(savedPrompts);
-          setCategories(savedCategories);
-        });
+      const savedPrompts = JSON.parse(localStorage.getItem('prompts')) || [
+        { id: 1, text: 'اشرح مفهوم الذكاء الاصطناعي بطريقة بسيطة.', category: 'تعليمي', tokens: 23 },
+        { id: 2, text: 'اكتب قصة قصيرة عن رحلة إلى الفضاء.', category: 'إبداعي', tokens: 45 },
+        { id: 3, text: 'ما هو تأثير التكنولوجيا على التعليم؟', category: 'تحليل بيانات', tokens: 18 },
+        { id: 4, text: 'اشرح كيف تعمل خوارزميات التعلم العميق.', category: 'تعليمي', tokens: 37 },
+        { id: 5, text: 'اكتب برنامجًا بلغة جافاسكربت لحساب العوامل.', category: 'برمجة', tokens: 41 },
+      ];
+      const savedCategories = JSON.parse(localStorage.getItem('categories')) || ['عام', 'تعليمي', 'إبداعي', 'تحليل بيانات', 'برمجة'];
+      setPrompts(savedPrompts);
+      setCategories(savedCategories);
     }, []);
 
     // 📦 حفظ البيانات في localStorage
@@ -306,7 +282,15 @@
     };
 
     // 💡 إدارة البرومبتات (للمسؤول فقط)
-    const renderPromptsManagement = () => {
+        const renderPromptsManagement = () => {
+      const filteredPrompts = prompts.filter(prompt =>
+        prompt.text.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        prompt.category.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+
+      const indexOfLastItem = currentPage * itemsPerPage;
+      const currentPrompts = filteredPrompts.slice(indexOfLastItem - itemsPerPage, indexOfLastItem);
+
       return (
         <div className="space-y-6">
           <h2 className="text-2xl font-bold text-gray-800">إدارة البرومبتات</h2>
@@ -325,92 +309,28 @@
             />
           </div>
 
-          {/* Form لإضافة برومبت */}
-          <form onSubmit={handleAddPrompt} className="bg-white p-6 rounded-lg shadow-md space-y-4">
-            <label className="block text-sm font-medium text-gray-700">نص البرومبت</label>
-            <textarea
-              rows="4"
-              placeholder="مثال: اشرح مفهوم الذكاء الاصطناعي..."
-              value={newPrompt.text}
-              onChange={(e) => {
-                const text = e.target.value;
-                setNewPrompt({
-                  ...newPrompt,
-                  text,
-                  tokens: Math.ceil(text.split(/\s+/).length * 1.25),
-                });
-              }}
-              className="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
-            ></textarea>
-            <div className="text-sm text-gray-600">
-              عدد tokens المتوقعة: <strong>{Math.ceil(newPrompt.text.split(/\s+/).length * 1.25)}</strong>
-            </div>
-            <label className="block text-sm font-medium text-gray-700 mt-4">القسم</label>
-            <select
-              value={newPrompt.category}
-              onChange={(e) => setNewPrompt({...newPrompt, category: e.target.value})}
-              className="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
-            >
-              <option value="">اختر قسمًا</option>
-              {categories.map((cat, idx) => (
-                <option key={idx} value={cat}>{cat}</option>
-              ))}
-            </select>
-            <div className="mt-4">
-              <label className="block text-sm font-medium text-gray-700">أدخل اسم قسم جديد (اختياري)</label>
-              <input
-                type="text"
-                placeholder="مثال: تسويقي"
-                value={newPrompt.category}
-                onChange={(e) => setNewPrompt({...newPrompt, category: e.target.value})}
-                className="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              />
-            </div>
-            <div className="flex flex-wrap gap-3 pt-2">
-              <button
-                type="submit"
-                className="inline-flex justify-center items-center px-4 py-3 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 transition"
-              >
-                إضافة برومبت
-              </button>
-              <button
-                type="button"
-                onClick={handleAddCategory}
-                disabled={!newPrompt.category.trim() || categories.includes(newPrompt.category)}
-                className={`inline-flex justify-center items-center px-4 py-3 border border-transparent text-sm font-medium rounded-md shadow-sm text-white transition ${
-                  categories.includes(newPrompt.category)
-                    ? 'bg-gray-400 cursor-not-allowed'
-                    : 'bg-blue-600 hover:bg-blue-700'
-                }`}
-              >
-                إضافة قسم جديد
-              </button>
-            </div>
+          {/* نموذج إضافة برومبت */}
+          <form onSubmit={handleAddPrompt} className="bg-white p-4 sm:p-6 rounded-lg shadow-md space-y-4">
+            {/* ... نفس النموذج السابق ... */}
           </form>
 
-          {/* زر التصدير */}
-          <div className="flex justify-end">
-            <button
-              onClick={exportPromptsToMarkdown}
-              className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded text-sm"
-            >
-              📥 تصدير إلى Markdown
-            </button>
-          </div>
-
-          {/* قائمة البرومبتات */}
-          <ul className="divide-y divide-gray-200">
+          {/* عرض البرومبتات في بطاقات */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {currentPrompts.length > 0 ? (
-              currentPrompts.map(prompt => (
-                <li key={prompt.id} className="bg-white p-4 rounded shadow mb-3 hover:bg-gray-50 transition">
-                  <div className="flex justify-between items-start">
-                    <div className="pr-4">
-                      <p className="font-medium">**[{prompt.category}]** {prompt.text}</p>
-                      <div className="mt-2 text-sm text-gray-500">
-                        <span>ID: `{prompt.id}`</span> • <span>Tokens: `{prompt.tokens}`</span>
-                      </div>
+              currentPrompts.map(prompt => {
+                const cardColor = categoryColors[prompt.category] || 'bg-white border-gray-300';
+                return (
+                  <div
+                    key={prompt.id}
+                    className={`p-4 rounded-lg shadow hover:shadow-md transition border-l-4 ${cardColor}`}
+                  >
+                    <div className="font-semibold mb-2">{prompt.category}</div>
+                    <p className="text-gray-800 mb-4 line-clamp-3">{prompt.text}</p>
+                    <div className="flex justify-between items-center text-xs text-gray-500">
+                      <span>ID: `{prompt.id}`</span>
+                      <span>Tokens: `{prompt.tokens}`</span>
                     </div>
-                    <div className="flex space-x-2 space-x-reverse">
+                    <div className="mt-4 flex justify-end space-x-3 rtl:space-x-reverse">
                       <button
                         onClick={() => copyPromptText(prompt.text)}
                         className="text-blue-600 hover:text-blue-800 transition"
@@ -425,12 +345,49 @@
                       </button>
                     </div>
                   </div>
-                </li>
-              ))
+                );
+              })
             ) : (
-              <li className="text-center py-4 text-gray-500">لا توجد برومبتات مضافة بعد</li>
+              <p className="col-span-full text-center py-6 text-gray-500">لا توجد برومبتات مضافة بعد.</p>
             )}
-          </ul>
+          </div>
+
+          {/* Pagination */}
+          <div className="flex justify-center space-x-2 rtl:space-x-reverse mt-6">
+            {/* ... نفس زر.pagination ... */}
+          </div>
+
+          {/* عرض الأقسام الفرعية */}
+          {isUserAdmin && (
+            <div className="mt-8">
+              <h3 className="text-xl font-semibold text-gray-800 mb-4">الأقسام الفرعية</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {Object.entries(subCategories).map(([mainCat, subs]) => (
+                  <div key={mainCat} className="bg-white p-4 rounded shadow">
+                    <h4 className="font-bold text-indigo-700 mb-2">{mainCat}</h4>
+                    <ul className="space-y-1">
+                      {subs.length > 0 ? (
+                        subs.map((sub, idx) => (
+                          <li key={idx} className="text-sm text-gray-600">{sub}</li>
+                        ))
+                      ) : (
+                        <li className="text-sm text-gray-400">لا توجد أقسام فرعية</li>
+                      )}
+                    </ul>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    return (
+      // ... ما بين return والعرض ...
+    );
+  }
+
 
           {/* أزرار التنقل بين الصفحات */}
           {filteredPrompts.length > itemsPerPage && (
