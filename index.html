@@ -38,16 +38,25 @@
   </div>
 
   <!-- Header -->
-  <header class="flex justify-between items-center pb-4 border-b border-gray-200 mb-6">
-    <h1 class="flex items-center text-3xl font-bold text-indigo-700">
-      <img src="logo.png" alt="شعار Promptica" class="w-10 h-10 ml-2">
-      Promptica
-    </h1>
-    <div class="space-x-4 rtl:space-x-reverse">
-      <a href="welcome.html" class="text-indigo-600 hover:text-indigo-800 underline">الترحيب</a>
-      <a href="login.html" class="text-gray-700 hover:text-indigo-600">تسجيل الخروج</a>
-    </div>
-  </header>
+<!-- Banner -->
+<div class="mb-6">
+  <img src="banner.jpg" alt="بانير موقع Promptica" class="w-full h-auto rounded-lg shadow-md">
+</div>
+
+<!-- Header -->
+<header className="flex justify-between items-center pb-4 border-b border-gray-200 mb-6">
+  <h1 className="text-3xl font-bold text-indigo-700 flex items-center">
+    <img src="logo.png" alt="شعار Promptica" className="w-8 h-8 mr-2" />
+    Promptica
+  </h1>
+  <div className="space-x-4 rtl:space-x-reverse">
+    <a href="welcome.html" className="text-indigo-600 hover:text-indigo-800 underline">الترحيب</a>
+    <a href="#" onClick={() => {
+      localStorage.removeItem("loggedInUser");
+      window.location.href = "logout.html";
+    }} className="text-gray-700 hover:text-indigo-600">تسجيل الخروج</a>
+  </div>
+</header>
 
   <!-- Root Div for React App -->
   <div id="root"></div>
