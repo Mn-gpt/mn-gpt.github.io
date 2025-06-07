@@ -18,13 +18,13 @@
   <div class="max-w-4xl mx-auto">
     <header class="flex justify-between items-center pb-4 border-b border-gray-200 mb-6">
       <h1 class="text-2xl sm:text-3xl font-bold text-indigo-700">MN.gpt</h1>
-      <a href="index.html" class="text-sm text-gray-700 hover:text-indigo-600 underline">العودة إلى لوحة التحكم</a>
+      <a href="index.html" class="text-sm text-gray-700 hover:text-indigo-600 underline">الرئيسية</a>
     </header>
 
     <section class="bg-white rounded-lg shadow-md p-6 space-y-6">
       <h2 class="text-xl font-bold text-gray-800">إدارة الأقسام الفرعية</h2>
 
-      <p class="text-sm text-gray-600">أضف أو حذف الأقسام الفرعية لكل قسم رئيسي.</p>
+      <p class="text-sm text-gray-600">أضف أو حذف أقسام فرعية لكل قسم رئيسي.</p>
 
       <!-- Form لإضافة قسم فرعي -->
       <form id="addSubCategoryForm" class="space-y-4">
@@ -49,19 +49,22 @@
         </button>
       </form>
 
-      <!-- قائمة الأقسام الفرعية -->
+      <!-- عرض الأقسام الفرعية -->
       <div id="subCategoriesList" class="mt-6 space-y-4">
-        <!-- سيتم تعبئتها ديناميكيًا -->
+        <h3 class="font-semibold text-gray-800">الأقسام الحالية:</h3>
+        <ul id="subCategoriesDisplay" class="space-y-2">
+          <!-- سيتم ملؤها ديناميكيًا -->
+        </ul>
       </div>
     </section>
 
-    <footer class="mt-8 pt-4 border-t border-gray-200 text-center text-sm text-gray-500">
+    <footer class="mt-8 pt-6 border-t border-gray-200 text-center text-sm text-gray-500">
       &copy; {{new Date().getFullYear()}} MN.gpt. جميع الحقوق محفوظة.
     </footer>
   </div>
 
   <script>
-    // قراءة الأقسام من localStorage
+    // قراءة الأقسام الرئيسية من localStorage
     const categories = JSON.parse(localStorage.getItem('categories')) || ['عام', 'تعليمي', 'إبداعي', 'تحليل بيانات', 'برمجة'];
     const subCategories = JSON.parse(localStorage.getItem('subCategories')) || {};
 
@@ -74,7 +77,7 @@
       mainCategorySelect.appendChild(option);
     });
 
-    // تحديث قائمة الأقسام الفرعية عند تقديم النموذج
+    // عند تقديم النموذج
     document.getElementById("addSubCategoryForm").addEventListener("submit", function(e) {
       e.preventDefault();
       const mainCatInput = document.getElementById("mainCategory");
@@ -112,7 +115,7 @@
 
     // عرض الأقسام الفرعية
     function renderSubCategories() {
-      const listContainer = document.getElementById("subCategoriesList");
+      const listContainer = document.getElementById("subCategoriesDisplay");
       listContainer.innerHTML = "";
 
       const storedSubCategories = JSON.parse(localStorage.getItem('subCategories')) || {};
@@ -122,30 +125,30 @@
         const subs = storedSubCategories[mainCat] || [];
 
         // عنوان القسم الرئيسي
-        const categoryHeader = document.createElement("h3");
-        categoryHeader.className = "font-semibold text-indigo-700 mt-6";
-        categoryHeader.textContent = mainCat;
-        listContainer.appendChild(categoryHeader);
+        const liHeader = document.createElement("li");
+        liHeader.className = "font-semibold text-indigo-700 mt-4";
+        liHeader.textContent = mainCat;
+        listContainer.appendChild(liHeader);
 
         // قائمة الأقسام الفرعية
         const ul = document.createElement("ul");
-        ul.className = "grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 mt-2";
+        ul.className = "pl-5 space-y-1";
 
         if (subs.length > 0) {
-          subs.forEach((sub, index) => {
+          subs.forEach((sub, idx) => {
             const li = document.createElement("li");
-            li.className = "bg-gray-50 p-3 rounded flex justify-between items-center";
+            li.className = "text-sm text-gray-800 flex justify-between items-center";
             li.innerHTML = `
               <span>${sub}</span>
               <button data-category="${mainCat}" data-subcategory="${sub}"
-                class="text-red-600 hover:text-red-800 text-sm">حذف</button>
+                class="text-xs text-red-600 hover:text-red-800">حذف</button>
             `;
             ul.appendChild(li);
           });
         } else {
           const li = document.createElement("li");
-          li.className = "text-sm text-gray-500";
-          li.textContent = "لا توجد أقسام فرعية مضافة بعد.";
+          li.className = "text-sm text-gray-400";
+          li.textContent = "لا توجد أقسام فرعية.";
           ul.appendChild(li);
         }
 
@@ -170,7 +173,7 @@
     }
 
     // أول تشغيل
-    window.onload = function () {
+    window.onload = () => {
       renderSubCategories();
     };
   </script>
