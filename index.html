@@ -32,6 +32,14 @@
       const [activeTab, setActiveTab] = useState('dashboard');
       const [prompts, setPrompts] = useState([]);
       const [categories, setCategories] = useState([]);
+      // قائمة الأقسام الفرعية
+const subCategories = {
+  'عام': [],
+  'تعليمي': ['رياضيات', 'فيزياء', 'كيمياء'],
+  'إبداعي': ['قصص', 'شعر', 'نصوص'],
+  'تحليل بيانات': ['Excel', 'SQL', 'Python', 'Data Science'],
+  'برمجة': ['JavaScript', 'Java', 'C++']
+};
       const [newPrompt, setNewPrompt] = useState({ text: '', category: '', tokens: 0 });
       const [editingCategory, setEditingCategory] = useState(null);
       const [editCategoryName, setEditCategoryName] = useState('');
