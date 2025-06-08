@@ -2,14 +2,18 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8" />
-  <title>Promptica - إدارة البرومبتات</title>
+  <title>Promptica - لوحة التحكم</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
   <!-- React + ReactDOM -->
   <script src="https://unpkg.com/react@18/umd/react.development.js"  crossorigin></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"  crossorigin></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script> 
-  <!-- Tailwind CSS -->
+
+  <!-- Tailwind CSS CDN -->
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"  rel="stylesheet" />
+
+  <!-- Internal Styles -->
   <style>
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -31,6 +35,7 @@
   </style>
 </head>
 <body class="min-h-screen bg-gray-50 p-4">
+
   <!-- Banner -->
   <div class="mb-6">
     <img src="banner.png" alt="بانير موقع Promptica" class="w-full h-auto rounded-lg shadow-md object-cover max-h-64">
@@ -48,6 +53,7 @@
     </div>
   </header>
 
+  <!-- Root Div for React App -->
   <div id="root"></div>
 
   <footer class="mt-8 pt-4 border-t border-gray-200 text-center text-sm text-gray-500">
@@ -57,7 +63,7 @@
   <script>
     function logout() {
       localStorage.removeItem("loggedInUser");
-      alert("تم تسجيل الخروج بنجاح.");
+      alert("تم تسجيل الخروج.");
       window.location.href = "login.html";
     }
   </script>
@@ -77,16 +83,16 @@
       const [searchTerm, setSearchTerm] = useState('');
       const [currentPage, setCurrentPage] = useState(1);
       const [itemsPerPage] = useState(4);
-      const [signature] = useState('Promptica');
+      const isUserAdmin = true; // يمكن تغييرها لاحقًا حسب نوع المستخدم
 
       // تحميل البيانات من localStorage
       useEffect(() => {
         const savedPrompts = JSON.parse(localStorage.getItem('prompts')) || [
-          { id: 1, text: 'اشرح مفهوم الذكاء الاصطناعي بطريقة بسيطة.', category: 'تعليمي', tokens: 23 },
-          { id: 2, text: 'اكتب قصة قصيرة عن رحلة إلى الفضاء.', category: 'إبداعي', tokens: 45 },
-          { id: 3, text: 'ما هو تأثير التكنولوجيا على التعليم؟', category: 'تحليل بيانات', tokens: 18 },
-          { id: 4, text: 'اشرح كيف تعمل خوارزميات التعلم العميق.', category: 'تعليمي', tokens: 37 },
-          { id: 5, text: 'اكتب برنامجًا بلغة جافاسكربت لحساب العوامل.', category: 'برمجة', tokens: 41 },
+          { id: 1, text: 'اشرح مفهوم الذكاء الاصطناعي بطريقة بسيطة.', category: 'تعليمي', subCategory: 'رياضيات', tokens: 23 },
+          { id: 2, text: 'اكتب قصة قصيرة عن رحلة إلى الفضاء.', category: 'إبداعي', subCategory: 'قصص', tokens: 45 },
+          { id: 3, text: 'ما هو تأثير التكنولوجيا على التعليم؟', category: 'تحليل بيانات', subCategory: 'Excel', tokens: 18 },
+          { id: 4, text: 'اشرح كيف تعمل خوارزميات التعلم العميق.', category: 'تعليمي', subCategory: 'فيزياء', tokens: 37 },
+          { id: 5, text: 'اكتب برنامجًا بلغة جافاسكربت لحساب العوامل.', category: 'برمجة', subCategory: 'JavaScript', tokens: 41 },
         ];
         const savedCategories = JSON.parse(localStorage.getItem('categories')) || ['عام', 'تعليمي', 'إبداعي', 'تحليل بيانات', 'برمجة'];
         const savedSubCategories = JSON.parse(localStorage.getItem('subCategories')) || {
@@ -102,7 +108,7 @@
       }, []);
 
       // حفظ البيانات في localStorage
-      const saveToLocalStorage = (updatedPrompts, updatedCategories, updatedSubCategories = subCategories) => {
+      const saveToLocalStorage = (updatedPrompts, updatedCategories, updatedSubCategories) => {
         localStorage.setItem('prompts', JSON.stringify(updatedPrompts));
         localStorage.setItem('categories', JSON.stringify(updatedCategories));
         localStorage.setItem('subCategories', JSON.stringify(updatedSubCategories));
@@ -114,19 +120,19 @@
         if (!newPrompt.text || !newPrompt.category) return;
 
         let mainCat = newPrompt.category;
-        let selectedSubCat = null;
+        let subCat = '';
 
         if (newPrompt.category.includes(':')) {
           const [main, sub] = newPrompt.category.split(':');
           mainCat = main;
-          selectedSubCat = sub;
+          subCat = sub;
         }
 
         const promptToAdd = {
           ...newPrompt,
           id: Date.now(),
           category: mainCat,
-          subCategory: selectedSubCat,
+          subCategory: subCat,
           tokens: Math.ceil(newPrompt.text.split(/\s+/).length * 1.25),
         };
 
@@ -139,8 +145,8 @@
         if (!updatedSubCategories[mainCat]) {
           updatedSubCategories[mainCat] = [];
         }
-        if (selectedSubCat && !updatedSubCategories[mainCat].includes(selectedSubCat)) {
-          updatedSubCategories[mainCat].push(selectedSubCat);
+        if (subCat && !updatedSubCategories[mainCat].includes(subCat)) {
+          updatedSubCategories[mainCat].push(subCat);
         }
 
         setPrompts(updatedPrompts);
@@ -221,12 +227,13 @@
         saveToLocalStorage(updatedPrompts, updatedCategories, updatedSubCategories);
       };
 
-      // 🔍 البحث والفرز
-      const filteredPrompts = prompts.filter(prompt =>
-        prompt.text.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        prompt.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (prompt.subCategory && prompt.subCategory.toLowerCase().includes(searchTerm.toLowerCase()))
-      );
+      // 🔍 البحث المتقدم
+      const filteredPrompts = prompts.filter(prompt => {
+        const matchesSearchTerm = prompt.text.toLowerCase().includes(searchTerm.toLowerCase());
+        const matchesCategory = prompt.category.toLowerCase().includes(searchTerm.toLowerCase());
+        const matchesSubCategory = prompt.subCategory?.toLowerCase().includes(searchTerm.toLowerCase());
+        return matchesSearchTerm || matchesCategory || matchesSubCategory;
+      });
 
       const indexOfLastItem = currentPage * itemsPerPage;
       const currentPrompts = filteredPrompts.slice(indexOfLastItem - itemsPerPage, indexOfLastItem);
@@ -246,12 +253,12 @@
       // 📊 إحصاءات الأقسام
       const getCategoryStats = () => {
         const stats = {};
-        categories.forEach(mainCat => {
-          const mainCatPrompts = prompts.filter(p => p.category === mainCat);
-          const subCatPrompts = prompts.filter(p => p.subCategory === mainCat);
+        categories.forEach(category => {
+          const mainCatPrompts = prompts.filter(p => p.category === category);
+          const subCatPrompts = prompts.filter(p => p.subCategory === category);
           const totalPrompts = mainCatPrompts.length + subCatPrompts.length;
           const totalTokens = [...mainCatPrompts, ...subCatPrompts].reduce((sum, p) => sum + p.tokens, 0);
-          stats[mainCat] = {
+          stats[category] = {
             count: totalPrompts,
             totalTokens: totalTokens,
             averageTokens: totalPrompts > 0 ? Math.round(totalTokens / totalPrompts) : 0
@@ -293,10 +300,10 @@
       // 📋 نسخ نص البرومبت
       const copyPromptText = (text) => {
         navigator.clipboard.writeText(text);
-        alert("تم النسخ!");
+        alert("✅ تم النسخ!");
       };
 
-      // 🃏 عرض لوحة التحكم
+      // 🧩 عرض لوحة التحكم
       const renderDashboard = () => {
         const stats = getCategoryStats();
         const totalPrompts = prompts.length;
@@ -311,10 +318,7 @@
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-3 sm:gap-6">
               <div className="bg-white p-4 sm:p-6 rounded shadow-md">
                 <h3 className="text-lg font-semibold text-gray-700 mb-2">عدد البرومبتات</h3>
-                <p className="text-3xl font-bold text-indigo-60تم التحديث الكامل لملف `index.html` ليشمل:
-- **البحث المتقدم** (يبحث في:
-  - نص البرومبت
-  - القسم الرئي0">{totalPrompts}</p>
+                <p className="text-3xl font-bold text-indigo-600">{totalPrompts}</p>
               </div>
               <div className="bg-white p-4 sm:p-6 rounded shadow-md">
                 <h3 className="text-lg font-semibold text-gray-700 mb-2">عدد الكلمات (tokens)</h3>
@@ -326,11 +330,11 @@
               </div>
             </div>
 
-            {/* شريط البحث */}
-            <div className="mt-4">
+            {/* شريط البحث المتقدم */}
+            <div className="mt-6">
               <input
                 type="text"
-                placeholder="ابحث في البرومبتات أو الأقسام..."
+                placeholder="🔍 ابحث في البرومبتات أو الأقسام..."
                 value={searchTerm}
                 onChange={(e) => {
                   setSearchTerm(e.target.value);
@@ -340,27 +344,20 @@
               />
             </div>
 
-            {/* قائمة الأقسام */}
-            <div className="mt-4">
-              <h3 className="text-xl font-semibold text-gray-800 mb-4">الأقسام المتاحة</h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-4">
-                {categories.map(cat => (
-                  <a
-                    key={cat}
-                    href={`category-prompts.html?category=${encodeURIComponent(cat)}`}
-                    className="bg-white p-4 rounded shadow hover:bg-gray-50 transition flex justify-between items-center"
-                  >
-                    <span className="font-medium text-indigo-600 text-sm">{cat}</span>
-                    <svg className="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
-                    </svg>
-                  </a>
-                ))}
-                {categories.length === 0 && (
-                  <p className="col-span-full text-center py-4 text-gray-500">لا توجد أقسام مضافة بعد.</p>
-                )}
-              </div>
-            </div>
+            {/* قائمة الأقسام للمستخدم العادي */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+  {categories.map(cat => (
+    <div key={cat} className="bg-white p-4 rounded shadow hover:bg-gray-50 transition flex justify-between items-center">
+      <span className="font-medium text-indigo-600 text-xs sm:text-sm">{cat}</span>
+      <svg className="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
+      </svg>
+    </div>
+  ))}
+  {categories.length === 0 && (
+    <p className="text-gray-500 text-center py-4">لا توجد أقسام مضافة بعد.</p>
+  )}
+</div>
 
             {/* إحصاءات الأقسام */}
             {categories.length > 0 && (
@@ -391,31 +388,32 @@
               </div>
             )}
 
-            {/* عرض الأقسام الفرعية */}
-            <div className="mt-8">
-              <h3 className="text-xl font-semibold text-gray-800 mb-4">الأقسام مع الأقسام الفرعية</h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {categories.map(cat => {
-                  const subs = subCategories[cat] || [];
-                  return (
-                    <div key={cat} className="bg-white p-4 rounded shadow-md border-l-4 border-indigo-500">
-                      <h4 className="font-bold text-indigo-700 text-sm mb-2">{cat}</h4>
+            {/* إدارة الأقسام الفرعية */}
+            {isUserAdmin && (
+              <div className="mt-8">
+                <a href="edit-subcategories.html" className="text-purple-600 hover:text-purple-800 underline">→ إدارة الأقسام الفرعية</a>
+                <h3 className="text-xl font-semibold text-gray-800 mb-4 mt-2">الأقسام مع الأقسام الفرعية</h3>
+                <a href="import-data.html" className="text-purple-600 hover:text-purple-800 underline">استيراد البيانات من Markdown</a>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {Object.entries(subCategories).map(([mainCat, subs]) => (
+                    <div key={mainCat} className="bg-white p-4 rounded shadow-md border-l-4 border-indigo-500">
+                      <h4 className="font-bold text-indigo-700 mb-2">{mainCat}</h4>
                       <ul className="space-y-1">
                         {subs.length > 0 ? (
                           subs.map((sub, idx) => (
-                            <li key={idx} className="text-xs sm:text-sm text-gray-700">
-                              ↳ {sub}
+                            <li key={idx} className="text-sm text-gray-600">
+                              ↳ <a href={`subcategory-prompts.html?main=${encodeURIComponent(mainCat)}&sub=${encodeURIComponent(sub)}`} className="underline text-purple-600">{sub}</a>
                             </li>
                           ))
                         ) : (
-                          <li className="text-xs text-gray-400">لا توجد أقسام فرعية</li>
+                          <li className="text-sm text-gray-400">لا توجد أقسام فرعية</li>
                         )}
                       </ul>
                     </div>
-                  );
-                })}
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
           </div>
         );
       };
@@ -470,8 +468,8 @@
                 <option value="">اختر قسمًا</option>
                 {categories.map((cat, idx) => (
                   <React.Fragment key={idx}>
-                    <option disabled style={{ fontWeight: 'bold' }}>{cat}</option>
-                    {subCategories[cat]?.map((sub, subIdx) => (
+                    <option disabled style={{ fontWeight: 'bold' }} value={cat}>── {cat} ──</option>
+                    {(subCategories[cat] || []).map((sub, subIdx) => (
                       <option key={`${cat}-${subIdx}`} value={`${cat}:${sub}`}>
                         ↳ {sub}
                       </option>
@@ -615,40 +613,43 @@
             )}
 
             {/* إدارة الأقسام */}
-            <div className="mt-8">
-              <h3 className="text-xl font-semibold text-gray-800 mb-4">إدارة الأقسام</h3>
-              <ul className="space-y-2">
-                {categories.map(cat => (
-                  <li key={cat} className="bg-gray-50 p-3 rounded flex justify-between items-center hover:bg-gray-100 transition">
-                    <span className="font-medium text-indigo-600 text-sm">{cat}</span>
-                    <div className="flex space-x-2 rtl:space-x-reverse">
-                      <button
-                        onClick={() => handleStartEditCategory(cat)}
-                        className="text-yellow-600 hover:text-yellow-800"
-                      >
-                        تعديل
-                      </button>
-                      <button
-                        onClick={() => handleDeleteCategory(cat)}
-                        className="text-red-600 hover:text-red-800"
-                      >
-                        حذف
-                      </button>
-                    </div>
-                  </li>
-                ))}
-                {categories.length === 0 && (
-                  <li className="text-center py-2 text-gray-500">لا توجد أقسام مضافة بعد.</li>
-                )}
-              </ul>
-            </div>
+            {isUserAdmin && (
+      
+              <div className="mt-8">
+                <h3 className="text-xl font-semibold text-gray-800 mb-4">إدارة الأقسام</h3>
+                <ul className="space-y-2">
+                  {categories.map(cat => (
+                    <li key={cat} className="bg-gray-50 p-3 rounded flex justify-between items-center hover:bg-gray-100 transition">
+                      <span className="font-medium text-indigo-600">{cat}</span>
+                      <div className="flex space-x-2 rtl:space-x-reverse">
+                        <button
+                          onClick={() => handleStartEditCategory(cat)}
+                          className="text-yellow-600 hover:text-yellow-800"
+                        >
+                          تعديل
+                        </button>
+                        <button
+                          onClick={() => handleDeleteCategory(cat)}
+                          className="text-red-600 hover:text-red-800"
+                        >
+                          حذف
+                        </button>
+                      </div>
+                    </li>
+                  ))}
+                  {categories.length === 0 && (
+                    <li className="text-center py-2 text-gray-500">لا توجد أقسام مضافة بعد.</li>
+                  )}
+                </ul>
+              </div>
+            )}
           </div>
         );
       };
 
       // Return JSX
       return (
-        <div className="container mx-auto max-w-6xl">
+        <div className="container mx-auto">
           {/* Tabs Navigation */}
           <div className="flex space-x-4 rtl:space-x-reverse mb-4 border-b border-gray-200">
             <button
@@ -664,25 +665,28 @@
             >
               لوحة التحكم
             </button>
-            <button
-              onClick={() => {
-                setActiveTab('prompts');
-                setCurrentPage(1);
-              }}
-              className={`py-2 px-4 font-medium ${
-                activeTab === 'prompts'
-                  ? 'border-b-2 border-indigo-600 text-indigo-600'
-                  : 'text-gray-600'
-              }`}
-            >
-              إدارة البرومبتات
-            </button>
+            {isUserAdmin && (
+              <button
+                onClick={() => {
+                  setActiveTab('prompts');
+                  setCurrentPage(1);
+                }}
+                className={`py-2 px-4 font-medium ${
+                  activeTab === 'prompts'
+                    ? 'border-b-2 border-indigo-600 text-indigo-600'
+                    : 'text-gray-600'
+                }`}
+              >
+                إدارة البرومبتات
+              </button>
+            )}
           </div>
 
           {/* Tab Content */}
           {activeTab === 'dashboard' && renderDashboard()}
-          {activeTab === 'prompts' && renderPromptsManagement()}
+          {activeTab === 'prompts' && isUserAdmin && renderPromptsManagement()}
         </div>
+        
       );
     }
 
