@@ -3,13 +3,16 @@
 <head>
   <meta charset="UTF-8" />
   <title>Promptica - إدارة البرومبتات</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+
   <!-- React + ReactDOM -->
   <script src="https://unpkg.com/react@18/umd/react.development.js"  crossorigin></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"  crossorigin></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script> 
+
   <!-- Tailwind CSS CDN -->
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"  rel="stylesheet" />
+
   <!-- Internal Styles -->
   <style>
     body {
@@ -26,6 +29,7 @@
   </style>
 </head>
 <body class="min-h-screen bg-gray-50 p-4">
+
   <!-- Banner -->
   <div class="mb-6">
     <img src="banner.jpg" alt="بانير موقع Promptica" class="w-full h-auto rounded-lg shadow-md object-cover max-h-64">
@@ -43,6 +47,7 @@
     </div>
   </header>
 
+  <!-- Root Div for React App -->
   <div id="root"></div>
 
   <footer class="mt-10 pt-4 border-t border-gray-200 text-center text-sm text-gray-500">
@@ -52,7 +57,7 @@
   <script>
     function logout() {
       localStorage.removeItem("loggedInUser");
-      alert("تم تسجيل الخروج بنجاح.");
+      alert("تم تسجيل الخروج.");
       window.location.href = "login.html";
     }
   </script>
@@ -66,13 +71,16 @@
       const [prompts, setPrompts] = useState([]);
       const [categories, setCategories] = useState([]);
       const [subCategories, setSubCategories] = useState({});
-      const [newPrompt, setNewPrompt] = useState({ text: '', category: '', tokens: 0 });
-      const [newSubCategory, setNewSubCategory] = useState('');
+      const [newPrompt, setNewPrompt] = useState({ text: '', category: '', subCategory: '', tokens: 0 });
       const [editingCategory, setEditingCategory] = useState(null);
       const [editCategoryName, setEditCategoryName] = useState('');
       const [searchTerm, setSearchTerm] = useState('');
       const [currentPage, setCurrentPage] = useState(1);
       const [itemsPerPage] = useState(4);
+      const [signature] = useState('Promptica');
+
+      // تحديد نوع المستخدم (مؤقتًا نجعله دائمًا مسؤول للتطوير)
+      const isUserAdmin = true;
 
       // تحميل البيانات من localStorage
       useEffect(() => {
@@ -108,35 +116,36 @@
         e.preventDefault();
         if (!newPrompt.text || !newPrompt.category) return;
 
-        let mainCat = newPrompt.category;
-        let selectedSubCat = null;
+        let selectedMainCat = newPrompt.category;
+        let selectedSubCat = newPrompt.subCategory || '';
 
-        if (newPrompt.category.includes(':')) {
-          const [main, sub] = newPrompt.category.split(':');
-          mainCat = main;
+        if (selectedMainCat.includes(':')) {
+          const [main, sub] = selectedMainCat.split(':');
+          selectedMainCat = main;
           selectedSubCat = sub;
         }
 
         const promptToAdd = {
           ...newPrompt,
           id: Date.now(),
-          category: mainCat,
-          subCategory: selectedSubCat || ''
+          category: selectedMainCat,
+          subCategory: selectedSubCat || '',
+          tokens: Math.ceil(newPrompt.text.split(/\s+/).length * 1.25),
         };
         const updatedPrompts = [...prompts, promptToAdd];
 
-        // تحديث الأقسام إن لم يكن موجودًا
-        const updatedCategories = categories.includes(mainCat)
+        // تحديث القسم إن لم يكن موجودًا
+        const updatedCategories = categories.includes(selectedMainCat)
           ? categories
-          : [...categories, mainCat];
+          : [...categories, selectedMainCat];
 
-        // تحديث الأقسام الفرعية إن لم يكن القسم الفرعي موجودًا
+        // تحديث الأقسام الفرعية إن لم تكن موجودة
         const updatedSubCategories = { ...subCategories };
-        if (!updatedSubCategories[mainCat]) {
-          updatedSubCategories[mainCat] = [];
+        if (!updatedSubCategories[selectedMainCat]) {
+          updatedSubCategories[selectedMainCat] = [];
         }
-        if (selectedSubCat && !updatedSubCategories[mainCat].includes(selectedSubCat)) {
-          updatedSubCategories[mainCat].push(selectedSubCat);
+        if (selectedSubCat && !updatedSubCategories[selectedMainCat].includes(selectedSubCat)) {
+          updatedSubCategories[selectedMainCat].push(selectedSubCat);
         }
 
         setPrompts(updatedPrompts);
@@ -144,7 +153,7 @@
         setSubCategories(updatedSubCategories);
 
         saveToLocalStorage(updatedPrompts, updatedCategories, updatedSubCategories);
-        setNewPrompt({ text: '', category: '', tokens: 0 });
+        setNewPrompt({ text: '', category: '', subCategory: '', tokens: 0 });
       };
 
       // ❌ حذف برومبت
@@ -158,7 +167,7 @@
       const handleAddCategory = () => {
         if (!newPrompt.category.trim()) return;
         if (categories.includes(newPrompt.category)) {
-          alert("هذا القسم موجود مسبقًا");
+          alert("هذا القسم موجود بالفعل!");
           return;
         }
         const updatedCategories = [...categories, newPrompt.category];
@@ -183,10 +192,8 @@
           p.category === editingCategory ? { ...p, category: editCategoryName } : p
         );
         const updatedSubCategories = { ...subCategories };
-        if (updatedSubCategories[editingCategory]) {
-          updatedSubCategories[editCategoryName] = updatedSubCategories[editingCategory];
-          delete updatedSubCategories[editingCategory];
-        }
+        updatedSubCategories[editCategoryName] = updatedSubCategories[editCategory] || [];
+        delete updatedSubCategories[editCategory];
 
         const updatedCategories = categories.map(cat =>
           cat === editingCategory ? editCategoryName : cat
@@ -214,14 +221,14 @@
         setPrompts(updatedPrompts);
         setCategories(updatedCategories);
         setSubCategories(updatedSubCategories);
-
         saveToLocalStorage(updatedPrompts, updatedCategories, updatedSubCategories);
       };
 
       // 🔍 البحث والفرز
       const filteredPrompts = prompts.filter(prompt =>
         prompt.text.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        prompt.category.toLowerCase().includes(searchTerm.toLowerCase())
+        prompt.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (prompt.subCategory && prompt.subCategory.toLowerCase().includes(searchTerm.toLowerCase()))
       );
 
       const indexOfLastItem = currentPage * itemsPerPage;
@@ -242,13 +249,15 @@
       // 📊 إحصاءات الأقسام
       const getCategoryStats = () => {
         const stats = {};
-        categories.forEach(category => {
-          const catPrompts = prompts.filter(p => p.category === category);
-          const totalTokens = catPrompts.reduce((sum, p) => sum + p.tokens, 0);
-          stats[category] = {
-            count: catPrompts.length,
-            totalTokens,
-            averageTokens: catPrompts.length > 0 ? Math.round(totalTokens / catPrompts.length) : 0
+        categories.forEach(mainCat => {
+          const mainCatPrompts = prompts.filter(p => p.category === mainCat);
+          const subCatPrompts = prompts.filter(p => p.subCategory === mainCat);
+          const totalPrompts = mainCatPrompts.length + subCatPrompts.length;
+          const totalTokens = [...mainCatPrompts, ...subCatPrompts].reduce((sum, p) => sum + p.tokens, 0);
+          stats[mainCat] = {
+            count: totalPrompts,
+            totalTokens: totalTokens,
+            averageTokens: totalPrompts > 0 ? Math.round(totalTokens / totalPrompts) : 0
           };
         });
         return stats;
@@ -269,7 +278,7 @@
           const [mainCat, subCat] = key.split(':');
           markdown += `## 📁 ${mainCat}${subCat ? ` → ${subCat}` : ''}\n`;
           promptList.forEach((prompt, index) => {
-            markdown += `${index + 1}. **[${prompt.category}]** ${prompt.text}\n   - \`ID: ${prompt.id}\`\n   - \`tokens: ${prompt.tokens}\`\n`;
+            markdown += `${index + 1}. **[${prompt.category}]${prompt.subCategory ? ` → ${prompt.subCategory}` : ''}** ${prompt.text}\n   - \`ID: ${prompt.id}\`\n   - \`tokens: ${prompt.tokens}\`\n`;
           });
         });
 
@@ -317,7 +326,7 @@
               </div>
             </div>
 
-            {/* قائمة الأقسام */}
+            {/* قائمة الأقسام للمستخدم العادي */}
             <div className="mt-6">
               <h3 className="text-xl font-semibold text-gray-800 mb-4">الأقسام المتاحة</h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -350,12 +359,12 @@
                       </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
-                      {Object.entries(stats).map(([category, data]) => (
-                        <tr key={category} className="hover:bg-gray-50">
+                      {Object.keys(stats).map((category, i) => (
+                        <tr key={i} className="hover:bg-gray-50">
                           <td className="px-4 py-4 whitespace-nowrap">{category}</td>
-                          <td className="px-4 py-4 whitespace-nowrap">{data.count}</td>
-                          <td className="px-4 py-4 whitespace-nowrap">{data.totalTokens}</td>
-                          <td className="px-4 py-4 whitespace-nowrap">{data.averageTokens}</td>
+                          <td className="px-4 py-4 whitespace-nowrap">{stats[category].count}</td>
+                          <td className="px-4 py-4 whitespace-nowrap">{stats[category].totalTokens}</td>
+                          <td className="px-4 py-4 whitespace-nowrap">{stats[category].averageTokens}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -387,7 +396,7 @@
               />
             </div>
 
-            {/* نموذج الإضافة */}
+            {/* Form لإضافة برومبت */}
             <form onSubmit={handleAddPrompt} className="bg-white p-4 sm:p-6 rounded-lg shadow-md space-y-4">
               <label className="block text-sm font-medium text-gray-700">نص البرومبت</label>
               <textarea
@@ -411,16 +420,26 @@
               <label className="block text-sm font-medium text-gray-700 mt-4">القسم الرئيسي</label>
               <select
                 value={newPrompt.category}
-                onChange={(e) => setNewPrompt({...newPrompt, category: e.target.value})}
+                onChange={(e) => {
+                  const selected = e.target.value;
+                  const [main, sub] = selected.split(':');
+                  setNewPrompt({
+                    ...newPrompt,
+                    category: main,
+                    subCategory: sub || ''
+                  });
+                }}
                 className="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
               >
                 <option value="">اختر قسمًا</option>
                 {categories.map((cat, idx) => (
                   <React.Fragment key={idx}>
-                    <option disabled style={{ fontWeight: 'bold' }}>{cat}</option>
+                    <option value={cat} disabled style={{ fontWeight: 'bold' }}>
+                      ── {cat} ──
+                    </option>
                     {subCategories[cat]?.map((sub, subIdx) => (
-                      <option key={subIdx} value={`${cat}:${sub}`}>
-                        &nbsp;&nbsp;&nbsp;↳ {sub}
+                      <option key={`${cat}-${subIdx}`} value={`${cat}:${sub}`}>
+                        ↳ {sub}
                       </option>
                     ))}
                   </React.Fragment>
@@ -434,6 +453,17 @@
                   placeholder="مثال: تسويقي"
                   value={newPrompt.category}
                   onChange={(e) => setNewPrompt({...newPrompt, category: e.target.value})}
+                  className="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                />
+              </div>
+
+              <div className="mt-4">
+                <label className="block text-sm font-medium text-gray-700">القسم الفرعي (اختياري)</label>
+                <input
+                  type="text"
+                  placeholder="مثال: خوارزميات"
+                  value={newPrompt.subCategory}
+                  onChange={(e) => setNewPrompt({...newPrompt, subCategory: e.target.value})}
                   className="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 />
               </div>
@@ -501,13 +531,13 @@
                       <div className="mt-4 flex justify-end space-x-3 rtl:space-x-reverse">
                         <button
                           onClick={() => copyPromptText(prompt.text)}
-                          className="text-blue-600 hover:text-blue-800"
+                          className="text-blue-600 hover:text-blue-800 transition"
                         >
                           نسخ
                         </button>
                         <button
                           onClick={() => handleDeletePrompt(prompt.id)}
-                          className="text-red-600 hover:text-red-800"
+                          className="text-red-600 hover:text-red-800 transition"
                         >
                           حذف
                         </button>
@@ -562,123 +592,41 @@
             )}
 
             {/* إدارة الأقسام الفرعية */}
-            <div className="mt-8">
-              <h3 className="text-xl font-semibold text-gray-800 mb-4">الأقسام مع الأقسام الفرعية</h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {Object.entries(subCategories).map(([mainCat, subs]) => (
-                  <div key={mainCat} className="bg-white p-4 rounded shadow-md border-l-4 border-indigo-500">
-                    <h4 className="font-bold text-indigo-700 mb-2">{mainCat}</h4>
-                    <ul className="space-y-1">
-                      {subs.length > 0 ? (
-                        subs.map((sub, idx) => (
-                          <li key={idx} className="text-sm text-gray-700 flex items-center">
-                            <span className="w-2 h-2 bg-purple-300 rounded-full inline-block mr-2"></span>
-                            {sub}
+            {isUserAdmin && (
+              <div className="mt-8">
+                <h3 className="text-xl font-semibold text-gray-800 mb-4">الأقسام مع الأقسام الفرعية</h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {categories.map(cat => (
+                    <div key={cat} className="bg-white p-4 rounded shadow-md border-l-4 border-indigo-500">
+                      <h4 className="font-bold text-indigo-700 mb-2">{cat}</h4>
+                      <ul className="space-y-1">
+                        {subCategories[cat]?.map((sub, idx) => (
+                          <li key={idx} className="flex justify-between items-center">
+                            <span className="text-sm text-gray-700">{sub}</span>
                             <button
-                              onClick={() => handleDeleteSubCategory(mainCat, sub)}
-                              className="text-xs text-red-600 hover:text-red-800 ml-2"
+                              onClick={() => handleDeleteSubCategory(cat, sub)}
+                              className="text-xs text-red-600 hover:text-red-800"
                             >
                               حذف
                             </button>
                           </li>
-                        ))
-                      ) : (
-                        <li className="text-sm text-gray-400">لا توجد أقسام فرعية</li>
-                      )}
-                    </ul>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* إضافة قسم فرعي */}
-            <div className="mt-6 bg-white p-4 rounded shadow-md">
-              <h3 className="text-lg font-semibold text-gray-800 mb-2">إضافة قسم فرعي</h3>
-              <select
-                value={newPrompt.category}
-                onChange={(e) => setNewPrompt({ ...newPrompt, category: e.target.value })}
-                className="w-full p-3 border border-gray-300 rounded mb-2"
-              >
-                <option value="">اختر قسمًا رئيسيًا</option>
-                {categories.map((cat, idx) => (
-                  <option key={idx} value={cat}>{cat}</option>
-                ))}
-              </select>
-
-              <input
-                type="text"
-                placeholder="اسم القسم الفرعي"
-                value={newSubCategory}
-                onChange={(e) => setNewSubCategory(e.target.value.trim())}
-                className="w-full p-3 border border-gray-300 rounded mb-2"
-              />
-
-              <button
-                onClick={() => addSubCategory()}
-                disabled={!newPrompt.category || !newSubCategory}
-                className={`w-full py-2 px-4 border border-transparent text-sm font-medium rounded text-white ${
-                  (!newPrompt.category || !newSubCategory)
-                    ? 'bg-gray-400 cursor-not-allowed'
-                    : 'bg-blue-600 hover:bg-blue-700'
-                }`}
-              >
-                ➕ إضافة قسم فرعي
-              </button>
-            </div>
-
-            {/* عرض الأقسام الفرعية */}
-            <div className="mt-8">
-              <h3 className="text-xl font-semibold text-gray-800 mb-4">عرض الأقسام الفرعية</h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {categories.map(cat => {
-                  const subs = subCategories[cat] || [];
-                  return (
-                    <div key={cat} className="bg-white p-4 rounded shadow-md">
-                      <h4 className="font-bold text-indigo-700 mb-2">{cat}</h4>
-                      <ul className="space-y-1">
-                        {subs.length > 0 ? (
-                          subs.map((sub, idx) => (
-                            <li key={idx} className="text-sm text-gray-700">
-                              ↳ {sub}
-                            </li>
-                          ))
-                        ) : (
-                          <li className="text-sm text-gray-400">لا توجد أقسام فرعية</li>
-                        )}
+                        )) || <li className="text-sm text-gray-400">لا توجد أقسام فرعية</li>}
                       </ul>
                     </div>
-                  );
-                })}
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
           </div>
         );
       };
 
-      // 🟢 إضافة قسم فرعي
-      const addSubCategory = () => {
-        if (!newPrompt.category || !newSubCategory) return;
-        const updatedSubCategories = { ...subCategories };
-        if (!updatedSubCategories[newPrompt.category]) {
-          updatedSubCategories[newPrompt.category] = [];
-        }
-        if (!updatedSubCategories[newPrompt.category].includes(newSubCategory)) {
-          updatedSubCategories[newPrompt.category].push(newSubCategory);
-          setSubCategories(updatedSubCategories);
-          saveToLocalStorage(prompts, categories, updatedSubCategories);
-          setNewSubCategory('');
-        } else {
-          alert("هذا القسم الفرعي موجود بالفعل");
-        }
-      };
-
-      // 🟥 حذف قسم فرعي
+      // 🟢 حذف قسم فرعي
       const handleDeleteSubCategory = (mainCategory, subCategory) => {
         if (!window.confirm(`هل أنت متأكد من حذف "${subCategory}" من القسم "${mainCategory}"؟`)) return;
 
         const updatedSubCategories = { ...subCategories };
         updatedSubCategories[mainCategory] = updatedSubCategories[mainCategory].filter(s => s !== subCategory);
-
         setSubCategories(updatedSubCategories);
         saveToLocalStorage(prompts, categories, updatedSubCategories);
       };
@@ -701,24 +649,31 @@
             >
               لوحة التحكم
             </button>
-            <button
-              onClick={() => {
-                setActiveTab('prompts');
-                setCurrentPage(1);
-              }}
-              className={`py-2 px-4 font-medium ${
-                activeTab === 'prompts'
-                  ? 'border-b-2 border-indigo-600 text-indigo-600'
-                  : 'text-gray-600'
-              }`}
-            >
-              إدارة البرومبتات
-            </button>
+            {isUserAdmin && (
+              <button
+                onClick={() => {
+                  setActiveTab('prompts');
+                  setCurrentPage(1);
+                }}
+                className={`py-2 px-4 font-medium ${
+                  activeTab === 'prompts'
+                    ? 'border-b-2 border-indigo-600 text-indigo-600'
+                    : 'text-gray-600'
+                }`}
+              >
+                إدارة البرومبتات
+              </button>
+            )}
           </div>
 
           {/* Tab Content */}
           {activeTab === 'dashboard' && renderDashboard()}
           {activeTab === 'prompts' && renderPromptsManagement()}
+
+          {/* Footer */}
+          <footer className="mt-8 pt-4 border-t border-gray-200 text-center text-sm text-gray-500">
+            &copy; {new Date().getFullYear()} {signature}. جميع الحقوق محفوظة.
+          </footer>
         </div>
       );
     }
