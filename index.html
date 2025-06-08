@@ -379,8 +379,7 @@
               </div>
             </div>
 
-            {/* إدارة الأقسام الفرعية */}
-            {/* إدارة الأقسام الفرعية */}
+{/* عرض الأقسام الفرعية */}
 {isUserAdmin && (
   <div className="mt-8">
     <h3 className="text-xl font-semibold text-gray-800 mb-4">الأقسام مع الأقسام الفرعية</h3>
@@ -391,7 +390,7 @@
           <ul className="space-y-1">
             {subs.map((sub, idx) => (
               <li key={idx} className="text-xs sm:text-sm text-gray-600">
-                ↳ <a href={`subcategory-prompts.html?main=${encodeURIComponent(mainCat)}&sub=${encodeURIComponent(sub)}`} className="underline text-purple-600">{sub}</a>
+                ↳ <a href={`popup-subcategory.html?main=${encodeURIComponent(mainCat)}&sub=${encodeURIComponent(sub)}`} target="_blank" className="underline text-purple-600">{sub}</a>
               </li>
             )) || <li className="text-xs text-gray-400">لا توجد أقسام فرعية</li>}
           </ul>
