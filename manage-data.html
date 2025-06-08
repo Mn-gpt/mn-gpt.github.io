@@ -1,0 +1,210 @@
+<DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <title>إدارة البيانات - Promptica</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <!-- Tailwind CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"  rel="stylesheet" />
+  <!-- Internal Styles -->
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f9fafb;
+      color: #1f2937;
+    }
+  </style>
+</head>
+<body class="min-h-screen bg-gray-50 p-4">
+
+  <!-- Banner -->
+  <div class="mb-6">
+    <img src="banner.png" alt="بانير موقع Promptica" class="w-full h-auto rounded-lg shadow-md object-cover max-h-64">
+  </div>
+
+  <!-- Header -->
+  <header class="flex justify-between items-center pb-4 border-b border-gray-200 mb-6">
+    <h1 class="text-2xl sm:text-3xl font-bold text-indigo-700 flex items-center">
+      <img src="logo1.png" alt="شعار Promptica" class="w-8 h-8 ml-2" />
+      Promptica | إدارة البيانات
+    </h1>
+    <a href="index.html" class="text-indigo-600 hover:text-indigo-800 underline">الرئيسية</a>
+  </header>
+
+  <main class="max-w-4xl mx-auto">
+    <section class="bg-white p-6 rounded-lg shadow-md space-y-6">
+      <h2 class="text-xl font-bold text-gray-800">لوحة إدارة البيانات</h2>
+
+      <!-- شريط البحث -->
+      <div>
+        <input
+          id="searchInput"
+          type="text"
+          placeholder="ابحث في البرومبتات أو الأقسام..."
+          class="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
+        />
+      </div>
+
+      <!-- عرض البيانات -->
+      <div id="dataDisplay" class="space-y-6">
+        <!-- سيتم ملؤها ديناميكيًا -->
+      </div>
+    </section>
+  </main>
+
+  <footer class="mt-8 pt-4 border-t border-gray-200 text-center text-sm text-gray-500">
+    &copy; {{new Date().getFullYear()}} Promptica. جميع الحقوق محفوظة.
+  </footer>
+
+  <script>
+    // قراءة البيانات من localStorage
+    const data = {
+      prompts: JSON.parse(localStorage.getItem('prompts')) || [],
+      categories: JSON.parse(localStorage.getItem('categories')) || [],
+      subCategories: JSON.parse(localStorage.getItem('subCategories')) || {}
+    };
+
+    // عرض البيانات
+    function renderData(searchQuery = '') {
+      const container = document.getElementById("dataDisplay");
+      container.innerHTML = "";
+
+      const lowerSearch = searchQuery.toLowerCase();
+
+      // عرض البرومبتات
+      const filteredPrompts = data.prompts.filter(p =>
+        p.text.toLowerCase().includes(lowerSearch) ||
+        p.category.toLowerCase().includes(lowerSearch) ||
+        (p.subCategory && p.subCategory.toLowerCase().includes(lowerSearch))
+      );
+
+      if (filteredPrompts.length > 0) {
+        const div = document.createElement("div");
+        div.className = "mb-6";
+        div.innerHTML = `
+          <h3 class="text-lg font-semibold text-gray-800 mb-2">برومبتات (${filteredPrompts.length})</h3>
+          <ul class="space-y-2">
+            ${filteredPrompts.map(prompt => `
+              <li class="bg-gray-50 p-3 rounded shadow-sm">
+                <strong>[${prompt.category}${prompt.subCategory ? ` → ${prompt.subCategory}` : ''}]</strong> ${prompt.text}
+                <div class="mt-1 text-xs text-gray-500">
+                  ID: <code>${prompt.id}</code> • Tokens: <code>${prompt.tokens}</code>
+                </div>
+              </li>
+            `).join('')}
+          </ul>
+        `;
+        container.appendChild(div);
+      }
+
+      // عرض الأقسام الرئيسية
+      const filteredCategories = data.categories.filter(cat =>
+        cat.toLowerCase().includes(lowerSearch)
+      );
+
+      if (filteredCategories.length > 0) {
+        const div = document.createElement("div");
+        div.className = "mb-6";
+        div.innerHTML = `
+          <h3 class="text-lg font-semibold text-gray-800 mb-2">الأقسام (${filteredCategories.length})</h3>
+          <ul class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
+            ${filteredCategories.map(cat => `
+              <li class="bg-white p-3 rounded shadow hover:bg-gray-50 transition flex justify-between items-center">
+                <span class="font-medium text-indigo-600">${cat}</span>
+                <button onclick='deleteCategory("${cat}")' class="text-xs text-red-600 hover:text-red-800">حذف</button>
+              </li>
+            `).join('')}
+          </ul>
+        `;
+        container.appendChild(div);
+      }
+
+      // عرض الأقسام الفرعية
+      const filteredSubCategories = {};
+      Object.keys(data.subCategories).forEach(mainCat => {
+        const subs = data.subCategories[mainCat].filter(sub =>
+          sub.toLowerCase().includes(lowerSearch)
+        );
+        if (subs.length > 0 || mainCat.toLowerCase().includes(lowerSearch)) {
+          filteredSubCategories[mainCat] = subs;
+        }
+      });
+
+      if (Object.keys(filteredSubCategories).length > 0) {
+        const div = document.createElement("div");
+        div.className = "mb-6";
+        div.innerHTML = `
+          <h3 class="text-lg font-semibold text-gray-800 mb-2">الأقسام الفرعية</h3>
+          <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+            ${Object.entries(filteredSubCategories).map(([mainCat, subs]) => `
+              <div class="bg-white p-4 rounded shadow-md border-l-4 border-indigo-500">
+                <h4 class="font-bold text-indigo-700 mb-2">${mainCat}</h4>
+                <ul class="space-y-1">
+                  ${subs.map((sub, idx) => `
+                    <li class="text-sm text-gray-700 flex items-center">
+                      <span class="w-2 h-2 bg-purple-300 rounded-full inline-block mr-2"></span>
+                      ${sub}
+                      <button onclick='deleteSubCategory("${mainCat}", "${sub}")' class="text-xs text-red-600 hover:text-red-800 ml-2">حذف</button>
+                    </li>
+                  `).join('')}
+                </ul>
+              </div>
+            `).join('')}
+          </div>
+        `;
+        container.appendChild(div);
+      }
+
+      // إظهار رسالة إن لم يتم العثور على شيء
+      if (filteredPrompts.length === 0 && filteredCategories.length === 0 && Object.keys(filteredSubCategories).length === 0) {
+        const noResult = document.createElement("p");
+        noResult.className = "text-center py-4 text-gray-500";
+        noResult.textContent = "لا توجد نتائج.";
+        container.appendChild(noResult);
+      }
+    }
+
+    // 🔍 عند البحث
+    document.getElementById("searchInput").addEventListener("input", function () {
+      renderData(this.value);
+    });
+
+    // ❌ حذف قسم رئيسي
+    function deleteCategory(categoryToDelete) {
+      if (!window.confirm(`هل أنت متأكد من حذف القسم "${categoryToDelete}" وجميع البرومبتات المرتبطة به؟`)) return;
+
+      const updatedCategories = data.categories.filter(cat => cat !== categoryToDelete);
+      const updatedPrompts = data.prompts.filter(p => p.category !== categoryToDelete);
+
+      const updatedSubCategories = { ...data.subCategories };
+      delete updatedSubCategories[categoryToDelete];
+
+      data.categories = updatedCategories;
+      data.prompts = updatedPrompts;
+      data.subCategories = updatedSubCategories;
+
+      localStorage.setItem("categories", JSON.stringify(updatedCategories));
+      localStorage.setItem("prompts", JSON.stringify(updatedPrompts));
+      localStorage.setItem("subCategories", JSON.stringify(updatedSubCategories));
+
+      renderData(document.getElementById("searchInput").value);
+    }
+
+    // ❌ حذف قسم فرعي
+    function deleteSubCategory(mainCat, subCat) {
+      if (!window.confirm(`هل أنت متأكد من حذف "${subCat}" من القسم "${mainCat}"؟`)) return;
+
+      const updatedSubCategories = { ...data.subCategories };
+      updatedSubCategories[mainCat] = updatedSubCategories[mainCat].filter(s => s !== subCat);
+      data.subCategories = updatedSubCategories;
+      localStorage.setItem("subCategories", JSON.stringify(updatedSubCategories));
+      renderData(document.getElementById("searchInput").value);
+    }
+
+    // أول تشغيل
+    window.onload = () => {
+      renderData();
+    };
+  </script>
+</body>
+</html>
