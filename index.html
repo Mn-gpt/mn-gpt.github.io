@@ -66,6 +66,12 @@
     }
   }
 </script>
+<button
+  onClick={() => setShowAdvancedSearch(!showAdvancedSearch)}
+  className="bg-gray-200 hover:bg-gray-300 text-gray-700 px-4 py-2 rounded text-sm"
+>
+  🔍 {showAdvancedSearch ? 'إخفاء البحث المتقدم' : 'بحث متقدم'}
+</button>
 </body>
 <div id="root"></div>
 
@@ -74,6 +80,12 @@
 
   function App() {
     // البيانات الأساسية
+    const filteredPrompts = prompts.filter(prompt => {
+  const matchesSearchTerm = prompt.text.toLowerCase().includes(searchTerm.toLowerCase());
+  const matchesCategory = prompt.category.toLowerCase().includes(searchTerm.toLowerCase());
+  const matchesSubCategory = prompt.subCategory?.toLowerCase().includes(searchTerm.toLowerCase());
+  return matchesSearchTerm || matchesCategory || matchesSubCategory;
+});
     const [activeTab, setActiveTab] = useState('dashboard');
     const [prompts, setPrompts] = useState([]);
     const [categories, setCategories] = useState([]);
@@ -312,23 +324,69 @@
           </div>
 
           {/* قائمة الأقسام */}
-          <div className="mt-6">
-            <h3 className="text-xl font-semibold text-gray-800 mb-4">الأقسام المتاحة</h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-              {categories.map(cat => (
-                <div key={cat} className="bg-white p-4 rounded shadow hover:bg-gray-50 transition flex justify-between items-center">
-                  <span className="font-medium text-indigo-600">{cat}</span>
-                  <svg className="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
-                  </svg>
-                </div>
-              ))}
-              {categories.length === 0 && (
-                <p className="text-gray-500 text-center py-4">لا توجد أقسام مضافة بعد.</p>
-              )}
-            </div>
-          </div>
+     {/* قائمة الأقسام للمستخدم العادي */}
+<div className="mt-6">
+  <h3 className="text-xl font-semibold text-gray-800 mb-4">الأقسام المتاحة</h3>
+  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+    {categories.map(cat => {
+      const subs = subCategories[cat] || [];
+      const hasMatchingSub = searchTerm && subs.some(sub =>
+        sub.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+      if (!cat.toLowerCase().includes(searchTerm.toLowerCase()) && !hasMatchingSub) {
+        return null;
+      }
+      return (
+        <a
+          key={cat}
+          href={`category-prompts.html?category=${encodeURIComponent(cat)}`}
+          className="bg-white p-4 rounded shadow hover:bg-gray-50 transition flex justify-between items-center"
+        >
+          <span className="font-medium text-indigo-600">{cat}</span>
+          <svg className="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
+          </svg>
+        </a>
+      );
+    })}
+    {categories.length === 0 && (
+      <p className="text-gray-500 text-center py-4">لا توجد أقسام مضافة بعد.</p>
+    )}
+  </div>
+</div>
+{/* الأقسام الفرعية */}
+<div className="mt-8">
+  <h3 className="text-xl font-semibold text-gray-800 mb-4">الأقسام مع الأقسام الفرعية</h3>
+  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+    {categories.map(cat => {
+      const subs = subCategories[cat] || [];
+      const hasMatchingSub = searchTerm && subs.some(sub =>
+        sub.toLowerCase().includes(searchTerm.toLowerCase())
+      );
 
+      if (!cat.toLowerCase().includes(searchTerm.toLowerCase()) && !hasMatchingSub) {
+        return null;
+      }
+
+      return (
+        <div key={cat} className="bg-white p-4 rounded shadow-md border-l-4 border-indigo-500">
+          <h4 className="font-bold text-indigo-700 mb-2">{cat}</h4>
+          <ul className="space-y-1">
+            {subs.length > 0 ? (
+              subs.map((sub, idx) => (
+                <li key={idx} className="text-sm text-gray-700">
+                  ↳ <a href={`subcategory-prompts.html?main=${encodeURIComponent(cat)}&sub=${encodeURIComponent(sub)}`} className="underline text-purple-600">{sub}</a>
+                </li>
+              ))
+            ) : (
+              <li className="text-sm text-gray-400">لا توجد أقسام فرعية</li>
+            )}
+          </ul>
+        </div>
+      );
+    })}
+  </div>
+</div>
           {/* إحصاءات الأقسام */
           categories.length > 0 && (
             <div className="mt-8">
@@ -368,18 +426,18 @@
           <h2 className="text-2xl sm:text-3xl font-bold text-gray-800">إدارة البرومبتات</h2>
 
           {/* شريط البحث */}
-          <div className="mb-4">
-            <input
-              type="text"
-              placeholder="ابحث في البرومبتات..."
-              value={searchTerm}
-              onChange={(e) => {
-                setSearchTerm(e.target.value);
-                setCurrentPage(1);
-              }}
-              className="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
-            />
-          </div>
+          <div className="mb-6">
+  <input
+    type="text"
+    placeholder="ابحث في البرومبتات أو الأقسام..."
+    value={searchTerm}
+    onChange={(e) => {
+      setSearchTerm(e.target.value);
+      setCurrentPage(1);
+    }}
+    className="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
+  />
+</div>
 
           {/* Form لإضافة برومبت */}
           <form onSubmit={handleAddPrompt} className="bg-white p-4 sm:p-6 rounded-lg shadow-md space-y-4">
