@@ -1,4 +1,4 @@
-<DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8" />
@@ -6,72 +6,67 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <!-- Tailwind CSS -->
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"  rel="stylesheet" />
+  <!-- Internal Styles -->
   <style>
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       background-color: #f9fafb;
       color: #1f2937;
     }
-    .line-clamp-3 {
-      display: -webkit-box;
-      -webkit-line-clamp: 3;
-      -webkit-box-orient: vertical;
-      overflow: hidden;
-    }
   </style>
 </head>
 <body class="min-h-screen bg-gray-50 p-4">
+
   <!-- Banner -->
   <div class="mb-6">
-    <img src="banner.jpg" alt="بانير موقع Promptica" class="w-full h-auto rounded-lg shadow-md object-cover max-h-64">
+    <img src="banner.png" alt="بانير موقع Promptica" class="w-full h-auto rounded-lg shadow-md object-cover max-h-64">
   </div>
 
   <!-- Header -->
   <header class="flex justify-between items-center pb-4 border-b border-gray-200 mb-6">
     <h1 class="text-2xl sm:text-3xl font-bold text-indigo-700 flex items-center">
-      <img src="logo.png" alt="شعار Promptica" class="w-8 h-8 ml-2" />
+      <img src="logo1.png" alt="شعار Promptica" class="w-8 h-8 ml-2" />
       Promptica
     </h1>
     <a href="index.html" class="text-indigo-600 hover:text-indigo-800 underline">الرئيسية</a>
   </header>
 
+  <!-- Main Content -->
   <main class="max-w-4xl mx-auto">
     <section class="bg-white p-6 rounded-lg shadow-md space-y-6">
       <h2 class="text-xl font-bold text-gray-800">إدارة الأقسام الفرعية</h2>
-      <p class="text-sm text-gray-600">اختر القسم الرئيسي، وأضف قسمًا فرعيًا جديدًا بحرية (يمكن أن يحتوي على مسافات)</p>
+      <p class="text-sm text-gray-600">اختر قسمًا رئيسيًا، وأضف قسمًا فرعيًا أسفله.</p>
 
       <!-- Form لإضافة قسم فرعي -->
       <form id="addSubCategoryForm" class="space-y-4">
-        <div>
-          <label for="mainCategory" class="block text-sm font-medium text-gray-700 mb-1">اختر القسم الرئيسي</label>
-          <select id="mainCategory" name="mainCategory" required class="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500">
-            <option value="">اختر قسمًا رئيسيًا</option>
-          </select>
-        </div>
+        <label for="mainCategory" class="block text-sm font-medium text-gray-700">اختر القسم الرئيسي</label>
+        <select id="mainCategory" name="mainCategory" required
+          class="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500">
+          <option value="">اختر قسمًا رئيسيًا</option>
+        </select>
 
         <div>
-          <label for="subCategoryName" class="block text-sm font-medium text-gray-700 mb-1">اسم القسم الفرعي الجديد</label>
-          <input type="text"
-                 id="subCategoryName"
-                 name="subCategoryName"
-                 placeholder="مثال: خوارزميات الذكاء الاصطناعي"
-                 class="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
-          />
+          <label for="subCategoryName" class="block text-sm font-medium text-gray-700">اسم القسم الفرعي الجديد</label>
+          <input type="text" id="subCategoryName" name="subCategoryName" required
+            placeholder="مثال: JavaScript"
+            class="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500" />
         </div>
 
         <button type="submit"
-                class="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded transition">
+          class="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded transition">
           ➕ إضافة قسم فرعي
         </button>
       </form>
 
       <!-- عرض الأقسام الفرعية -->
       <div id="subCategoriesList" class="mt-6 space-y-4">
-        <!-- سيتم تعبئة البيانات هنا ديناميكيًا -->
+        <h3 class="font-semibold text-gray-800">الأقسام الحالية:</h3>
+        <ul class="space-y-2" id="subCategoriesDisplay"></ul>
       </div>
     </section>
   </main>
 
+  <!-- Footer -->
   <footer class="mt-8 pt-4 border-t border-gray-200 text-center text-sm text-gray-500">
     &copy; {{new Date().getFullYear()}} Promptica. جميع الحقوق محفوظة.
   </footer>
@@ -79,7 +74,13 @@
   <script>
     // قراءة البيانات من localStorage
     const categories = JSON.parse(localStorage.getItem('categories')) || ['عام', 'تعليمي', 'إبداعي', 'تحليل بيانات', 'برمجة'];
-    let subCategories = JSON.parse(localStorage.getItem('subCategories')) || {};
+    let subCategories = JSON.parse(localStorage.getItem('subCategories')) || {
+      'عام': [],
+      'تعليمي': ['رياضيات', 'فيزياء'],
+      'إبداعي': ['قصص', 'شعر'],
+      'تحليل بيانات': ['Excel', 'SQL'],
+      'برمجة': ['JavaScript', 'Python']
+    };
 
     // ملء قائمة الاختيار بالأقسام الرئيسية
     const mainCategorySelect = document.getElementById("mainCategory");
@@ -104,41 +105,32 @@
         return;
       }
 
-      // التأكد من وجود القسم
       if (!subCategories[mainCategory]) {
         subCategories[mainCategory] = [];
       }
 
-      // التحقق من عدم التكرار
       if (subCategories[mainCategory].includes(newSubCategory)) {
         alert("هذا القسم الفرعي موجود بالفعل.");
         return;
       }
 
-      // إضافة القسم الفرعي
       subCategories[mainCategory].push(newSubCategory);
-
-      // حفظ البيانات
       localStorage.setItem("subCategories", JSON.stringify(subCategories));
 
-      // إعادة تحميل القائمة
       renderSubCategories();
       subCatInput.value = "";
     });
 
     // عرض الأقسام الفرعية
     function renderSubCategories() {
-      const listContainer = document.getElementById("subCategoriesList");
+      const listContainer = document.getElementById("subCategoriesDisplay");
       listContainer.innerHTML = "";
 
-      const storedSubCategories = JSON.parse(localStorage.getItem('subCategories')) || {};
-      const storedCategories = JSON.parse(localStorage.getItem('categories')) || [];
-
-      storedCategories.forEach(mainCat => {
-        const subs = storedSubCategories[mainCat] || [];
+      Object.keys(subCategories).forEach(mainCat => {
+        const subs = subCategories[mainCat];
 
         // عنوان القسم الرئيسي
-        const categoryHeader = document.createElement("h3");
+        const categoryHeader = document.createElement("h4");
         categoryHeader.className = "font-semibold text-indigo-700 mt-6";
         categoryHeader.textContent = mainCat;
         listContainer.appendChild(categoryHeader);
@@ -148,15 +140,13 @@
         ul.className = "grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2";
 
         if (subs.length > 0) {
-          subs.forEach((sub, index) => {
+          subs.forEach((sub, idx) => {
             const li = document.createElement("li");
             li.className = "bg-gray-50 p-3 rounded flex justify-between items-center";
             li.innerHTML = `
               <span>${sub}</span>
               <button data-category="${mainCat}" data-subcategory="${sub}"
-                      class="text-red-600 hover:text-red-800 text-sm">
-                حذف
-              </button>
+                class="text-red-600 hover:text-red-800 text-sm">حذف</button>
             `;
             ul.appendChild(li);
           });
