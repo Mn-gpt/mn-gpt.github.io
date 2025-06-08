@@ -52,7 +52,20 @@
   <div id="root"></div>
 
   <!-- Remaining Script and Footer -->
-  ...
+  ...<button onclick="resetData()" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded mt-4">
+  ⚠️ إعادة تعيين البيانات
+</button>
+<script>
+  function resetData() {
+    if (confirm("هل أنت متأكد من مسح جميع البيانات؟")) {
+      localStorage.removeItem("prompts");
+      localStorage.removeItem("categories");
+      localStorage.removeItem("subCategories");
+      alert("✅ تم مسح البيانات. سيتم إعادة التحميل...");
+      location.reload();
+    }
+  }
+</script>
 </body>
 <div id="root"></div>
 
