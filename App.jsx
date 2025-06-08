@@ -12,7 +12,7 @@ function App() {
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(4);
-  const [signature] = useState('MN.gpt');
+  const [signature] = useState('Mn.Gpt');
 
   const isUserAdmin = localStorage.getItem('isAdmin') === 'true';
 
