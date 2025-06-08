@@ -6,13 +6,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <!-- Tailwind CSS -->
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"  rel="stylesheet" />
-  <style>
-    body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background-color: #f9fafb;
-      color: #1f2937;
-    }
-  </style>
 </head>
 <body class="min-h-screen bg-gray-50 p-6">
 
@@ -33,7 +26,7 @@
   <main class="max-w-4xl mx-auto">
     <section class="bg-white p-6 rounded-lg shadow-md space-y-6">
       <h2 class="text-xl font-bold text-gray-800">استيراد البيانات من Markdown</h2>
-      <p class="text-sm text-gray-600">ألصق النص الكامل أدناه، وسنقوم باستيراد الأقسام الرئيسية والفرعية تلقائيًا.</p>
+      <p class="text-sm text-gray-600">ألصق نص Markdown هنا، وسنقوم باستيراد الأقسام الرئيسية والفرعية تلقائيًا.</p>
 
       <textarea id="markdownInput" rows="20"
         placeholder="ضع نص Markdown هنا..."
@@ -71,7 +64,7 @@
       lines.forEach(line => {
         line = line.trim();
 
-        // تحديد القسم الرئيسي
+        // القسم الرئيسي
         if (line.startsWith("# التصنيف الرئيسي: ")) {
           currentCategory = line.replace("# التصنيف الرئيسي: ", "").split(" ")[0].trim();
           if (currentCategory) {
@@ -82,17 +75,14 @@
           }
           currentSubCategory = "";
 
-        // تحديد القسم الفرعي
+        // القسم الفرعي
         } else if (line.startsWith("## الفرع")) {
           currentSubCategory = line.split(":")[1]?.trim();
           if (currentCategory && currentSubCategory) {
-            if (!subCategories[currentCategory]) {
-              subCategories[currentCategory] = new Set();
-            }
             subCategories[currentCategory].add(currentSubCategory);
           }
 
-        // استخراج البرومبتات
+        // البرومبت
         } else if (line.startsWith("- ") && currentCategory) {
           const promptText = line.substring(2).trim();
           if (promptText) {
@@ -101,7 +91,7 @@
               text: promptText,
               category: currentCategory,
               subCategory: currentSubCategory || "",
-              tokens: Math.ceil(promptText.split(/\s+/).length * 1.25)
+              tokens: Math.ceil(promptText.split(/\s+/).length * 1.25),
             });
           }
         }
