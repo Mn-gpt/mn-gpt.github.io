@@ -207,30 +207,44 @@
               </div>
             </div>
 
+            
             {/* إدارة الأقسام الفرعية */}
-            {isUserAdmin && (
-              <div className="mt-8">
-                <h3 className="text-xl font-semibold text-gray-800 mb-4">الأقسام مع الأقسام الفرعية</h3>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {Object.entries(subCategories).map(([mainCat, subs]) => (
-                    <div key={mainCat} className="bg-white p-4 rounded shadow-md border-l-4 border-indigo-500">
-                      <p className="font-semibold text-indigo-700 text-sm mb-2">{mainCat}</p>
-                      <ul className="space-y-1">
-                        {subs.length > 0 ? (
-                          subs.map((sub, idx) => (
-                            <li key={idx} className="text-xs sm:text-sm text-gray-600">
-                              ↳ <a href={`popup-subcategory.html?main=${encodeURIComponent(mainCat)}&sub=${encodeURIComponent(sub)}`} target="_blank" className="underline text-purple-600">{sub}</a>
-                            </li>
-                          ))
-                        ) : (
-                          <li className="text-xs text-gray-400">لا توجد أقسام فرعية</li>
-                        )}
-                      </ul>
-                    </div>
-                  ))}
-                </div>
-              </div>
+{isUserAdmin && (
+  <div className="mt-8">
+    <a href="edit-subcategories.html?main={{encodeURIComponent(category)}}" className="text-purple-600 hover:text-purple-800 underline">→ إدارة الأقسام الفرعية</a>
+    
+    {/* 👇 الزر الجديد هنا */}
+    <button
+      onClick={() => window.location.href = `add-new-subcategory.html?main=${encodeURIComponent(category)}`}
+      className="mt-2 inline-flex items-center space-x-2 rtl:space-x-reverse text-sm text-blue-600 hover:text-blue-800"
+    >
+      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+      </svg>
+      <span>➕ إضافة قسم فرعي</span>
+    </button>
+
+    <h3 className="text-xl font-semibold text-gray-800 mb-4 mt-2">الأقسام مع الأقسام الفرعية</h3>
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      {Object.entries(subCategories).map(([mainCat, subs]) => (
+        <div key={mainCat} className="bg-white p-4 rounded shadow-md border-l-4 border-indigo-500">
+          <h4 className="font-bold text-indigo-700 mb-2">{mainCat}</h4>
+          <ul className="space-y-1">
+            {subs.length > 0 ? (
+              subs.map((sub, idx) => (
+                <li key={idx} className="text-sm text-gray-600">
+                  ↳ <a href={`popup-subcategory.html?main=${encodeURIComponent(mainCat)}&sub=${encodeURIComponent(sub)}`} target="_blank" className="underline text-purple-600">{sub}</a>
+                </li>
+              ))
+            ) : (
+              <li className="text-sm text-gray-400">لا توجد أقسام فرعية</li>
             )}
+          </ul>
+        </div>
+      ))}
+    </div>
+  </div>
+)}
 
             {/* زر استيراد البيانات */}
             {isUserAdmin && (
