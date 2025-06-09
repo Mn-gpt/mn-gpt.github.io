@@ -20,24 +20,111 @@
 
   <main class="max-w-4xl mx-auto">
     <section class="bg-white p-6 rounded-lg shadow-md space-y-6">
-      <h2 class="text-xl font-bold text-gray-800">دمج البيانات مع البيانات السابقة</h2>
-      <p class="text-sm text-gray-600">ألصق نص Markdown هنا، وسنقوم **بدمج** البيانات الجديدة مع القديمة، وليس استبدالها.</p>
+      <h2 class="text-xl font-bold text-gray-800">استيراد البيانات من Markdown</h2>
+      <p class="text-sm text-gray-600">ألصق نص Markdown هنا، واختر طريقة التعامل مع البيانات:</p>
 
       <textarea id="markdownInput" rows="20"
         placeholder="ضع نص Markdown هنا..."
         class="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"></textarea>
 
-      <button onclick="importData()"
-        class="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded transition">
-        ➕ دمج البيانات
-      </button>
+      <div class="flex flex-wrap gap-3">
+        <button onclick="overwriteData()"
+          class="w-full sm:w-auto py-3 bg-red-600 hover:bg-red-700 text-white font-medium rounded transition">
+          🔄 استيراد البيانات (حذف القديمة)
+        </button>
+        <button onclick="mergeData()"
+          class="w-full sm:w-auto py-3 bg-green-600 hover:bg-green-700 text-white font-medium rounded transition">
+          ➕ دمج البيانات (إبقاء القديمة)
+        </button>
+      </div>
 
       <div id="output" class="mt-4 text-sm text-gray-600"></div>
     </section>
   </main>
 
   <script>
-    function importData() {
+    function overwriteData() {
+      const input = document.getElementById("markdownInput").value.trim();
+      if (!input) {
+        alert("يرجى إدخال نص");
+        return;
+      }
+
+      const lines = input.split("\n");
+
+      let currentCategory = "";
+      let currentSubCategory = "";
+      const newPrompts = [];
+      const newCategories = [];
+      const newSubCategories = {};
+
+      lines.forEach(line => {
+        line = line.trim();
+
+        // تحديد القسم الرئيسي
+        if (line.startsWith("# التصنيف الرئيسي: ")) {
+          currentCategory = line.replace("# التصنيف الرئيسي: ", "").split(" ")[0].trim();
+          if (currentCategory) {
+            newCategories.push(currentCategory);
+            if (!newSubCategories[currentCategory]) {
+              newSubCategories[currentCategory] = [];
+            }
+          }
+          currentSubCategory = "";
+
+        // تحديد القسم الفرعي
+        } else if (line.startsWith("## الفرع")) {
+          currentSubCategory = line.split(":")[1]?.trim();
+          if (currentCategory && currentSubCategory) {
+            if (!newSubCategories[currentCategory]) {
+              newSubCategories[currentCategory] = [];
+            }
+            newSubCategories[currentCategory].push(currentSubCategory);
+          }
+
+        // استخراج البرومبتات
+        } else if (line.startsWith("- ") && currentCategory) {
+          const promptText = line.substring(2).trim();
+          if (promptText) {
+            newPrompts.push({
+              id: Date.now() + Math.floor(Math.random() * 1000),
+              text: promptText,
+              category: currentCategory,
+              subCategory: currentSubCategory || "",
+              tokens: Math.ceil(promptText.split(/\s+/).length * 1.25)
+            });
+          }
+        }
+      });
+
+      // حفظ البيانات الجديدة فقط (بدون دمج)
+      localStorage.setItem("prompts", JSON.stringify(newPrompts));
+      localStorage.setItem("categories", JSON.stringify(newCategories));
+      localStorage.setItem("subCategories", JSON.stringify(newSubCategories));
+
+      // عرض رسالة نجاح
+      const outputDiv = document.getElementById("output");
+      outputDiv.innerHTML = `
+        ✅ تم استيراد البيانات بنجاح!
+        <ul class="list-disc mt-2 mr-5 space-y-1">
+          <li><strong>عدد البرومبتات:</strong> ${newPrompts.length}</li>
+          <li><strong>الأقسام الرئيسية:</strong> ${newCategories.join(", ")}</li>
+          <li><strong>الأقسام الفرعية:</strong></li>
+          <ul class="list-inside list-disc mr-5 space-y-1">
+            ${Object.entries(newSubCategories).map(([main, subs]) =>
+              `<li>${main}: ${subs.join(", ")}</li>`
+            ).join("")}
+          </ul>
+        </ul>
+        <p class="mt-4 text-green-600">→ سيتم إعادة توجيهك إلى الصفحة الرئيسية...</p>
+      `;
+
+      setTimeout(() => {
+        window.location.href = "index.html";
+      }, 3000);
+    }
+
+    function mergeData() {
       const input = document.getElementById("markdownInput").value.trim();
       if (!input) {
         alert("يرجى إدخال نص");
@@ -52,7 +139,7 @@
       const newCategories = new Set();
       const newSubCategories = {};
 
-      // قراءة البيانات القديمة من localStorage
+      // قراءة البيانات الحالية من localStorage
       const savedPrompts = JSON.parse(localStorage.getItem('prompts')) || [];
       const savedCategories = JSON.parse(localStorage.getItem('categories')) || [];
       const savedSubCategories = JSON.parse(localStorage.getItem('subCategories')) || {};
@@ -70,10 +157,9 @@
             }
           }
           currentSubCategory = "";
-        }
 
         // تحديد القسم الفرعي
-        else if (line.startsWith("## الفرع")) {
+        } else if (line.startsWith("## الفرع")) {
           currentSubCategory = line.split(":")[1]?.trim();
           if (currentCategory && currentSubCategory) {
             if (!newSubCategories[currentCategory]) {
@@ -81,10 +167,9 @@
             }
             newSubCategories[currentCategory].add(currentSubCategory);
           }
-        }
 
         // استخراج البرومبتات
-        else if (line.startsWith("- ") && currentCategory) {
+        } else if (line.startsWith("- ") && currentCategory) {
           const promptText = line.substring(2).trim();
           if (promptText) {
             newPrompts.push({
@@ -107,7 +192,7 @@
         if (!mergedSubCategories[cat]) {
           mergedSubCategories[cat] = [];
         }
-        mergedSubCategories[cat] = [...new Set([...mergedSubCategories[cat], [...newSubCategories[cat]])];
+        mergedSubCategories[cat] = [...new Set([...mergedSubCategories[cat], ...Array.from(newSubCategories[cat]])];
       });
 
       // حفظ البيانات المدمجة
