@@ -3,54 +3,27 @@
 <head>
   <meta charset="UTF-8" />
   <title>استيراد البيانات - Promptica</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <!-- Tailwind CSS -->
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"  rel="stylesheet" />
-  <style>
-    body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background-color: #f9fafb;
-      color: #1f2937;
-    }
-  </style>
 </head>
 <body class="min-h-screen bg-gray-50 p-6">
 
-  <!-- Banner -->
-  <div class="mb-6">
-    <img src="banner.png" alt="بانير موقع Promptica" class="w-full h-auto rounded-lg shadow-md object-cover max-h-64">
+  <div class="max-w-4xl mx-auto bg-white rounded-lg shadow-md p-6">
+    <h1 class="text-2xl font-bold text-indigo-700 mb-4">استيراد البيانات من Markdown</h1>
+    <p class="text-sm text-gray-600 mb-4">ألصق النص هنا...</p>
+
+    <textarea id="markdownInput" rows="20"
+      placeholder="ضع نص Markdown هنا..."
+      class="w-full p-3 border border-gray-300 rounded mb-4"></textarea>
+
+    <button onclick="importData()"
+      class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded">
+      ➕ استيراد البيانات
+    </button>
+
+    <div id="output" class="mt-6 text-sm text-gray-600"></div>
   </div>
-
-  <!-- Header -->
-  <header class="flex justify-between items-center pb-4 border-b border-gray-200 mb-6">
-    <h1 class="text-2xl sm:text-3xl font-bold text-indigo-700 flex items-center">
-      <img src="logo1.png" alt="شعار Promptica" class="w-8 h-8 ml-2" />
-      Promptica | استيراد البيانات
-    </h1>
-    <a href="index.html" class="text-indigo-600 hover:text-indigo-800 underline">الرئيسية</a>
-  </header>
-
-  <main class="max-w-4xl mx-auto">
-    <section class="bg-white p-6 rounded-lg shadow-md space-y-6">
-      <h2 class="text-xl font-bold text-gray-800">استيراد البيانات من Markdown</h2>
-      <p class="text-sm text-gray-600">ألصق النص الكامل أدناه، وسنقوم باستيراد الأقسام الرئيسية والفرعية تلقائيًا.</p>
-
-      <textarea id="markdownInput" rows="20"
-        placeholder="ضع نص Markdown هنا..."
-        class="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"></textarea>
-
-      <button onclick="importData()"
-        class="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded transition">
-        ➕ استيراد البيانات
-      </button>
-
-      <div id="output" class="mt-4 text-sm text-gray-600"></div>
-    </section>
-  </main>
-
-  <footer class="mt-8 pt-4 border-t border-gray-200 text-center text-sm text-gray-500">
-    &copy; {{new Date().getFullYear()}} Promptica. جميع الحقوق محفوظة.
-  </footer>
 
   <script>
     function importData() {
@@ -93,6 +66,10 @@
           }
 
         // استخراج البرومبتات
+        } else if (line.startsWith("### برومبت")) {
+          // نتجاهل العناوين الفرعية
+          return;
+
         } else if (line.startsWith("- ") && currentCategory) {
           const promptText = line.substring(2).trim();
           if (promptText) {
