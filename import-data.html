@@ -3,27 +3,15 @@
 <head>
   <meta charset="UTF-8" />
   <title>استيراد البيانات - Promptica</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <!-- Tailwind CSS -->
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"  rel="stylesheet" />
-  <style>
-    body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background-color: #f9fafb;
-      color: #1f2937;
-    }
-  </style>
 </head>
 <body class="min-h-screen bg-gray-50 p-6">
 
-  <!-- Banner -->
-  <div class="mb-6">
-    <img src="banner.png" alt="بانير موقع Promptica" class="w-full h-auto rounded-lg shadow-md object-cover max-h-64">
-  </div>
-
   <!-- Header -->
   <header class="flex justify-between items-center pb-4 border-b border-gray-200 mb-6">
-    <h1 class="text-2xl sm:text-3xl font-bold text-indigo-700 flex items-center">
+    <h1 class="text-2xl font-bold text-indigo-700 flex items-center">
       <img src="logo1.png" alt="شعار Promptica" class="w-8 h-8 ml-2" />
       Promptica | استيراد البيانات
     </h1>
@@ -32,8 +20,8 @@
 
   <main class="max-w-4xl mx-auto">
     <section class="bg-white p-6 rounded-lg shadow-md space-y-6">
-      <h2 class="text-xl font-bold text-gray-800">استيراد البيانات من Markdown</h2>
-      <p class="text-sm text-gray-600">ألصق النص الكامل هنا، وسنقوم باستيراد الأقسام الرئيسية والفرعية تلقائيًا.</p>
+      <h2 class="text-xl font-bold text-gray-800">دمج البيانات مع البيانات السابقة</h2>
+      <p class="text-sm text-gray-600">ألصق نص Markdown هنا، وسنقوم **بدمج** البيانات الجديدة مع القديمة، وليس استبدالها.</p>
 
       <textarea id="markdownInput" rows="20"
         placeholder="ضع نص Markdown هنا..."
@@ -41,16 +29,12 @@
 
       <button onclick="importData()"
         class="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded transition">
-        ➕ استيراد البيانات
+        ➕ دمج البيانات
       </button>
 
       <div id="output" class="mt-4 text-sm text-gray-600"></div>
     </section>
   </main>
-
-  <footer class="mt-8 pt-4 border-t border-gray-200 text-center text-sm text-gray-500">
-    &copy; {{new Date().getFullYear()}} Promptica. جميع الحقوق محفوظة.
-  </footer>
 
   <script>
     function importData() {
@@ -64,36 +48,46 @@
 
       let currentCategory = "";
       let currentSubCategory = "";
-      const prompts = [];
-      const categories = new Set();
-      const subCategories = {};
+      const newPrompts = [];
+      const newCategories = new Set();
+      const newSubCategories = {};
+
+      // قراءة البيانات القديمة من localStorage
+      const savedPrompts = JSON.parse(localStorage.getItem('prompts')) || [];
+      const savedCategories = JSON.parse(localStorage.getItem('categories')) || [];
+      const savedSubCategories = JSON.parse(localStorage.getItem('subCategories')) || {};
 
       lines.forEach(line => {
         line = line.trim();
 
-        // القسم الرئيسي
-        if (line.startsWith("# ")) {
-          currentCategory = line.substring(2).trim();
+        // تحديد القسم الرئيسي
+        if (line.startsWith("# التصنيف الرئيسي: ")) {
+          currentCategory = line.replace("# التصنيف الرئيسي: ", "").split(" ")[0].trim();
           if (currentCategory) {
-            categories.add(currentCategory);
-            if (!subCategories[currentCategory]) {
-              subCategories[currentCategory] = new Set();
+            newCategories.add(currentCategory);
+            if (!newSubCategories[currentCategory]) {
+              newSubCategories[currentCategory] = new Set();
             }
           }
           currentSubCategory = "";
+        }
 
-        // القسم الفرعي
-        } else if (line.startsWith("## ")) {
-          currentSubCategory = line.substring(3).trim();
+        // تحديد القسم الفرعي
+        else if (line.startsWith("## الفرع")) {
+          currentSubCategory = line.split(":")[1]?.trim();
           if (currentCategory && currentSubCategory) {
-            subCategories[currentCategory].add(currentSubCategory);
+            if (!newSubCategories[currentCategory]) {
+              newSubCategories[currentCategory] = new Set();
+            }
+            newSubCategories[currentCategory].add(currentSubCategory);
           }
+        }
 
-        // البرومبت
-        } else if (line.startsWith("- ") && currentCategory) {
+        // استخراج البرومبتات
+        else if (line.startsWith("- ") && currentCategory) {
           const promptText = line.substring(2).trim();
           if (promptText) {
-            prompts.push({
+            newPrompts.push({
               id: Date.now() + Math.floor(Math.random() * 1000),
               text: promptText,
               category: currentCategory,
@@ -104,28 +98,33 @@
         }
       });
 
-      // تحويل البيانات إلى صيغة JSON
-      const processedCategories = Array.from(categories);
-      const processedSubCategories = {};
-      Object.keys(subCategories).forEach(cat => {
-        processedSubCategories[cat] = Array.from(subCategories[cat]);
+      // دمج البيانات الجديدة مع القديمة
+      const mergedPrompts = [...savedPrompts, ...newPrompts];
+      const mergedCategories = [...new Set([...savedCategories, ...Array.from(newCategories)])];
+
+      const mergedSubCategories = { ...savedSubCategories };
+      Object.keys(newSubCategories).forEach(cat => {
+        if (!mergedSubCategories[cat]) {
+          mergedSubCategories[cat] = [];
+        }
+        mergedSubCategories[cat] = [...new Set([...mergedSubCategories[cat], [...newSubCategories[cat]])];
       });
 
-      // حفظ البيانات في localStorage
-      localStorage.setItem("prompts", JSON.stringify(prompts));
-      localStorage.setItem("categories", JSON.stringify(processedCategories));
-      localStorage.setItem("subCategories", JSON.stringify(processedSubCategories));
+      // حفظ البيانات المدمجة
+      localStorage.setItem("prompts", JSON.stringify(mergedPrompts));
+      localStorage.setItem("categories", JSON.stringify(mergedCategories));
+      localStorage.setItem("subCategories", JSON.stringify(mergedSubCategories));
 
       // عرض رسالة نجاح
       const outputDiv = document.getElementById("output");
       outputDiv.innerHTML = `
-        ✅ تم استيراد البيانات بنجاح!
+        ✅ تم دمج البيانات بنجاح!
         <ul class="list-disc mt-2 mr-5 space-y-1">
-          <li><strong>عدد البرومبتات:</strong> ${prompts.length}</li>
-          <li><strong>الأقسام الرئيسية:</strong> ${processedCategories.join(", ")}</li>
+          <li><strong>عدد البرومبتات:</strong> ${mergedPrompts.length}</li>
+          <li><strong>الأقسام الرئيسية:</strong> ${mergedCategories.join(", ")}</li>
           <li><strong>الأقسام الفرعية:</strong></li>
           <ul class="list-inside list-disc mr-5 space-y-1">
-            ${Object.entries(processedSubCategories).map(([main, subs]) =>
+            ${Object.entries(mergedSubCategories).map(([main, subs]) =>
               `<li>${main}: ${subs.join(", ")}</li>`
             ).join("")}
           </ul>
