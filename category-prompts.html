@@ -1,114 +1,198 @@
-<DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8" />
-  <title>برومبتات القسم - Promptica</title>
+  <title>برومبتات - {category}</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <!-- Tailwind CSS -->
+  
+  <!-- React + ReactDOM -->
+  <script src="https://unpkg.com/react@18/umd/react.development.js"  crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"  crossorigin></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>  
+
+  <!-- Tailwind CSS CDN -->
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"  rel="stylesheet" />
+
+  <!-- Internal Styles -->
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f9fafb;
+      color: #1f2937;
+      line-height: 1.8;
+    }
+    .line-clamp-3 {
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    @media (max-width: 640px) {
+      html {
+        font-size: 16px;
+      }
+    }
+  </style>
 </head>
 <body class="min-h-screen bg-gray-50 p-4">
-
-  <!-- Banner -->
-  <div class="mb-6">
-    <img src="banner.png" alt="بانير موقع Promptica" class="w-full h-auto rounded-lg shadow-md object-cover max-h-64">
-  </div>
-
   <!-- Header -->
   <header class="flex justify-between items-center pb-4 border-b border-gray-200 mb-6">
     <h1 class="text-2xl sm:text-3xl font-bold text-indigo-700 flex items-center">
-      <img src="logo1.png" alt="شعار Promptica" class="w-8 h-8 ml-2" />
       Promptica
     </h1>
-    <a href="index.html" class="text-indigo-600 hover:text-indigo-800 underline">الرئيسية</a>
+    <div class="space-x-4 rtl:space-x-reverse">
+      <a href="index.html" class="text-indigo-600 hover:text-indigo-800 underline">← الرجوع إلى لوحة التحكم</a>
+    </div>
   </header>
 
-  <main class="max-w-4xl mx-auto">
-    <section class="bg-white p-6 rounded-lg shadow-md space-y-6">
-      <h2 id="categoryTitle" class="text-xl font-bold text-gray-800">جاري التحميل...</h2>
-      <input
-        type="text"
-        id="searchInput"
-        placeholder="ابحث في هذا القسم..."
-        class="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
-      />
-      <div id="promptsList" class="space-y-4 mt-4"></div>
-    </section>
-  </main>
+  <!-- Root Div for React App -->
+  <div id="root"></div>
 
+  <!-- Footer -->
   <footer class="mt-8 pt-4 border-t border-gray-200 text-center text-sm text-gray-500">
     &copy; {{new Date().getFullYear()}} Promptica. جميع الحقوق محفوظة.
   </footer>
 
-  <script>
-    // قراءة اسم القسم من الرابط
-    const urlParams = new URLSearchParams(window.location.search);
-    const selectedCategory = decodeURIComponent(urlParams.get('category') || 'غير معروف');
+  <!-- React Code -->
+  <script type="text/babel">
+    const { useState, useEffect } = window.React;
 
-    document.getElementById("categoryTitle").textContent = `برومبتات القسم: ${selectedCategory}`;
+    function App() {
+      const [prompts, setPrompts] = useState([]);
+      const [category, setCategory] = useState('');
+      const [filteredPrompts, setFilteredPrompts] = useState([]);
+      const [searchTerm, setSearchTerm] = useState('');
 
-    // قراءة البيانات من localStorage
-    const prompts = JSON.parse(localStorage.getItem('prompts')) || [];
+      // قراءة اسم القسم من URL
+      useEffect(() => {
+        const urlParams = new URLSearchParams(window.location.search);
+        const categoryFromURL = decodeURIComponent(urlParams.get('category') || '');
+        setCategory(categoryFromURL);
 
-    // عرض البرومبتات المرتبطة بهذا القسم
-    const listContainer = document.getElementById("promptsList");
-    const filteredPrompts = prompts.filter(p => p.category === selectedCategory);
+        const savedPrompts = JSON.parse(localStorage.getItem('prompts')) || [];
+        const filtered = savedPrompts.filter(p => p.category === categoryFromURL);
+        setPrompts(filtered);
+        setFilteredPrompts(filtered);
+      }, []);
 
-    if (filteredPrompts.length === 0) {
-      const noPrompt = document.createElement("p");
-      noPrompt.className = "text-gray-500 text-center py-4";
-      noPrompt.textContent = "لا توجد برومبتات مضافة لهذا القسم.";
-      listContainer.appendChild(noPrompt);
-    } else {
-      filteredPrompts.forEach(prompt => {
-        const div = document.createElement("div");
-        div.className = "bg-white p-4 rounded shadow hover:bg-gray-50 transition";
-        div.innerHTML = `
-          <div class="font-medium text-indigo-700 mb-2">[${prompt.category}]</div>
-          <p class="text-gray-800 mb-4">${prompt.text}</p>
-          <div class="flex justify-end space-x-3 rtl:space-x-reverse">
-            <button onclick='copyText("${prompt.text}")' class="text-blue-600 hover:text-blue-800">نسخ</button>
+      // تحديث البحث
+      useEffect(() => {
+        if (!searchTerm.trim()) {
+          setFilteredPrompts(prompts);
+          return;
+        }
+        const lowerSearch = searchTerm.toLowerCase();
+        setFilteredPrompts(
+          prompts.filter(p =>
+            p.text.toLowerCase().includes(lowerSearch) ||
+            (p.subCategory && p.subCategory.toLowerCase().includes(lowerSearch))
+          )
+        );
+      }, [searchTerm, prompts]);
+
+      // 🔍 نسخ النص
+      const copyPromptText = (text) => {
+        navigator.clipboard.writeText(text);
+        alert("✅ تم النسخ!");
+      };
+
+      return (
+        <div className="container mx-auto max-w-4xl">
+          <h2 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-6">
+            برومبتات القسم: <span className="text-indigo-600">{category}</span>
+          </h2>
+
+          {/* شريط البحث */}
+          <div className="mb-6">
+            <input
+              type="text"
+              placeholder="🔍 ابحث في برومبتات هذا القسم..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 shadow-sm hover:shadow transition-shadow"
+            />
           </div>
-        `;
-        listContainer.appendChild(div);
-      });
-    }
 
-    // 🔍 البحث داخل القسم
-    document.getElementById("searchInput").addEventListener("input", function () {
-      const searchTerm = this.value.toLowerCase();
-      const filtered = prompts.filter(p =>
-        p.category === selectedCategory &&
-        p.text.toLowerCase().includes(searchTerm)
-      );
-
-      listContainer.innerHTML = "";
-      if (filtered.length === 0) {
-        const noPrompt = document.createElement("p");
-        noPrompt.className = "text-gray-500 text-center py-4";
-        noPrompt.textContent = "لا توجد نتائج.";
-        listContainer.appendChild(noPrompt);
-      } else {
-        filtered.forEach(prompt => {
-          const div = document.createElement("div");
-          div.className = "bg-white p-4 rounded shadow hover:bg-gray-50 transition";
-          div.innerHTML = `
-            <div class="font-medium text-indigo-700 mb-2">[${prompt.category}]</div>
-            <p class="text-gray-800 mb-4">${prompt.text}</p>
-            <div class="flex justify-end space-x-3 rtl:space-x-reverse">
-              <button onclick='copyText("${prompt.text}")' class="text-blue-600 hover:text-blue-800">نسخ</button>
+          {/* إحصاءات */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
+            <div className="bg-white p-4 rounded shadow-md flex items-center space-x-4 rtl:space-x-reverse">
+              <div className="bg-blue-100 p-3 rounded-full">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 00-2 2v12a2 2 0 002 2h6a2 2 0 002-2V7a2 2 0 00-2-2h-6z" />
+                </svg>
+              </div>
+              <div>
+                <p className="text-sm text-gray-600">عدد البرومبتات</p>
+                <p className="text-xl font-semibold text-blue-600">{filteredPrompts.length}</p>
+              </div>
             </div>
-          `;
-          listContainer.appendChild(div);
-        });
-      }
-    });
+            <div className="bg-white p-4 rounded shadow-md flex items-center space-x-4 rtl:space-x-reverse">
+              <div className="bg-purple-100 p-3 rounded-full">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <div>
+                <p className="text-sm text-gray-600">متوسط الكلمات</p>
+                <p className="text-xl font-semibold text-purple-600">
+                  {filteredPrompts.length > 0 ? Math.round(filteredPrompts.reduce((sum, p) => sum + p.tokens, 0) / filteredPrompts.length) : 0}
+                </p>
+              </div>
+            </div>
+          </div>
 
-    // 📋 نسخ نص البرومبت
-    function copyText(text) {
-      navigator.clipboard.writeText(text);
-      alert("تم النسخ!");
+          {/* قائمة البرومبتات */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {filteredPrompts.length > 0 ? (
+              filteredPrompts.map(prompt => {
+                const cardColor = (() => {
+                  switch (prompt.category) {
+                    case 'البرمجة والتطوير': return 'border-red-400';
+                    case 'التسويق الرقمي': return 'border-blue-400';
+                    case 'الكتابة الإبداعية': return 'border-purple-400';
+                    case 'تحليل البيانات': return 'border-green-400';
+                    default: return 'border-gray-300';
+                  }
+                })();
+
+                return (
+                  <div
+                    key={prompt.id}
+                    className={`bg-white p-5 rounded-lg shadow-sm hover:shadow-md transition-all duration-200 border-l-4 ${cardColor}`}
+                  >
+                    <div className="font-medium text-indigo-700 mb-3">
+                      [{prompt.category}{prompt.subCategory ? ` → ${prompt.subCategory}` : ''}]
+                    </div>
+                    <p className="text-gray-800 mb-4 line-clamp-3">{prompt.text}</p>
+                    <div className="flex justify-between items-center text-xs text-gray-500">
+                      <span>ID: `{prompt.id}`</span>
+                      <span>Tokens: `{prompt.tokens}`</span>
+                    </div>
+                    <div className="mt-4 flex justify-end space-x-4 rtl:space-x-reverse">
+                      <button
+                        onClick={() => copyPromptText(prompt.text)}
+                        className="text-blue-600 hover:text-blue-800 transition-colors flex items-center space-x-1 rtl:space-x-reverse"
+                      >
+                        <span>نسخ</span>
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                          <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+                );
+              })
+            ) : (
+              <p className="col-span-full text-center py-10 text-gray-500">لا توجد برومبتات مضافة لهذا القسم بعد.</p>
+            )}
+          </div>
+        </div>
+      );
     }
+
+    const root = window.ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
   </script>
 </body>
 </html>
