@@ -31,10 +31,6 @@
       html {
         font-size: 16px;
       }
-      textarea {
-        font-size: 0.875rem;
-        padding: 0.75rem;
-      }
     }
   </style>
 </head>
@@ -65,8 +61,10 @@
       const [mainCategory, setMainCategory] = useState('');
       const [subCategories, setSubCategories] = useState([]);
       const [newSubCategory, setNewSubCategory] = useState('');
+      const [editingSub, setEditingSub] = useState(null);
+      const [editSubName, setEditSubName] = useState('');
 
-      // قراءة اسم القسم من الرابط
+      // قراءة الاسم من الرابط
       useEffect(() => {
         const urlParams = new URLSearchParams(window.location.search);
         const main = decodeURIComponent(urlParams.get('main') || '');
@@ -80,7 +78,7 @@
         }
       }, []);
 
-      // ➕ إضافة قسم فرعي جديد
+      // ➕ إضافة قسم فرعي
       const handleAddSubCategory = () => {
         if (!newSubCategory.trim()) return;
         if (subCategories.includes(newSubCategory)) {
@@ -90,44 +88,63 @@
 
         const updatedSubCategories = [...subCategories, newSubCategory];
         setSubCategories(updatedSubCategories);
-        updateLocalStorage(updatedSubCategories);
-        setNewSubCategory('');
-      };
 
-      // ❌ حذف قسم فرعي
-      const handleDeleteSubCategory = (subCatToDelete) => {
-        if (!window.confirm(`هل أنت متأكد من حذف "${subCatToDelete}" وجميع البرومبتات المرتبطة به؟`)) return;
-
-        // تحديث subCategories
-        const updatedSubCategories = subCategories.filter(sub => sub !== subCatToDelete);
-        setSubCategories(updatedSubCategories);
-        updateLocalStorage(updatedSubCategories);
-
-        // تحديث البرومبتات في localStorage
-        const savedPrompts = JSON.parse(localStorage.getItem('prompts')) || [];
-        const updatedPrompts = savedPrompts.filter(p =>
-          !(p.category === mainCategory && p.subCategory === subCatToDelete)
-        );
-        localStorage.setItem('prompts', JSON.stringify(updatedPrompts));
-      };
-
-      // 💾 تحديث localStorage
-      const updateLocalStorage = (updatedSubCategories) => {
         const allSubCategories = JSON.parse(localStorage.getItem('subCategories')) || {};
         allSubCategories[mainCategory] = updatedSubCategories;
         localStorage.setItem('subCategories', JSON.stringify(allSubCategories));
+
+        setNewSubCategory('');
+      };
+
+      // ✏️ بدء التعديل
+      const startEdit = (sub) => {
+        setEditingSub(sub);
+        setEditSubName(sub);
+      };
+
+      // 💾 حفظ التعديل
+      const saveEdit = () => {
+        if (!editSubName.trim()) return;
+        const updated = subCategories.map(s => s === editingSub ? editSubName : s);
+        setSubCategories(updated);
+
+        const allSubCategories = JSON.parse(localStorage.getItem('subCategories')) || {};
+        allSubCategories[mainCategory] = updated;
+        localStorage.setItem('subCategories', JSON.stringify(allSubCategories));
+
+        setEditingSub(null);
+        setEditSubName('');
+      };
+
+      // ❌ حذف قسم فرعي
+      const deleteSubCategory = (sub) => {
+        if (!window.confirm(`هل أنت متأكد من حذف "${sub}" وجميع البرومبتات المرتبطة به؟`)) return;
+
+        const updated = subCategories.filter(s => s !== sub);
+        setSubCategories(updated);
+
+        const allSubCategories = JSON.parse(localStorage.getItem('subCategories')) || {};
+        allSubCategories[mainCategory] = updated;
+        localStorage.setItem('subCategories', JSON.stringify(allSubCategories));
+
+        // تحديث البرومبتات
+        const prompts = JSON.parse(localStorage.getItem('prompts')) || [];
+        const filteredPrompts = prompts.filter(p =>
+          !(p.category === mainCategory && p.subCategory === sub)
+        );
+        localStorage.setItem('prompts', JSON.stringify(filteredPrompts));
       };
 
       return (
         <div className="container mx-auto max-w-4xl">
           <h2 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-6">
-            تعديل الأقسام الفرعية للقسم:
+            إدارة الأقسام الفرعية للقسم:
             <span className="text-blue-600 mr-2">{mainCategory}</span>
           </h2>
 
-          {/* إضافة قسم فرعي جديد */}
+          {/* إضافة قسم فرعي */}
           <div className="bg-white p-6 rounded-lg shadow-md mb-8">
-            <h3 className="font-semibold text-lg text-gray-800 mb-4">إضافة قسم فرعي جديد</h3>
+            <h3 className="font-semibold text-lg mb-4">إضافة قسم فرعي جديد</h3>
             <div className="flex flex-wrap gap-4">
               <input
                 type="text"
@@ -145,30 +162,56 @@
                     : 'bg-gray-200 cursor-not-allowed text-gray-500'
                 }`}
               >
-                ➕ إضافة قسم فرعي
+                ➕ إضافة
               </button>
             </div>
           </div>
 
-          {/* قائمة الأقسام الفرعية الحالية */}
+          {/* قائمة الأقسام الفرعية */}
           <div className="bg-white rounded-lg shadow-md p-6">
-            <h3 className="font-semibold text-lg text-gray-800 mb-4">الأقسام الفرعية الحالية</h3>
+            <h3 className="font-semibold text-lg mb-4">الأقسام الفرعية الحالية</h3>
             {subCategories.length > 0 ? (
               <ul className="space-y-2">
                 {subCategories.map((sub, idx) => (
                   <li key={idx} className="flex justify-between items-center bg-gray-50 p-3 rounded hover:bg-gray-100">
-                    <span className="font-medium text-purple-600">{sub}</span>
-                    <button
-                      onClick={() => handleDeleteSubCategory(sub)}
-                      className="text-red-600 hover:text-red-800 px-3 py-1 rounded hover:bg-red-50 transition-colors"
-                    >
-                      ❌ حذف
-                    </button>
+                    {editingSub === sub ? (
+                      <>
+                        <input
+                          className="border border-gray-300 p-2 rounded w-full"
+                          value={editSubName}
+                          onChange={(e) => setEditSubName(e.target.value)}
+                        />
+                        <button
+                          onClick={saveEdit}
+                          className="text-green-600 hover:text-green-800 px-3"
+                        >
+                          ✓ حفظ
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        <span className="font-medium text-purple-600">{sub}</span>
+                        <div className="flex space-x-3 rtl:space-x-reverse">
+                          <button
+                            onClick={() => startEdit(sub)}
+                            className="text-yellow-600 hover:text-yellow-800"
+                          >
+                            ✏️ تعديل
+                          </button>
+                          <button
+                            onClick={() => deleteSubCategory(sub)}
+                            className="text-red-600 hover:text-red-800"
+                          >
+                            ❌ حذف
+                          </button>
+                        </div>
+                      </>
+                    )}
                   </li>
                 ))}
               </ul>
             ) : (
-              <p className="text-gray-500 text-center py-4">لا توجد أقسام فرعية مضافة لهذا القسم بعد.</p>
+              <p className="text-gray-500 text-center py-4">لا توجد أقسام فرعية مضافة بعد.</p>
             )}
           </div>
         </div>
