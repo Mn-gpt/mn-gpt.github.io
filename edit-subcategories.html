@@ -3,17 +3,9 @@
 <head>
   <meta charset="UTF-8" />
   <title>إدارة الأقسام الفرعية - Promptica</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <!-- Tailwind CSS -->
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"  rel="stylesheet" />
-  <!-- Internal Styles -->
-  <style>
-    body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background-color: #f9fafb;
-      color: #1f2937;
-    }
-  </style>
 </head>
 <body class="min-h-screen bg-gray-50 p-4">
 
@@ -24,26 +16,27 @@
 
   <!-- Header -->
   <header class="flex justify-between items-center pb-4 border-b border-gray-200 mb-6">
-    <h1 class="text-2xl sm:text-3xl font-bold text-indigo-700 flex items-center">
+    <h1 class="text-2xl font-bold text-indigo-700 flex items-center">
       <img src="logo1.png" alt="شعار Promptica" class="w-8 h-8 ml-2" />
-      Promptica
+      Promptica | إدارة الأقسام الفرعية
     </h1>
     <a href="index.html" class="text-indigo-600 hover:text-indigo-800 underline">الرئيسية</a>
   </header>
 
-  <!-- Main Content -->
   <main class="max-w-4xl mx-auto">
     <section class="bg-white p-6 rounded-lg shadow-md space-y-6">
       <h2 class="text-xl font-bold text-gray-800">إدارة الأقسام الفرعية</h2>
-      <p class="text-sm text-gray-600">اختر قسمًا رئيسيًا، وأضف قسمًا فرعيًا أسفله.</p>
+      <p class="text-sm text-gray-600">اختر القسم الرئيسي، وأضف أو حذف أقسام فرعية.</p>
 
       <!-- Form لإضافة قسم فرعي -->
       <form id="addSubCategoryForm" class="space-y-4">
-        <label for="mainCategory" class="block text-sm font-medium text-gray-700">اختر القسم الرئيسي</label>
-        <select id="mainCategory" name="mainCategory" required
-          class="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500">
-          <option value="">اختر قسمًا رئيسيًا</option>
-        </select>
+        <div>
+          <label for="mainCategory" class="block text-sm font-medium text-gray-700">اختر القسم الرئيسي</label>
+          <select id="mainCategory" name="mainCategory" required
+            class="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500">
+            <option value="">اختر قسمًا رئيسيًا</option>
+          </select>
+        </div>
 
         <div>
           <label for="subCategoryName" class="block text-sm font-medium text-gray-700">اسم القسم الفرعي الجديد</label>
@@ -59,28 +52,18 @@
       </form>
 
       <!-- عرض الأقسام الفرعية -->
-      <div id="subCategoriesList" class="mt-6 space-y-4">
+      <div class="mt-6 space-y-4">
         <h3 class="font-semibold text-gray-800">الأقسام الحالية:</h3>
         <ul class="space-y-2" id="subCategoriesDisplay"></ul>
       </div>
     </section>
   </main>
 
-  <!-- Footer -->
-  <footer class="mt-8 pt-4 border-t border-gray-200 text-center text-sm text-gray-500">
-    &copy; {{new Date().getFullYear()}} Promptica. جميع الحقوق محفوظة.
-  </footer>
-
   <script>
     // قراءة البيانات من localStorage
-    const categories = JSON.parse(localStorage.getItem('categories')) || ['عام', 'تعليمي', 'إبداعي', 'تحليل بيانات', 'برمجة'];
-    let subCategories = JSON.parse(localStorage.getItem('subCategories')) || {
-      'عام': [],
-      'تعليمي': ['رياضيات', 'فيزياء'],
-      'إبداعي': ['قصص', 'شعر'],
-      'تحليل بيانات': ['Excel', 'SQL'],
-      'برمجة': ['JavaScript', 'Python']
-    };
+    let categories = JSON.parse(localStorage.getItem('categories')) || [];
+    let subCategories = JSON.parse(localStorage.getItem('subCategories')) || {};
+    let prompts = JSON.parse(localStorage.getItem('prompts')) || [];
 
     // ملء قائمة الاختيار بالأقسام الرئيسية
     const mainCategorySelect = document.getElementById("mainCategory");
