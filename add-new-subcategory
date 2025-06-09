@@ -1,0 +1,248 @@
+<DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <title>إضافة قسم فرعي جديد</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+
+  <!-- React + ReactDOM -->
+  <script src="https://unpkg.com/react@18/umd/react.development.js"  crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"  crossorigin></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script> 
+
+  <!-- Tailwind CSS CDN -->
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"  rel="stylesheet" />
+
+  <!-- Internal Styles -->
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f9fafb;
+      color: #1f2937;
+      line-height: 1.8;
+    }
+    .line-clamp-3 {
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    @media (max-width: 640px) {
+      html {
+        font-size: 16px;
+      }
+      textarea {
+        font-size: 0.875rem;
+        padding: 0.75rem;
+      }
+    }
+  </style>
+</head>
+<body class="min-h-screen bg-gray-50 p-4">
+  <!-- Header -->
+  <header class="flex justify-between items-center pb-4 border-b border-gray-200 mb-6">
+    <h1 class="text-2xl sm:text-3xl font-bold text-indigo-700 flex items-center">
+      Promptica
+    </h1>
+    <div class="space-x-4 rtl:space-x-reverse">
+      <a href="index.html" class="text-indigo-600 hover:text-indigo-800 underline">← الرجوع إلى لوحة التحكم</a>
+    </div>
+  </header>
+
+  <!-- Root Div for React App -->
+  <div id="root"></div>
+
+  <!-- Footer -->
+  <footer class="mt-8 pt-4 border-t border-gray-200 text-center text-sm text-gray-500">
+    &copy; {{new Date().getFullYear()}} Promptica. جميع الحقوق محفوظة.
+  </footer>
+
+  <!-- React Code -->
+  <script type="text/babel">
+    const { useState } = window.React;
+
+    function App() {
+      const [mainCategory, setMainCategory] = useState('');
+      const [subCategory, setSubCategory] = useState('');
+      const [markdownText, setMarkdownText] = useState('');
+      const [message, setMessage] = useState('');
+
+      // قراءة اسم القسم من الرابط
+      useEffect(() => {
+        const urlParams = new URLSearchParams(window.location.search);
+        const main = decodeURIComponent(urlParams.get('main') || '');
+        if (!main) {
+          alert("خطأ: لم يتم تحديد القسم الرئيسي.");
+          window.location.href = "index.html";
+          return;
+        }
+
+        setMainCategory(main);
+      }, []);
+
+      // معالجة رفع الملف
+      const handleFileUpload = (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          setMarkdownText(event.target.result);
+        };
+        reader.readAsText(file);
+      };
+
+      // استخراج البيانات من Markdown
+      const parseSubCategoryFromMarkdown = (content) => {
+        const lines = content.split('\n');
+        let subCat = '';
+        const prompts = [];
+
+        // التقاط القسم الفرعي
+        lines.forEach(line => {
+          line = line.trim();
+
+          const categoryMatch = line.match(/^##\s*(.+?):\s*(.+)$/);
+          if (categoryMatch) {
+            const [, main, sub] = categoryMatch;
+            if (decodeURIComponent(main).trim() === mainCategory) {
+              subCat = decodeURIComponent(sub).trim();
+            }
+          }
+
+          const promptMatch = line.match(/^\-\s*(.+?)(?:\s*-\s*`ID:\s*(\d+)`)?(?:\s*-\s*`tokens:\s*(\d+)`)?$/);
+          if (promptMatch) {
+            const text = promptMatch[1].trim();
+            const id = parseInt(promptMatch[2]) || Date.now() + Math.floor(Math.random() * 1000);
+            const tokens = parseInt(promptMatch[3]) || Math.ceil(text.split(/\s+/).length * 1.25);
+
+            prompts.push({
+              id,
+              text,
+              category: mainCategory,
+              subCategory: subCat,
+              tokens
+            });
+          }
+        });
+
+        return {
+          subCategory: subCat,
+          prompts
+        };
+      };
+
+      // عند الضغط على زر الاستيراد
+      const handleImport = () => {
+        if (!markdownText.trim()) {
+          alert("الرجاء إدخال بيانات صحيحة.");
+          return;
+        }
+
+        const data = parseSubCategoryFromMarkdown(markdownText);
+        if (!data.subCategory || data.prompts.length === 0) {
+          alert("تنسيق غير صحيح، يرجى اتباع الصيغة المطلوبة");
+          return;
+        }
+
+        const existingSubCategories = JSON.parse(localStorage.getItem('subCategories')) || {};
+        const existingPrompts = JSON.parse(localStorage.getItem('prompts')) || [];
+        const existingCategories = JSON.parse(localStorage.getItem('categories')) || [];
+
+        // تحديث الأقسام
+        if (!existingCategories.includes(mainCategory)) {
+          existingCategories.push(mainCategory);
+        }
+
+        // تحديث الأقسام الفرعية
+        if (!existingSubCategories[mainCategory]) {
+          existingSubCategories[mainCategory] = [];
+        }
+        if (!existingSubCategories[mainCategory].includes(data.subCategory)) {
+          existingSubCategories[mainCategory].push(data.subCategory);
+        }
+
+        // دمج البرومبتات الجديدة مع الموجودة
+        const updatedPrompts = [...existingPrompts, ...data.prompts];
+
+        localStorage.setItem('prompts', JSON.stringify(updatedPrompts));
+        localStorage.setItem('categories', JSON.stringify(existingCategories));
+        localStorage.setItem('subCategories', JSON.stringify(existingSubCategories));
+
+        setMessage(`✅ تم استيراد ${data.prompts.length} برومبت جديد.`);
+        
+        setTimeout(() => {
+          window.location.href = "index.html"; // إعادة التوجيه بعد 2 ثانية
+        }, 2000);
+      };
+
+      return (
+        <div className="container mx-auto max-w-4xl">
+          <h2 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-6">إضافة قسم فرعي جديد</h2>
+
+          {/* عرض القسم الرئيسي */}
+          <div className="bg-white p-4 sm:p-6 rounded-lg shadow-md mb-6">
+            <label className="block text-sm font-medium text-gray-700 mb-2">القسم الرئيسي</label>
+            <p className="font-semibold text-blue-600">{mainCategory}</p>
+          </div>
+
+          {/* منطقة لصق النص */}
+          <div className="mb-6">
+            <label className="block text-sm font-medium text-gray-700 mb-2">أو ألصق محتوى Markdown هنا:</label>
+            <textarea
+              value={markdownText}
+              onChange={(e) => setMarkdownText(e.target.value)}
+              placeholder={`## ${mainCategory}:مثال\n- نص البرومبت الأول\`ID: 101\`\n- نص البرومبت الثاني\`ID: 102\``}
+              className="w-full h-64 p-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 shadow-sm hover:shadow transition-shadow"
+            ></textarea>
+          </div>
+
+          {/* رفع ملف */}
+          <div className="mb-6">
+            <label className="block text-sm font-medium text-gray-700 mb-2">أو ارفع ملف:</label>
+            <input
+              type="file"
+              accept=".md,.txt"
+              onChange={handleFileUpload}
+              className="w-full"
+            />
+          </div>
+
+          {/* زر الاستيراد */}
+          <button
+            onClick={handleImport}
+            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition w-full sm:w-auto"
+          >
+            📥 استيراد البيانات
+          </button>
+
+          {/* رسالة النجاح */}
+          {message && (
+            <div className="mt-4 p-3 bg-green-100 text-green-800 rounded border border-green-300 text-center">
+              {message}
+            </div>
+          )}
+
+          {/* أمثلة على التنسيق */}
+          <div className="mt-6 text-sm text-gray-600">
+            <h3 className="font-semibold mb-2">مثال على تنسيق الملف:</h3>
+            <pre className="bg-gray-100 p-3 rounded overflow-x-auto whitespace-pre-wrap example-pre">
+{`## ${mainCategory}:مثال
+- نص البرومبت الأول
+  - \`ID: 101\`
+  - \`tokens: 23\`
+
+- نص البرومبت الثاني
+  - \`ID: 102\`
+  - \`tokens: 45\``}
+            </pre>
+          </div>
+        </div>
+      );
+    }
+
+    const root = window.ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+</body>
+</html>
