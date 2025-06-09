@@ -3,11 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <title>Promptica - لوحة التحكم</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <!-- React + ReactDOM -->
-  <script src="https://unpkg.com/react@18/umd/react.development.js"  crossorigin></script>
-  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"  crossorigin></script>
-  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script> 
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <!-- Tailwind CSS -->
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"  rel="stylesheet" />
   <style>
@@ -15,23 +11,7 @@
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       background-color: #f9fafb;
       color: #1f2937;
-      line-height: 1.8;
     }
-
-    .line-clamp-3 {
-      display: -webkit-box;
-      -webkit-line-clamp: 3;
-      -webkit-box-orient: vertical;
-      overflow: hidden;
-    }
-
-    @media (max-width: 640px) {
-      html {
-        font-size: 17px;
-      }
-    }
-
-    /* نمط النافذة المنبثقة */
     .modal-overlay {
       position: fixed;
       top: 0;
@@ -43,7 +23,6 @@
       justify-content: center;
       align-items: center;
     }
-
     .modal-content {
       background-color: white;
       padding: 2rem;
@@ -51,18 +30,6 @@
       max-width: 800px;
       max-height: 90vh;
       overflow-y: auto;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-    }
-
-    .modal-close {
-      float: right;
-      cursor: pointer;
-      font-size: 1.2em;
-      color: #666;
-    }
-
-    .modal-close:hover {
-      color: #333;
     }
   </style>
 </head>
@@ -73,14 +40,28 @@
     <img src="banner.png" alt="بانير موقع Promptica" class="w-full h-auto rounded-lg shadow-md object-cover max-h-64">
   </div>
 
+  <!-- Header -->
+  <header class="flex justify-between items-center pb-4 border-b border-gray-200 mb-6">
+    <h1 class="text-2xl sm:text-3xl font-bold text-indigo-700 flex items-center">
+      <img src="logo1.png" alt="شعار Promptica" class="w-8 h-8 ml-2" />
+      Promptica
+    </h1>
+    <a href="login.html" class="text-gray-700 hover:text-indigo-600">تسجيل الخروج</a>
+  </header>
+
   <!-- Root Div for React App -->
   <div id="root"></div>
 
+  <!-- Modal for Subcategory Prompts -->
   <div class="modal-overlay" id="modalOverlay">
     <div class="modal-content">
-      <span class="modal-close" onclick="closeModal()">&times;</span>
-      <h2 id="modalTitle" class="text-xl font-bold text-indigo-700 mb-4"></h2>
-      <div id="modalPrompts" class="space-y-4 mt-4"></div>
+      <div class="flex justify-between items-center mb-4">
+        <h2 id="modalTitle" class="text-xl font-bold text-gray-800"></h2>
+        <button onclick="closeModal()" class="text-gray-500 hover:text-gray-700">
+          ×
+        </button>
+      </div>
+      <div id="modalPrompts" class="space-y-4"></div>
     </div>
   </div>
 
@@ -116,11 +97,13 @@
         const savedPrompts = JSON.parse(localStorage.getItem('prompts')) || [];
         const savedCategories = JSON.parse(localStorage.getItem('categories')) || [
           'الذكاء الاصطناعي التوليدي',
-          'تحليل البيانات المتعددة الوسائط'
         ];
         const savedSubCategories = JSON.parse(localStorage.getItem('subCategories')) || {
-          'الذكاء الاصطناعي التوليدي': ['التوليد المتعدد الوسائط', 'أنظمة الحوار متعددة الوسائط'],
-          'تحليل البيانات المتعددة الوسائط': ['تحويل الصوت إلى تعابير وجه']
+          'الذكاء الاصطناعي التوليدي': {
+            'إنشاء المحتوى التخصصي': [],
+            'تطوير النماذج اللغوية': [],
+            'أخلاقيات التوليد': [],
+          },
         };
 
         setPrompts(savedPrompts);
@@ -145,8 +128,8 @@
 
         if (newPrompt.category.includes(':')) {
           const [main, sub] = newPrompt.category.split(':');
-          mainCat = main;
-          subCat = sub;
+          mainCat = main.trim();
+          subCat = sub.trim();
         }
 
         const promptToAdd = {
@@ -164,7 +147,7 @@
 
         const updatedSubCategories = { ...subCategories };
         if (!updatedSubCategories[mainCat]) {
-          updatedSubCategories[mainCat] = [];
+          updatedSubCategories[mainCat] = {};
         }
         if (subCat && !updatedSubCategories[mainCat].includes(subCat)) {
           updatedSubCategories[mainCat].push(subCat);
@@ -301,7 +284,7 @@
 
         Object.entries(groupedByCategory).forEach(([key, promptList]) => {
           const [mainCat, subCat] = key.split(':');
-          markdown += `## 📁 ${mainCat}${subCat ? ` → ${subCat}` : ''}\n`;
+          markdown += `## ${mainCat}${subCat ? ` → ${subCat}` : ''}\n`;
           promptList.forEach((prompt, index) => {
             markdown += `${index + 1}. **[${prompt.category}]${prompt.subCategory ? ` → ${prompt.subCategory}` : ''}** ${prompt.text}\n   - \`ID: ${prompt.id}\`\n   - \`tokens: ${prompt.tokens}\`\n`;
           });
@@ -372,38 +355,13 @@
                 {categories.map(cat => (
                   <div
                     key={cat}
-                    className="bg-white p-4 rounded shadow hover:bg-gray-50 transition flex justify-between items-center"
+                    className="bg-white p-4 rounded shadow hover:bg-gray-50 transition flex justify-between items-center cursor-pointer"
                     onClick={() => {
-                      const subcats = subCategories[cat] || [];
+                      const subcats = Object.keys(subCategories[cat] || {});
                       if (subcats.length > 0) {
-                        // إذا كان هناك أقسام فرعية، افتح نافذة منبثقة
-                        const overlay = document.getElementById("modalOverlay");
-                        const modalTitle = document.getElementById("modalTitle");
-                        const modalPrompts = document.getElementById("modalPrompts");
-
-                        // عرض النافذة
-                        overlay.style.display = "flex";
-
-                        // تصفية البرومبتات بناءً على القسم الرئيسي
-                        const filtered = prompts.filter(p => p.category === cat);
-                        modalTitle.textContent = `برومبتات القسم: ${cat}`;
-                        modalPrompts.innerHTML = filtered.map(prompt => (
-                          <div key={prompt.id} className="bg-white p-4 rounded shadow hover:bg-gray-50 transition">
-                            <div className="font-medium text-indigo-700 mb-2">[{prompt.category}{prompt.subCategory ? ` → ${prompt.subCategory}` : ''}]</div>
-                            <p className="text-gray-800 mb-4 line-clamp-3">{prompt.text}</p>
-                            <div className="flex justify-end space-x-3 rtl:space-x-reverse">
-                              <button
-                                onClick={() => copyPromptText(prompt.text)}
-                                className="text-blue-600 hover:text-blue-800"
-                              >
-                                نسخ
-                              </button>
-                            </div>
-                          </div>
-                        ));
+                        openSubcategoryModal(cat, subcats);
                       } else {
-                        // إذا لم يكن هناك أقسام فرعية، انتقل إلى صفحة العرض
-                        window.location.href = `category-prompts.html?category=${encodeURIComponent(cat)}`;
+                        openPromptsModal(cat);
                       }
                     }}
                   >
@@ -430,7 +388,7 @@
                       <ul className="space-y-1">
                         {subs.map((sub, idx) => (
                           <li key={idx} className="text-xs sm:text-sm text-gray-600">
-                            ↳ <a href={`subcategory-prompts.html?main=${encodeURIComponent(mainCat)}&sub=${encodeURIComponent(sub)}`} className="underline text-purple-600">{sub}</a>
+                            ↳ <a href="#" onClick={(e) => { e.preventDefault(); openPromptsModal(mainCat, sub); }} className="underline text-purple-600">{sub}</a>
                           </li>
                         )) || <li className="text-xs text-gray-400">لا توجد أقسام فرعية</li>}
                       </ul>
@@ -596,8 +554,10 @@
                 currentPrompts.map(prompt => {
                   const cardColor = (() => {
                     switch (prompt.category) {
-                      case 'الذكاء الاصطناعي التوليدي': return 'border-red-400';
-                      case 'تحليل البيانات المتعددة الوسائط': return 'border-blue-400';
+                      case 'البرمجة والتطوير': return 'border-red-400';
+                      case 'التسويق الرقمي': return 'border-blue-400';
+                      case 'الكتابة الإبداعية': return 'border-purple-400';
+                      case 'تحليل البيانات': return 'border-green-400';
                       default: return 'border-gray-300';
                     }
                   })();
@@ -693,3 +653,145 @@
                             onChange={(e) => setEditCategoryName(e.target.value)}
                           />
                           <button
+                            onClick={handleUpdateCategory}
+                            className="text-yellow-600 hover:text-yellow-800"
+                          >
+                            حفظ
+                          </button>
+                        </>
+                      ) : (
+                        <>
+                          <span className="font-medium text-indigo-600">{cat}</span>
+                          <div className="flex space-x-2 rtl:space-x-reverse">
+                            <button
+                              onClick={() => handleStartEditCategory(cat)}
+                              className="text-yellow-600 hover:text-yellow-800"
+                            >
+                              تعديل
+                            </button>
+                            <button
+                              onClick={() => handleDeleteCategory(cat)}
+                              className="text-red-600 hover:text-red-800"
+                            >
+                              حذف
+                            </button>
+                          </div>
+                        </>
+                      )}
+                    </li>
+                  ))}
+                  {categories.length === 0 && (
+                    <li className="text-center py-2 text-gray-500">لا توجد أقسام مضافة بعد.</li>
+                  )}
+                </ul>
+              </div>
+            )}
+          </div>
+        );
+      };
+
+      // Open Subcategory Modal
+      const openSubcategoryModal = (mainCat, subcats) => {
+        const modal = document.getElementById('modalOverlay');
+        const modalTitle = document.getElementById('modalTitle');
+        const modalContent = document.getElementById('modalPrompts');
+
+        modal.style.display = 'flex';
+        modalTitle.textContent = `القسم: ${mainCat}`;
+        modalContent.innerHTML = `
+          <h3 class="text-lg font-semibold text-indigo-700 mb-4">الأقسام الفرعية:</h3>
+          <ul class="space-y-2">
+            ${subcats.map(sub => `
+              <li class="bg-white p-3 rounded shadow hover:bg-gray-50 transition">
+                <div class="font-medium text-indigo-700 mb-2">${sub}</div>
+                <button 
+                  onclick="openPromptsModal('${mainCat}', '${sub}')"
+                  class="float-right text-blue-600 hover:text-blue-800"
+                >
+                  عرض البرومبتات
+                </button>
+              </li>
+            `).join('')}
+          </ul>
+        `;
+      };
+
+      // Open Prompts Modal
+      const openPromptsModal = (mainCat, subCat = '') => {
+        const modal = document.getElementById('modalOverlay');
+        const modalTitle = document.getElementById('modalTitle');
+        const modalContent = document.getElementById('modalPrompts');
+
+        modal.style.display = 'flex';
+        modalTitle.textContent = `القسم: ${mainCat} → ${subCat || 'الكل'}`;
+        modalContent.innerHTML = `
+          <ul class="space-y-4">
+            ${prompts
+              .filter(p => p.category === mainCat && (subCat ? p.subCategory === subCat : true))
+              .map(prompt => `
+                <li class="bg-white p-4 rounded shadow hover:bg-gray-50 transition">
+                  <div class="font-medium text-indigo-700 mb-2">[${prompt.category}${subCat ? ` → ${subCat}` : ''}]</div>
+                  <p class="text-gray-800 mb-4">${prompt.text}</p>
+                  <div class="flex justify-end space-x-3 rtl:space-x-reverse">
+                    <button 
+                      onclick='copyPromptText("${prompt.text}")' 
+                      class="text-blue-600 hover:text-blue-800"
+                    >
+                      نسخ
+                    </button>
+                  </div>
+                </li>
+              `)
+              .join('')}
+          </ul>
+        `;
+      };
+
+      // Return JSX
+      return (
+        <div className="container mx-auto max-w-4xl">
+          {/* Tabs Navigation */}
+          <div className="flex space-x-4 rtl:space-x-reverse mb-4 border-b border-gray-200 pb-2">
+            <button
+              onClick={() => {
+                setActiveTab('dashboard');
+                setCurrentPage(1);
+              }}
+              className={`py-2 px-4 font-medium ${
+                activeTab === 'dashboard'
+                  ? 'border-b-2 border-indigo-600 text-indigo-600'
+                  : 'text-gray-600'
+              }`}
+            >
+              لوحة التحكم
+            </button>
+            {isUserAdmin && (
+              <button
+                onClick={() => {
+                  setActiveTab('prompts');
+                  setCurrentPage(1);
+                }}
+                className={`py-2 px-4 font-medium ${
+                  activeTab === 'prompts'
+                    ? 'border-b-2 border-indigo-600 text-indigo-600'
+                    : 'text-gray-600'
+                }`}
+              >
+                إدارة البرومبتات
+              </button>
+            )}
+          </div>
+
+          {/* Tab Content */}
+          {activeTab === 'dashboard' && renderDashboard()}
+          {activeTab === 'prompts' && isUserAdmin && renderPromptsManagement()}
+        </div>
+      );
+    }
+
+    // Render App
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+</body>
+</html>
