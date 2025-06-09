@@ -67,7 +67,7 @@
       // قراءة الاسم من الرابط
       useEffect(() => {
         const urlParams = new URLSearchParams(window.location.search);
-        
+        const main = decodeURIComponent(urlParams.get('main') || '');
         if (!main) {
           alert("خطأ: لم يتم تحديد القسم الرئيسي.");
           window.location.href = "index.html";
