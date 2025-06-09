@@ -648,12 +648,6 @@
       </svg>
       <span>➕</span>
     </button>
-<a 
-  href={`add-new-subcategory.html?main=${encodeURIComponent(mainCategory)}`}
-  className="text-blue-600 hover:text-blue-800 underline mt-2 block"
->
-  ➕ إضافة قسم فرعي جديد
-</a>
     <h3 className="text-xl font-semibold text-gray-800 mb-4 mt-2">الأقسام الرئيسية مع الأقسام الفرعية</h3>
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
       {Object.entries(subCategories).map(([mainCat, subs]) => (
