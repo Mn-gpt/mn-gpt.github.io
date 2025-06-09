@@ -2,15 +2,15 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8" />
-  <title>استيراد البيانات</title>
+  <title>Promptica - استيراد البيانات</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <!-- React + ReactDOM -->
   <script src="https://unpkg.com/react@18/umd/react.development.js"  crossorigin></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"  crossorigin></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script> 
-  <!-- Tailwind CSS -->
+  <!-- Tailwind CSS CDN -->
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"  rel="stylesheet" />
-  <!-- Responsive Meta -->
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <!-- Internal Styles -->
   <style>
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -39,15 +39,9 @@
   </style>
 </head>
 <body class="min-h-screen bg-gray-50 p-4">
-  <!-- Banner -->
-  <div class="mb-6">
-    <img src="banner.png" alt="بانير موقع Promptica" class="w-full h-auto rounded-lg shadow-md object-cover max-h-64">
-  </div>
-
   <!-- Header -->
   <header class="flex justify-between items-center pb-4 border-b border-gray-200 mb-6">
     <h1 class="text-2xl sm:text-3xl font-bold text-indigo-700 flex items-center">
-      <img src="logo1.png" alt="شعار Promptica" class="w-8 h-8 ml-2" />
       Promptica
     </h1>
     <div class="space-x-4 rtl:space-x-reverse">
@@ -86,7 +80,7 @@
         setMarkdownText(e.target.value);
       };
 
-      // رفع ملف
+      // معالجة رفع الملف
       const handleFileUpload = (e) => {
         const file = e.target.files[0];
         if (!file) return;
@@ -98,56 +92,53 @@
         reader.readAsText(file);
       };
 
-      // استخراج البرومبتات
+      // استخراج البرومبتات من Markdown
       const parsePromptsFromMarkdown = (content) => {
         const lines = content.split('\n');
         const newPrompts = [];
 
-        let currentCategory = '';
+        let currentMainCategory = '';
         let currentSubCategory = '';
 
         lines.forEach(line => {
           line = line.trim();
 
-          // التقاط الأقسام
-          const categoryMatch = line.match(/^##\s*(.+?)(:\s*(.+))?$/);
-          if (categoryMatch) {
-            currentCategory = (categoryMatch[1] || '').trim();
-            currentSubCategory = (categoryMatch[3] || '').trim();
+          // التقاط القسم الرئيسي
+          const mainCatMatch = line.match(/^#\s*(.+)$/);
+          if (mainCatMatch) {
+            currentMainCategory = mainCatMatch[1].trim();
+            currentSubCategory = '';
+            return;
           }
 
-          // التقاط البرومبتات
-          const promptMatch = line.match(/^(\d+\.|\-|\*)\s*\$\$(.*?)\$\$\s+(.+?)(?:\s*-\s*`ID:\s*(\d+)`)?(?:\s*-\s*`tokens:\s*(\d+)`)?$/);
-          if (!promptMatch) return;
-
-          const [, , categoryPart = '', text = '', idStr = '', tokensStr = ''] = promptMatch;
-          let mainCat = 'عام';
-          let subCat = '';
-
-          if (categoryPart.includes('→')) {
-            [mainCat, subCat] = categoryPart.split('→').map(s => s.trim());
-          } else if (categoryPart.includes(':')) {
-            [mainCat, subCat] = categoryPart.split(':').map(s => s.trim());
-          } else if (categoryPart.trim()) {
-            mainCat = categoryPart.trim();
+          // التقاط القسم الفرعي
+          const subCatMatch = line.match(/^##\s*(.+)$/);
+          if (subCatMatch) {
+            currentSubCategory = subCatMatch[1].trim();
+            return;
           }
 
-          const id = parseInt(idStr) || Date.now() + Math.floor(Math.random() * 1000);
-          const tokens = parseInt(tokensStr) || Math.ceil(text.split(/\s+/).length * 1.25);
+          // التقاط البرومبت
+          const promptMatch = line.match(/^\-\s*(.+)$/);
+          if (promptMatch) {
+            const text = promptMatch[1].trim();
+            const id = Date.now() + Math.floor(Math.random() * 1000);
+            const tokens = Math.ceil(text.split(/\s+/).length * 1.25);
 
-          newPrompts.push({
-            id,
-            text,
-            category: mainCat,
-            subCategory: subCat,
-            tokens,
-          });
+            newPrompts.push({
+              id,
+              text,
+              category: currentMainCategory,
+              subCategory: currentSubCategory || '',
+              tokens
+            });
+          }
         });
 
         return newPrompts;
       };
 
-      // زر الاستيراد
+      // عند الضغط على زر الاستيراد
       const handleImport = () => {
         if (!markdownText.trim()) {
           alert("الرجاء إدخال بيانات صحيحة.");
@@ -168,13 +159,12 @@
             existingCategories.push(category);
           }
 
-          if (subCategory) {
-            if (!existingSubCategories[category]) {
-              existingSubCategories[category] = [];
-            }
-            if (!existingSubCategories[category].includes(subCategory)) {
-              existingSubCategories[category].push(subCategory);
-            }
+          if (!existingSubCategories[category]) {
+            existingSubCategories[category] = [];
+          }
+
+          if (subCategory && !existingSubCategories[category].includes(subCategory)) {
+            existingSubCategories[category].push(subCategory);
           }
         });
 
@@ -188,7 +178,7 @@
         setMessage(`✅ تم استيراد ${newPrompts.length} برومبت جديد.`);
         
         setTimeout(() => {
-          window.location.href = "index.html"; // إعادة التوجيه بعد 2 ثانية
+          window.location.href = "index.html"; // إعادة التوجيه
         }, 2000);
       };
 
@@ -196,14 +186,14 @@
         <div className="bg-white p-4 sm:p-6 rounded-xl shadow-md max-w-4xl mx-auto">
           <h1 className="text-2xl font-bold mb-4">استيراد البيانات</h1>
           <p className="mb-4 text-gray-700">
-            يمكنك نسخ ولصق محتوى Markdown أو TXT يحتوي على برومبتات جديدة أدناه، أو رفع ملف.
+            يمكنك نسخ ولصق ملف Markdown أو TXT يحتوي على برومبتات جديدة أدناه، أو رفع ملف.
             سيتم إضافة البرومبتات إلى بياناتك الحالية دون حذفها.
           </p>
 
           {/* منطقة لصق */}
           <textarea
             value={markdownText}
-            onChange={(e) => setMarkdownText(e.target.value)}
+            onChange={handlePaste}
             placeholder="ألصق محتوى Markdown هنا..."
             className="w-full h-64 p-4 border border-gray-300 rounded mb-4"
           />
@@ -222,7 +212,7 @@
           {/* زر الاستيراد */}
           <button
             onClick={handleImport}
-            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors w-full sm:w-auto"
+            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition w-full sm:w-auto"
           >
             📥 استيراد البيانات
           </button>
@@ -238,15 +228,9 @@
           <div className="mt-6 text-sm text-gray-600">
             <h3 className="font-semibold mb-2">مثال على التنسيق:</h3>
             <pre className="bg-gray-100 p-3 rounded overflow-x-auto whitespace-pre-wrap example-pre">
-{`## تعليمي: رياضيات
-1. **[تعليمي]:[رياضيات]** اشرح مفهوم التفاضل بطريقة بسيطة.
-   - \`ID: 101\`
-   - \`tokens: 23\`
-
-## إبداعي: قصص
-1. **[إبداعي]:[قصص]** اكتب قصة قصيرة عن رحلة إلى الفضاء.
-   - \`ID: 102\`
-   - \`tokens: 45\``}
+{`# الذكاء الاصطناعي التوليدي
+## نماذج اللغات الكبيرة
+- أنشئ نموذج توليد نصوص طبية عربية: معالجة المصطلحات الطبية اللاتينية، التحقق من الدقة العلمية، منع الهلوسة المعلوماتية`}
             </pre>
           </div>
         </div>
