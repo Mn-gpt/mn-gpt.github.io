@@ -1,8 +1,8 @@
-<DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8" />
-  <title>تعديل الأقسام الفرعية</title>
+  <title>تعديل القسم الفرعي</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
 
   <!-- React + ReactDOM -->
@@ -60,10 +60,11 @@
     function App() {
       const [mainCategory, setMainCategory] = useState('');
       const [subCategories, setSubCategories] = useState([]);
-      const [selectedSubCategory, setSelectedSubCategory] = useState(null);
-      const [searchTerm, setSearchTerm] = useState('');
+      const [editingSub, setEditingSub] = useState(null);
+      const [editSubName, setEditSubName] = useState('');
+      const [newSubCategory, setNewSubCategory] = useState('');
 
-      // قراءة القسم من الرابط
+      // قراءة الاسم من الرابط
       useEffect(() => {
         const urlParams = new URLSearchParams(window.location.search);
         const main = decodeURIComponent(urlParams.get('main') || '');
@@ -85,36 +86,66 @@
 
       // ➕ إضافة قسم فرعي جديد
       const handleAddSubCategory = () => {
-        const newSub = document.getElementById('newSubCategoryInput').value.trim();
-        if (!newSub) return;
-        if (subCategories.includes(newSub)) {
+        if (!newSubCategory.trim()) return;
+        if (subCategories.includes(newSubCategory)) {
           alert("هذا القسم الفرعي موجود بالفعل!");
           return;
         }
 
-        const updatedSubCategories = [...subCategories, newSub];
+        const updatedSubCategories = [...subCategories, newSubCategory];
         setSubCategories(updatedSubCategories);
 
         const allSubCategories = JSON.parse(localStorage.getItem('subCategories')) || {};
         allSubCategories[mainCategory] = updatedSubCategories;
         localStorage.setItem('subCategories', JSON.stringify(allSubCategories));
+
+        setNewSubCategory('');
       };
 
-      // ❌ حذف قسم فرعي كامل
-      const handleDeleteSubCategory = (subCatToDelete) => {
-        if (!window.confirm(`هل أنت متأكد من حذف "${subCatToDelete}" وجميع البرومبتات المرتبطة به؟`)) return;
+      // ✏️ بدء تعديل اسم القسم الفرعي
+      const startEdit = (sub) => {
+        setEditingSub(sub);
+        setEditSubName(sub);
+      };
 
-        const updatedSubCategories = subCategories.filter(sub => sub !== subCatToDelete);
-        setSubCategories(updatedSubCategories);
+      // 💾 حفظ التعديل
+      const saveEdit = () => {
+        if (!editSubName.trim()) return;
+        const updated = subCategories.map(s => s === editingSub ? editSubName : s);
+        setSubCategories(updated);
 
         const allSubCategories = JSON.parse(localStorage.getItem('subCategories')) || {};
-        allSubCategories[mainCategory] = updatedSubCategories;
+        allSubCategories[mainCategory] = updated;
+        localStorage.setItem('subCategories', JSON.stringify(allSubCategories));
+
+        // تحديث البرومبتات
+        const prompts = JSON.parse(localStorage.getItem('prompts')) || [];
+        const updatedPrompts = prompts.map(p =>
+          p.subCategory === editingSub && p.category === mainCategory
+            ? { ...p, subCategory: editSubName }
+            : p
+        );
+        localStorage.setItem('prompts', JSON.stringify(updatedPrompts));
+
+        setEditingSub(null);
+        setEditSubName('');
+      };
+
+      // ❌ حذف قسم فرعي
+      const deleteSubCategory = (sub) => {
+        if (!window.confirm(`هل أنت متأكد من حذف "${sub}" وجميع البرومبتات المرتبطة به؟`)) return;
+
+        const updated = subCategories.filter(s => s !== sub);
+        setSubCategories(updated);
+
+        const allSubCategories = JSON.parse(localStorage.getItem('subCategories')) || {};
+        allSubCategories[mainCategory] = updated;
         localStorage.setItem('subCategories', JSON.stringify(allSubCategories));
 
         // تحديث البرومبتات
         const prompts = JSON.parse(localStorage.getItem('prompts')) || [];
         const filteredPrompts = prompts.filter(p =>
-          !(p.category === mainCategory && p.subCategory === subCatToDelete)
+          !(p.category === mainCategory && p.subCategory === sub)
         );
         localStorage.setItem('prompts', JSON.stringify(filteredPrompts));
       };
@@ -126,19 +157,25 @@
             <span className="text-blue-600 mr-2">{mainCategory}</span>
           </h2>
 
-          {/* إضافة قسم فرعي جديد */}
+          {/* إضافة قسم فرعي */}
           <div className="bg-white p-6 rounded-lg shadow-md mb-8">
             <h3 className="font-semibold text-lg mb-4">إضافة قسم فرعي جديد</h3>
             <div className="flex flex-wrap gap-4">
               <input
-                id="newSubCategoryInput"
                 type="text"
                 placeholder="اسم القسم الفرعي الجديد"
+                value={newSubCategory}
+                onChange={(e) => setNewSubCategory(e.target.value)}
                 className="flex-1 min-w-[200px] p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
               />
               <button
                 onClick={handleAddSubCategory}
-                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded transition"
+                disabled={!newSubCategory.trim()}
+                className={`px-4 py-2 rounded transition-colors ${
+                  newSubCategory.trim()
+                    ? 'bg-blue-600 hover:bg-blue-700 text-white'
+                    : 'bg-gray-200 cursor-not-allowed text-gray-500'
+                }`}
               >
                 ➕ إضافة
               </button>
@@ -152,23 +189,39 @@
               <ul className="space-y-2">
                 {subCategories.map((sub, idx) => (
                   <li key={idx} className="flex justify-between items-center bg-gray-50 p-3 rounded hover:bg-gray-100">
-                    <span className="font-medium text-purple-600">{sub}</span>
-                    <div className="flex space-x-3 rtl:space-x-reverse">
-                      <button
-                        onClick={() => setSelectedSubCategory(sub)}
-                        className="text-yellow-600 hover:text-yellow-800 px-3 py-1 rounded hover:bg-yellow-50 transition"
-                        title="تعديل"
-                      >
-                        ✏️
-                      </button>
-                      <button
-                        onClick={() => handleDeleteSubCategory(sub)}
-                        className="text-red-600 hover:text-red-800 px-3 py-1 rounded hover:bg-red-50 transition"
-                        title="حذف"
-                      >
-                        ❌
-                      </button>
-                    </div>
+                    {editingSub === sub ? (
+                      <>
+                        <input
+                          className="border border-gray-300 p-2 rounded w-full"
+                          value={editSubName}
+                          onChange={(e) => setEditSubName(e.target.value)}
+                        />
+                        <button
+                          onClick={saveEdit}
+                          className="text-green-600 hover:text-green-800 px-3 py-1 rounded hover:bg-green-50 transition"
+                        >
+                          ✓ حفظ
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        <span className="font-medium text-purple-600">{sub}</span>
+                        <div className="flex space-x-3 rtl:space-x-reverse">
+                          <button
+                            onClick={() => startEdit(sub)}
+                            className="text-yellow-600 hover:text-yellow-800 px-3 py-1 rounded hover:bg-yellow-50 transition"
+                          >
+                            ✏️ تعديل
+                          </button>
+                          <button
+                            onClick={() => deleteSubCategory(sub)}
+                            className="text-red-600 hover:text-red-800 px-3 py-1 rounded hover:bg-red-50 transition"
+                          >
+                            ❌ حذف
+                          </button>
+                        </div>
+                      </>
+                    )}
                   </li>
                 ))}
               </ul>
