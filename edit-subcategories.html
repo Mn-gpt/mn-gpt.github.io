@@ -62,7 +62,6 @@
       const [subCategories, setSubCategories] = useState([]);
       const [editingSub, setEditingSub] = useState(null);
       const [editSubName, setEditSubName] = useState('');
-      const [newSubCategory, setNewSubCategory] = useState('');
 
       // قراءة الاسم من الرابط
       useEffect(() => {
@@ -84,24 +83,6 @@
         }
       }, []);
 
-      // ➕ إضافة قسم فرعي جديد
-      const handleAddSubCategory = () => {
-        if (!newSubCategory.trim()) return;
-        if (subCategories.includes(newSubCategory)) {
-          alert("هذا القسم الفرعي موجود بالفعل!");
-          return;
-        }
-
-        const updatedSubCategories = [...subCategories, newSubCategory];
-        setSubCategories(updatedSubCategories);
-
-        const allSubCategories = JSON.parse(localStorage.getItem('subCategories')) || {};
-        allSubCategories[mainCategory] = updatedSubCategories;
-        localStorage.setItem('subCategories', JSON.stringify(allSubCategories));
-
-        setNewSubCategory('');
-      };
-
       // ✏️ بدء تعديل اسم القسم الفرعي
       const startEdit = (sub) => {
         setEditingSub(sub);
@@ -120,6 +101,9 @@
 
         // تحديث البرومبتات
         const prompts = JSON.parse(localStorage.getItem('prompts')) || [];
+        const filteredPrompts = prompts.filter(p =>
+          !(p.category === mainCategory && p.subCategory === editingSub)
+        );
         const updatedPrompts = prompts.map(p =>
           p.subCategory === editingSub && p.category === mainCategory
             ? { ...p, subCategory: editSubName }
@@ -131,56 +115,12 @@
         setEditSubName('');
       };
 
-      // ❌ حذف قسم فرعي
-      const deleteSubCategory = (sub) => {
-        if (!window.confirm(`هل أنت متأكد من حذف "${sub}" وجميع البرومبتات المرتبطة به؟`)) return;
-
-        const updated = subCategories.filter(s => s !== sub);
-        setSubCategories(updated);
-
-        const allSubCategories = JSON.parse(localStorage.getItem('subCategories')) || {};
-        allSubCategories[mainCategory] = updated;
-        localStorage.setItem('subCategories', JSON.stringify(allSubCategories));
-
-        // تحديث البرومبتات
-        const prompts = JSON.parse(localStorage.getItem('prompts')) || [];
-        const filteredPrompts = prompts.filter(p =>
-          !(p.category === mainCategory && p.subCategory === sub)
-        );
-        localStorage.setItem('prompts', JSON.stringify(filteredPrompts));
-      };
-
       return (
         <div className="container mx-auto max-w-4xl">
           <h2 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-6">
             إدارة الأقسام الفرعية للقسم:
             <span className="text-blue-600 mr-2">{mainCategory}</span>
           </h2>
-
-          {/* إضافة قسم فرعي */}
-          <div className="bg-white p-6 rounded-lg shadow-md mb-8">
-            <h3 className="font-semibold text-lg mb-4">إضافة قسم فرعي جديد</h3>
-            <div className="flex flex-wrap gap-4">
-              <input
-                type="text"
-                placeholder="اسم القسم الفرعي الجديد"
-                value={newSubCategory}
-                onChange={(e) => setNewSubCategory(e.target.value)}
-                className="flex-1 min-w-[200px] p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              />
-              <button
-                onClick={handleAddSubCategory}
-                disabled={!newSubCategory.trim()}
-                className={`px-4 py-2 rounded transition-colors ${
-                  newSubCategory.trim()
-                    ? 'bg-blue-600 hover:bg-blue-700 text-white'
-                    : 'bg-gray-200 cursor-not-allowed text-gray-500'
-                }`}
-              >
-                ➕ إضافة
-              </button>
-            </div>
-          </div>
 
           {/* قائمة الأقسام الفرعية الحالية */}
           <div className="bg-white rounded-lg shadow-md p-6">
@@ -231,6 +171,25 @@
           </div>
         </div>
       );
+
+      // ❌ حذف القسم الفرعي
+      const deleteSubCategory = (sub) => {
+        if (!window.confirm(`هل أنت متأكد من حذف "${sub}" وجميع البرومبتات المرتبطة به؟`)) return;
+
+        const updated = subCategories.filter(s => s !== sub);
+        setSubCategories(updated);
+
+        const allSubCategories = JSON.parse(localStorage.getItem('subCategories')) || {};
+        allSubCategories[mainCategory] = updated;
+        localStorage.setItem('subCategories', JSON.stringify(allSubCategories));
+
+        // تحديث البرومبتات
+        const prompts = JSON.parse(localStorage.getItem('prompts')) || [];
+        const filteredPrompts = prompts.filter(p =>
+          !(p.category === mainCategory && p.subCategory === sub)
+        );
+        localStorage.setItem('prompts', JSON.stringify(filteredPrompts));
+      };
     }
 
     const root = window.ReactDOM.createRoot(document.getElementById('root'));
