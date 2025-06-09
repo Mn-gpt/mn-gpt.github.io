@@ -1,19 +1,15 @@
-<!DOCTYPE html>
+<DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8" />
   <title>Promptica - لوحة التحكم</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-
   <!-- React + ReactDOM -->
   <script src="https://unpkg.com/react@18/umd/react.development.js"  crossorigin></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"  crossorigin></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script> 
-
-  <!-- Tailwind CSS CDN -->
+  <!-- Tailwind CSS -->
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"  rel="stylesheet" />
-
-  <!-- Internal Styles -->
   <style>
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -34,6 +30,40 @@
         font-size: 17px;
       }
     }
+
+    /* نمط النافذة المنبثقة */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.5);
+      display: none;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .modal-content {
+      background-color: white;
+      padding: 2rem;
+      border-radius: 8px;
+      max-width: 800px;
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    .modal-close {
+      float: right;
+      cursor: pointer;
+      font-size: 1.2em;
+      color: #666;
+    }
+
+    .modal-close:hover {
+      color: #333;
+    }
   </style>
 </head>
 <body class="min-h-screen bg-gray-50 p-4">
@@ -43,30 +73,24 @@
     <img src="banner.png" alt="بانير موقع Promptica" class="w-full h-auto rounded-lg shadow-md object-cover max-h-64">
   </div>
 
-  <!-- Header -->
-  <header class="flex justify-between items-center pb-4 border-b border-gray-200 mb-6">
-    <h1 class="text-2xl sm:text-3xl font-bold text-indigo-700 flex items-center">
-      <img src="logo1.png" alt="شعار Promptica" class="w-8 h-8 ml-2" />
-      Promptica
-    </h1>
-    <div class="space-x-4 rtl:space-x-reverse">
-      <a href="welcome.html" class="text-indigo-600 hover:text-indigo-800 underline">الترحيب</a>
-      <a href="login.html" class="text-gray-700 hover:text-indigo-600">تسجيل الخروج</a>
-    </div>
-  </header>
-
   <!-- Root Div for React App -->
   <div id="root"></div>
+
+  <div class="modal-overlay" id="modalOverlay">
+    <div class="modal-content">
+      <span class="modal-close" onclick="closeModal()">&times;</span>
+      <h2 id="modalTitle" class="text-xl font-bold text-indigo-700 mb-4"></h2>
+      <div id="modalPrompts" class="space-y-4 mt-4"></div>
+    </div>
+  </div>
 
   <footer class="mt-8 pt-4 border-t border-gray-200 text-center text-sm text-gray-500">
     &copy; {{new Date().getFullYear()}} Promptica. جميع الحقوق محفوظة.
   </footer>
 
   <script>
-    function logout() {
-      localStorage.removeItem("loggedInUser");
-      alert("تم تسجيل الخروج بنجاح.");
-      window.location.href = "login.html";
+    function closeModal() {
+      document.getElementById("modalOverlay").style.display = "none";
     }
   </script>
 
@@ -91,28 +115,12 @@
       useEffect(() => {
         const savedPrompts = JSON.parse(localStorage.getItem('prompts')) || [];
         const savedCategories = JSON.parse(localStorage.getItem('categories')) || [
-          'البرمجة والتطوير',
-          'التسويق الرقمي',
-          'الكتابة الإبداعية',
-          'تحليل البيانات',
-          'التصميم والجرافيك',
-          'الترجمة واللغويات',
-          'التعليم والتدريب',
-          'الصحة والطب',
-          'الأعمال والإدارة',
-          'الحياة اليومية'
+          'الذكاء الاصطناعي التوليدي',
+          'تحليل البيانات المتعددة الوسائط'
         ];
         const savedSubCategories = JSON.parse(localStorage.getItem('subCategories')) || {
-          'البرمجة والتطوير': ['توليد الأكواد', 'تصحيح الأخطاء', 'شرح المفاهيم'],
-          'التسويق الرقمي': ['إنشاء المحتوى', 'تحليل السوق', 'استراتيجيات الحملات'],
-          'الكتابة الإبداعية': ['القصص القصيرة', 'السيناريوهات', 'الشعر والإنشاءات الأدبية'],
-          'تحليل البيانات': ['تفسير النتائج', 'تصور البيانات', 'التنبؤات'],
-          'التصميم والجرافيك': ['وصف التصاميم', 'أفكار إبداعية بصرية', 'تقييم تجربة المستخدم'],
-          'الترجمة واللغويات': ['الترجمة الاحترافية', 'التدقيق اللغوي', 'تحليل النصوص'],
-          'التعليم والتدريب': ['إنشاء المناهج', 'أسئلة التقييم', 'شرح المفاهيم'],
-          'الصحة والطب': ['تفسير التقارير الطبية', 'نصائح صحية', 'الشرح العلمي'],
-          'الأعمال والإدارة': ['الخطط الاستراتيجية', 'تحليل المشاريع', 'صياغة السياسات'],
-          'الحياة اليومية': ['نصائح شخصية', 'حل المشكلات', 'التخطيط اليومي']
+          'الذكاء الاصطناعي التوليدي': ['التوليد المتعدد الوسائط', 'أنظمة الحوار متعددة الوسائط'],
+          'تحليل البيانات المتعددة الوسائط': ['تحويل الصوت إلى تعابير وجه']
         };
 
         setPrompts(savedPrompts);
@@ -362,16 +370,48 @@
               <h3 className="text-xl font-semibold text-gray-800 mb-4">الأقسام المتاحة</h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {categories.map(cat => (
-                  <a
+                  <div
                     key={cat}
-                    href={`category-prompts.html?category=${encodeURIComponent(cat)}`}
                     className="bg-white p-4 rounded shadow hover:bg-gray-50 transition flex justify-between items-center"
+                    onClick={() => {
+                      const subcats = subCategories[cat] || [];
+                      if (subcats.length > 0) {
+                        // إذا كان هناك أقسام فرعية، افتح نافذة منبثقة
+                        const overlay = document.getElementById("modalOverlay");
+                        const modalTitle = document.getElementById("modalTitle");
+                        const modalPrompts = document.getElementById("modalPrompts");
+
+                        // عرض النافذة
+                        overlay.style.display = "flex";
+
+                        // تصفية البرومبتات بناءً على القسم الرئيسي
+                        const filtered = prompts.filter(p => p.category === cat);
+                        modalTitle.textContent = `برومبتات القسم: ${cat}`;
+                        modalPrompts.innerHTML = filtered.map(prompt => (
+                          <div key={prompt.id} className="bg-white p-4 rounded shadow hover:bg-gray-50 transition">
+                            <div className="font-medium text-indigo-700 mb-2">[{prompt.category}{prompt.subCategory ? ` → ${prompt.subCategory}` : ''}]</div>
+                            <p className="text-gray-800 mb-4 line-clamp-3">{prompt.text}</p>
+                            <div className="flex justify-end space-x-3 rtl:space-x-reverse">
+                              <button
+                                onClick={() => copyPromptText(prompt.text)}
+                                className="text-blue-600 hover:text-blue-800"
+                              >
+                                نسخ
+                              </button>
+                            </div>
+                          </div>
+                        ));
+                      } else {
+                        // إذا لم يكن هناك أقسام فرعية، انتقل إلى صفحة العرض
+                        window.location.href = `category-prompts.html?category=${encodeURIComponent(cat)}`;
+                      }
+                    }}
                   >
                     <span className="font-medium text-indigo-600 text-xs sm:text-sm">{cat}</span>
                     <svg className="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
                     </svg>
-                  </a>
+                  </div>
                 ))}
                 {categories.length === 0 && (
                   <p className="text-gray-500 text-center py-4 col-span-full">لا توجد أقسام مضافة بعد.</p>
@@ -379,26 +419,26 @@
               </div>
             </div>
 
-{/* عرض الأقسام الفرعية */}
-{isUserAdmin && (
-  <div className="mt-8">
-    <h3 className="text-xl font-semibold text-gray-800 mb-4">الأقسام مع الأقسام الفرعية</h3>
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-      {Object.entries(subCategories).map(([mainCat, subs]) => (
-        <div key={mainCat} className="bg-white p-4 rounded shadow-md border-l-4 border-indigo-500">
-          <p className="font-semibold text-indigo-700 text-sm mb-2">{mainCat}</p>
-          <ul className="space-y-1">
-            {subs.map((sub, idx) => (
-              <li key={idx} className="text-xs sm:text-sm text-gray-600">
-                ↳ <a href={`popup-subcategory.html?main=${encodeURIComponent(mainCat)}&sub=${encodeURIComponent(sub)}`} target="_blank" className="underline text-purple-600">{sub}</a>
-              </li>
-            )) || <li className="text-xs text-gray-400">لا توجد أقسام فرعية</li>}
-          </ul>
-        </div>
-      ))}
-    </div>
-  </div>
-)}
+            {/* إدارة الأقسام الفرعية */}
+            {isUserAdmin && (
+              <div className="mt-8">
+                <h3 className="text-xl font-semibold text-gray-800 mb-4">الأقسام مع الأقسام الفرعية</h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {Object.entries(subCategories).map(([mainCat, subs]) => (
+                    <div key={mainCat} className="bg-white p-4 rounded shadow-md border-l-4 border-indigo-500">
+                      <p className="font-semibold text-indigo-700 text-sm mb-2">{mainCat}</p>
+                      <ul className="space-y-1">
+                        {subs.map((sub, idx) => (
+                          <li key={idx} className="text-xs sm:text-sm text-gray-600">
+                            ↳ <a href={`subcategory-prompts.html?main=${encodeURIComponent(mainCat)}&sub=${encodeURIComponent(sub)}`} className="underline text-purple-600">{sub}</a>
+                          </li>
+                        )) || <li className="text-xs text-gray-400">لا توجد أقسام فرعية</li>}
+                      </ul>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* زر استيراد البيانات */}
             {isUserAdmin && (
@@ -556,10 +596,8 @@
                 currentPrompts.map(prompt => {
                   const cardColor = (() => {
                     switch (prompt.category) {
-                      case 'البرمجة والتطوير': return 'border-red-400';
-                      case 'التسويق الرقمي': return 'border-blue-400';
-                      case 'الكتابة الإبداعية': return 'border-purple-400';
-                      case 'تحليل البيانات': return 'border-green-400';
+                      case 'الذكاء الاصطناعي التوليدي': return 'border-red-400';
+                      case 'تحليل البيانات المتعددة الوسائط': return 'border-blue-400';
                       default: return 'border-gray-300';
                     }
                   })();
@@ -655,93 +693,3 @@
                             onChange={(e) => setEditCategoryName(e.target.value)}
                           />
                           <button
-                            onClick={handleUpdateCategory}
-                            className="text-yellow-600 hover:text-yellow-800"
-                          >
-                            حفظ
-                          </button>
-                        </>
-                      ) : (
-                        <>
-                          <span className="font-medium text-indigo-600">{cat}</span>
-                          <div className="flex space-x-2 rtl:space-x-reverse">
-                            <button
-                              onClick={() => handleStartEditCategory(cat)}
-                              className="text-yellow-600 hover:text-yellow-800"
-                            >
-                              تعديل
-                            </button>
-                            <button
-                              onClick={() => handleDeleteCategory(cat)}
-                              className="text-red-600 hover:text-red-800"
-                            >
-                              حذف
-                            </button>
-                          </div>
-                        </>
-                      )}
-                    </li>
-                  ))}
-                  {categories.length === 0 && (
-                    <li className="text-center py-2 text-gray-500">لا توجد أقسام مضافة بعد.</li>
-                  )}
-                </ul>
-              </div>
-            )}
-          </div>
-        );
-      };
-
-      // Return JSX
-      return (
-        <div className="container mx-auto max-w-4xl">
-          {/* Tabs Navigation */}
-          <div className="flex space-x-4 rtl:space-x-reverse mb-4 border-b border-gray-200 pb-2">
-            <button
-              onClick={() => {
-                setActiveTab('dashboard');
-                setCurrentPage(1);
-              }}
-              className={`py-2 px-4 font-medium ${
-                activeTab === 'dashboard'
-                  ? 'border-b-2 border-indigo-600 text-indigo-600'
-                  : 'text-gray-600'
-              }`}
-            >
-              لوحة التحكم
-            </button>
-            {isUserAdmin && (
-              <button
-                onClick={() => {
-                  setActiveTab('prompts');
-                  setCurrentPage(1);
-                }}
-                className={`py-2 px-4 font-medium ${
-                  activeTab === 'prompts'
-                    ? 'border-b-2 border-indigo-600 text-indigo-600'
-                    : 'text-gray-600'
-                }`}
-              >
-                إدارة البرومبتات
-              </button>
-            )}
-          </div>
-
-          {/* Tab Content */}
-          {activeTab === 'dashboard' && renderDashboard()}
-          {activeTab === 'prompts' && isUserAdmin && renderPromptsManagement()}
-
-          {/* Footer */}
-          <footer className="mt-8 pt-4 border-t border-gray-200 text-center text-sm text-gray-500">
-            &copy; {new Date().getFullYear()} Promptica. جميع الحقوق محفوظة.
-          </footer>
-        </div>
-      );
-    }
-
-    // Render App
-    const root = ReactDOM.createRoot(document.getElementById('root'));
-    root.render(<App />);
-  </script>
-</body>
-</html>
