@@ -9,22 +9,84 @@
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script> 
   <!-- Tailwind CSS -->
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"  rel="stylesheet" />
+  <!-- Responsive Meta -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f9fafb;
+      color: #1f2937;
+      line-height: 1.8;
+    }
+    .line-clamp-3 {
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    @media (max-width: 640px) {
+      html {
+        font-size: 16px;
+      }
+      textarea {
+        font-size: 0.875rem;
+        padding: 0.75rem;
+      }
+      .example-pre {
+        font-size: 0.75rem;
+      }
+    }
+  </style>
 </head>
-<body class="bg-gray-50 p-6 min-h-screen font-sans">
+<body class="min-h-screen bg-gray-50 p-4">
+  <!-- Banner -->
+  <div class="mb-6">
+    <img src="banner.png" alt="بانير موقع Promptica" class="w-full h-auto rounded-lg shadow-md object-cover max-h-64">
+  </div>
+
+  <!-- Header -->
+  <header class="flex justify-between items-center pb-4 border-b border-gray-200 mb-6">
+    <h1 class="text-2xl sm:text-3xl font-bold text-indigo-700 flex items-center">
+      <img src="logo1.png" alt="شعار Promptica" class="w-8 h-8 ml-2" />
+      Promptica
+    </h1>
+    <div class="space-x-4 rtl:space-x-reverse">
+      <a href="welcome.html" class="text-indigo-600 hover:text-indigo-800 underline">الترحيب</a>
+      <a href="#" onclick="logout()" class="text-gray-700 hover:text-indigo-600">تسجيل الخروج</a>
+    </div>
+  </header>
+
+  <!-- Root Div for React App -->
   <div id="root"></div>
 
-  <script type="text/babel">
-    const App = () => {
-      const [message, setMessage] = React.useState('');
-      const [markdownText, setMarkdownText] = React.useState('');
+  <!-- Footer -->
+  <footer class="mt-8 pt-4 border-t border-gray-200 text-center text-sm text-gray-500">
+    &copy; {{new Date().getFullYear()}} Promptica. جميع الحقوق محفوظة.
+  </footer>
 
-      // معالجة النص المنسوخ
+  <!-- Logout Function -->
+  <script>
+    function logout() {
+      localStorage.removeItem("loggedInUser");
+      alert("تم تسجيل الخروج.");
+      window.location.href = "login.html";
+    }
+  </script>
+
+  <!-- React Code -->
+  <script type="text/babel">
+    const { useState } = window.React;
+
+    function App() {
+      const [markdownText, setMarkdownText] = useState('');
+      const [message, setMessage] = useState('');
+
+      // معالجة اللصق
       const handlePaste = (e) => {
-        const text = e.target.value;
-        setMarkdownText(text);
+        setMarkdownText(e.target.value);
       };
 
-      // معالجة رفع الملف
+      // رفع ملف
       const handleFileUpload = (e) => {
         const file = e.target.files[0];
         if (!file) return;
@@ -36,7 +98,7 @@
         reader.readAsText(file);
       };
 
-      // استخراج البرومبتات من النص
+      // استخراج البرومبتات
       const parsePromptsFromMarkdown = (content) => {
         const lines = content.split('\n');
         const newPrompts = [];
@@ -46,14 +108,15 @@
 
         lines.forEach(line => {
           line = line.trim();
-          // البحث عن القسم الرئيسي أو الفرعي
+
+          // التقاط الأقسام
           const categoryMatch = line.match(/^##\s*(.+?)(:\s*(.+))?$/);
           if (categoryMatch) {
             currentCategory = (categoryMatch[1] || '').trim();
             currentSubCategory = (categoryMatch[3] || '').trim();
           }
 
-          // البحث عن برومبت
+          // التقاط البرومبتات
           const promptMatch = line.match(/^(\d+\.|\-|\*)\s*\$\$(.*?)\$\$\s+(.+?)(?:\s*-\s*`ID:\s*(\d+)`)?(?:\s*-\s*`tokens:\s*(\d+)`)?$/);
           if (!promptMatch) return;
 
@@ -84,7 +147,7 @@
         return newPrompts;
       };
 
-      // عند الضغط على زر الاستيراد
+      // زر الاستيراد
       const handleImport = () => {
         if (!markdownText.trim()) {
           alert("الرجاء إدخال بيانات صحيحة.");
@@ -101,12 +164,10 @@
         newPrompts.forEach(prompt => {
           const { category, subCategory } = prompt;
 
-          // إضافة القسم إن لم يكن موجودًا
           if (!existingCategories.includes(category)) {
             existingCategories.push(category);
           }
 
-          // إضافة القسم الفرعي إن لم يكن موجودًا
           if (subCategory) {
             if (!existingSubCategories[category]) {
               existingSubCategories[category] = [];
@@ -117,7 +178,7 @@
           }
         });
 
-        // دمج البرومبتات الجديدة مع القائمة الحالية
+        // دمج البيانات
         const updatedPrompts = [...existingPrompts, ...newPrompts];
 
         localStorage.setItem('prompts', JSON.stringify(updatedPrompts));
@@ -125,20 +186,24 @@
         localStorage.setItem('subCategories', JSON.stringify(existingSubCategories));
 
         setMessage(`✅ تم استيراد ${newPrompts.length} برومبت جديد.`);
+        
+        setTimeout(() => {
+          window.location.href = "index.html"; // إعادة التوجيه بعد 2 ثانية
+        }, 2000);
       };
 
       return (
-        <div className="max-w-4xl mx-auto bg-white p-6 rounded-lg shadow-md">
-          <h1 className="text-2xl font-bold mb-6">استيراد البيانات</h1>
+        <div className="bg-white p-4 sm:p-6 rounded-xl shadow-md max-w-4xl mx-auto">
+          <h1 className="text-2xl font-bold mb-4">استيراد البيانات</h1>
           <p className="mb-4 text-gray-700">
-            يمكنك نسخ لصق ملف Markdown (.md) أو TXT يحتوي على برومبتات جديدة أدناه، أو رفع ملف.
+            يمكنك نسخ ولصق محتوى Markdown أو TXT يحتوي على برومبتات جديدة أدناه، أو رفع ملف.
             سيتم إضافة البرومبتات إلى بياناتك الحالية دون حذفها.
           </p>
 
-          {/* نسخ ولصق */}
+          {/* منطقة لصق */}
           <textarea
             value={markdownText}
-            onChange={handlePaste}
+            onChange={(e) => setMarkdownText(e.target.value)}
             placeholder="ألصق محتوى Markdown هنا..."
             className="w-full h-64 p-4 border border-gray-300 rounded mb-4"
           />
@@ -157,14 +222,14 @@
           {/* زر الاستيراد */}
           <button
             onClick={handleImport}
-            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors w-full sm:w-auto"
           >
             📥 استيراد البيانات
           </button>
 
           {/* رسالة النجاح */}
           {message && (
-            <div className="mt-4 p-3 bg-green-100 text-green-800 rounded border border-green-300">
+            <div className="mt-4 p-3 bg-green-100 text-green-800 rounded border border-green-300 text-center">
               {message}
             </div>
           )}
@@ -172,7 +237,7 @@
           {/* مثال على التنسيق */}
           <div className="mt-6 text-sm text-gray-600">
             <h3 className="font-semibold mb-2">مثال على التنسيق:</h3>
-            <pre className="bg-gray-100 p-3 rounded overflow-x-auto whitespace-pre-wrap">
+            <pre className="bg-gray-100 p-3 rounded overflow-x-auto whitespace-pre-wrap example-pre">
 {`## تعليمي: رياضيات
 1. **[تعليمي]:[رياضيات]** اشرح مفهوم التفاضل بطريقة بسيطة.
    - \`ID: 101\`
@@ -186,9 +251,9 @@
           </div>
         </div>
       );
-    };
+    }
 
-    const root = ReactDOM.createRoot(document.getElementById('root'));
+    const root = window.ReactDOM.createRoot(document.getElementById('root'));
     root.render(<App />);
   </script>
 </body>
