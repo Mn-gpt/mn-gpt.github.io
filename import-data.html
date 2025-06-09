@@ -8,105 +8,91 @@
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script> 
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"  rel="stylesheet" />
 </head>
-<body class="min-h-screen bg-gray-50 p-4">
+<body class="bg-gray-50 p-6 min-h-screen">
   <div id="root"></div>
 
   <script type="text/babel">
     const App = () => {
-      const [file, setFile] = React.useState(null);
       const [message, setMessage] = React.useState('');
+      const fileInputRef = React.useRef(null);
 
-      const handleFileChange = (e) => {
-        setFile(e.target.files[0]);
-      };
-
-      const parseMarkdown = (content) => {
-        const promptRegex = /\d+\.\s*\*\*$$(.*?)$$\s*→\s*(.*?)\*\*.*?\n(.*?)(?=\n\d+\.|\Z)/gs;
-        const prompts = [];
-        let match;
-
-        while ((match = promptRegex.exec(content)) !== null) {
-          const fullMatch = match[0];
-          const mainCategory = match[1].trim();
-          const subCategory = match[2].trim();
-          const text = match[3].replace(/^-.*$/gm, '').trim(); // تنظيف النص
-          const idMatch = /`ID:\s*(\d+)`/.exec(fullMatch);
-          const tokensMatch = /`tokens:\s*(\d+)`/.exec(fullMatch);
-
-          if (text && idMatch && tokensMatch) {
-            const id = parseInt(idMatch[1], 10);
-            const tokens = parseInt(tokensMatch[1], 10);
-
-            prompts.push({
-              id,
-              text,
-              category: mainCategory,
-              subCategory,
-              tokens
-            });
-          }
-        }
-
-        return prompts;
-      };
-
-      const handleImport = () => {
-        if (!file) {
-          alert("الرجاء اختيار ملف Markdown.");
-          return;
-        }
+      // معالجة ملف Markdown
+      const handleFileUpload = (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
 
         const reader = new FileReader();
-        reader.onload = (e) => {
-          const content = e.target.result;
-          const importedPrompts = parseMarkdown(content);
-
-          if (importedPrompts.length === 0) {
-            setMessage("❌ لم يتم العثور على برومبتات في الملف.");
-            return;
-          }
-
-          // جلب البيانات الحالية من localStorage
+        reader.onload = (event) => {
+          const content = event.target.result;
           const existingPrompts = JSON.parse(localStorage.getItem('prompts')) || [];
+
+          // استخراج البرومبتات من النص
+          const lines = content.split('\n');
+          const newPrompts = [];
+
+          let currentCategory = '';
+          let currentSubCategory = '';
+
+          lines.forEach(line => {
+            line = line.trim();
+            const promptMatch = line.match(/^(\d+\.|\-|\*)\s+\$\$(.*?)\$\$\s+(.+?)(?:\s*-\s*`ID:\s*(\d+)`)?(?:\s*-\s*`tokens:\s*(\d+)`)?$/);
+            if (!promptMatch) return;
+
+            const [, , categoryPart = '', text = '', idStr = '', tokensStr = ''] = promptMatch;
+            let mainCat = 'عام';
+            let subCat = '';
+
+            if (categoryPart.includes('→')) {
+              [mainCat, subCat] = categoryPart.split('→').map(s => s.trim());
+            } else if (categoryPart.includes(':')) {
+              [mainCat, subCat] = categoryPart.split(':').map(s => s.trim());
+            } else {
+              mainCat = categoryPart.trim() || 'عام';
+            }
+
+            const id = parseInt(idStr) || Date.now() + Math.floor(Math.random() * 1000);
+            const tokens = parseInt(tokensStr) || Math.ceil(text.split(/\s+/).length * 1.25);
+
+            newPrompts.push({
+              id,
+              text,
+              category: mainCat,
+              subCategory: subCat,
+              tokens,
+            });
+          });
+
+          // تحديث الأقسام الفرعية
           const existingCategories = JSON.parse(localStorage.getItem('categories')) || [];
           const existingSubCategories = JSON.parse(localStorage.getItem('subCategories')) || {};
 
-          // تجنب التكرار باستخدام Set
-          const existingIds = new Set(existingPrompts.map(p => p.id));
-          const newPrompts = importedPrompts.filter(p => !existingIds.has(p.id));
-
-          // تحديث القائمة مع الحفاظ على البيانات القديمة
-          const updatedPrompts = [...existingPrompts, ...newPrompts];
-
-          // تحديث الأقسام
-          const updatedCategories = [...new Set([
-            ...existingCategories,
-            ...newPrompts.map(p => p.category)
-          ])];
-
-          // تحديث الأقسام الفرعية
-          const updatedSubCategories = { ...existingSubCategories };
           newPrompts.forEach(prompt => {
-            if (!updatedSubCategories[prompt.category]) {
-              updatedSubCategories[prompt.category] = [];
+            const { category, subCategory } = prompt;
+
+            // إضافة القسم الرئيسي إذا لم يكن موجودًا
+            if (!existingCategories.includes(category)) {
+              existingCategories.push(category);
             }
-            if (
-              prompt.subCategory &&
-              !updatedSubCategories[prompt.category].includes(prompt.subCategory)
-            ) {
-              updatedSubCategories[prompt.category].push(prompt.subCategory);
+
+            // إضافة القسم الفرعي إذا كان موجودًا
+            if (subCategory) {
+              if (!existingSubCategories[category]) {
+                existingSubCategories[category] = [];
+              }
+              if (!existingSubCategories[category].includes(subCategory)) {
+                existingSubCategories[category].push(subCategory);
+              }
             }
           });
 
-          // حفظ البيانات بعد التحديث
+          // دمج البرومبتات الجديدة مع القائمة الحالية
+          const updatedPrompts = [...existingPrompts, ...newPrompts];
           localStorage.setItem('prompts', JSON.stringify(updatedPrompts));
-          localStorage.setItem('categories', JSON.stringify(updatedCategories));
-          localStorage.setItem('subCategories', JSON.stringify(updatedSubCategories));
+          localStorage.setItem('categories', JSON.stringify(existingCategories));
+          localStorage.setItem('subCategories', JSON.stringify(existingSubCategories));
 
           setMessage(`✅ تم استيراد ${newPrompts.length} برومبت جديد.`);
-          setTimeout(() => {
-            window.location.href = "index.html";
-          }, 2000);
+          fileInputRef.current.value = '';
         };
 
         reader.readAsText(file);
@@ -114,28 +100,39 @@
 
       return (
         <div className="max-w-2xl mx-auto bg-white p-6 rounded shadow-md">
-          <h2 className="text-2xl font-bold mb-4">استيراد البيانات</h2>
-          <p className="mb-4">اختر ملف Markdown يحتوي على بيانات برومبتات لإضافتها إلى قاعدة البيانات الحالية.</p>
-          
+          <h1 className="text-2xl font-bold mb-6">استيراد البيانات</h1>
+          <p className="mb-4 text-gray-700">
+            ارفع ملف Markdown (.md) أو نصي (.txt) يحتوي على برومبتات جديدة. سيتم إضافتها إلى بياناتك الحالية.
+          </p>
+
           <input
+            ref={fileInputRef}
             type="file"
-            accept=".md"
-            onChange={handleFileChange}
-            className="w-full p-2 border border-gray-300 rounded mb-4"
+            accept=".md,.txt"
+            onChange={handleFileUpload}
+            className="mb-4"
           />
 
-          <button
-            onClick={handleImport}
-            className="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 transition"
-          >
-            استيراد البيانات
-          </button>
-
           {message && (
-            <div className="mt-4 p-3 bg-blue-100 text-blue-700 rounded">
+            <div className="mt-4 p-3 bg-green-100 text-green-800 rounded border border-green-300">
               {message}
             </div>
           )}
+
+          <div className="mt-6 text-sm text-gray-500">
+            <h3 className="font-semibold mb-2">مثال على تنسيق الملف:</h3>
+            <pre className="bg-gray-100 p-3 rounded overflow-x-auto">
+{`## تعليمي: رياضيات
+1. **[تعليمي]:[رياضيات]** اشرح مفهوم التفاضل بطريقة بسيطة.
+   - \`ID: 101\`
+   - \`tokens: 23\`
+
+## إبداعي: قصص
+1. **[إبداعي]:[قصص]** اكتب قصة قصيرة عن رحلة إلى الفضاء.
+   - \`ID: 102\`
+   - \`tokens: 45\``}
+            </pre>
+          </div>
         </div>
       );
     };
