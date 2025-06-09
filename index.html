@@ -34,6 +34,49 @@
         font-size: 17px;
       }
     }
+
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.5);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 50;
+    }
+
+    .modal-content {
+      background-color: white;
+      padding: 2rem;
+      border-radius: 8px;
+      max-width: 800px;
+      max-height: 90vh;
+      overflow-y: auto;
+      position: relative;
+      width: 90%;
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+      border-bottom: 1px solid #e5e7eb;
+      padding-bottom: 0.5rem;
+    }
+
+    .modal-close {
+      font-size: 1.5rem;
+      cursor: pointer;
+      color: #6b7280;
+    }
+
+    .modal-close:hover {
+      color: #374151;
+    }
   </style>
 </head>
 <body class="min-h-screen bg-gray-50 p-4">
@@ -51,12 +94,23 @@
     </h1>
     <div class="space-x-4 rtl:space-x-reverse">
       <a href="welcome.html" class="text-indigo-600 hover:text-indigo-800 underline">الترحيب</a>
-      <a href="login.html" class="text-gray-700 hover:text-indigo-600">تسجيل الخروج</a>
+      <a href="#" onclick="logout()" class="text-gray-700 hover:text-indigo-600">تسجيل الخروج</a>
     </div>
   </header>
 
   <!-- Root Div for React App -->
   <div id="root"></div>
+
+  <!-- Modal for Subcategory Prompts -->
+  <div class="modal-overlay" id="modalOverlay">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 id="modalTitle" class="text-xl font-bold text-gray-800"></h2>
+        <span class="modal-close" onclick="closeModal()">✕</span>
+      </div>
+      <div id="modalPrompts" class="space-y-4"></div>
+    </div>
+  </div>
 
   <footer class="mt-8 pt-4 border-t border-gray-200 text-center text-sm text-gray-500">
     &copy; {{new Date().getFullYear()}} Promptica. جميع الحقوق محفوظة.
@@ -67,6 +121,98 @@
       localStorage.removeItem("loggedInUser");
       alert("تم تسجيل الخروج بنجاح.");
       window.location.href = "login.html";
+    }
+
+    function closeModal() {
+      document.getElementById("modalOverlay").style.display = "none";
+    }
+
+    function openSubcategoryModal(mainCat, subcats) {
+      const modal = document.getElementById("modalOverlay");
+      const modalTitle = document.getElementById("modalTitle");
+      const modalContent = document.getElementById("modalPrompts");
+
+      modal.style.display = "flex";
+      modalTitle.textContent = `القسم الرئيسي: ${mainCat}`;
+      modalContent.innerHTML = "";
+
+      if (subcats.length === 0) {
+        const noSubs = document.createElement("p");
+        noSubs.className = "text-gray-500 text-center py-4";
+        noSubs.textContent = "لا توجد أقسام فرعية لهذا القسم.";
+        modalContent.appendChild(noSubs);
+        return;
+      }
+
+      const ul = document.createElement("ul");
+      ul.className = "space-y-2";
+
+      subcats.forEach(sub => {
+        const li = document.createElement("li");
+        li.className = "bg-white p-4 rounded shadow hover:bg-gray-50 transition";
+        li.innerHTML = `
+          <div class="font-medium text-indigo-700 mb-2">${sub}</div>
+          <button 
+            onclick="openPromptsModal('${mainCat}', '${sub}')"
+            class="text-blue-600 hover:text-blue-800"
+          >
+            عرض البرومبتات
+          </button>
+        `;
+        ul.appendChild(li);
+      });
+
+      modalContent.appendChild(ul);
+    }
+
+    function openPromptsModal(mainCat, subCat = '') {
+      const modal = document.getElementById("modalOverlay");
+      const modalTitle = document.getElementById("modalTitle");
+      const modalContent = document.getElementById("modalPrompts");
+
+      modal.style.display = "flex";
+      modalTitle.textContent = `القسم: ${mainCat} → ${subCat || 'الكل'}`;
+      modalContent.innerHTML = "";
+
+      const prompts = JSON.parse(localStorage.getItem('prompts')) || [];
+
+      const filteredPrompts = prompts.filter(p => 
+        p.category === mainCat && 
+        (subCat ? p.subCategory === subCat : true)
+      );
+
+      if (filteredPrompts.length === 0) {
+        const noPrompt = document.createElement("p");
+        noPrompt.className = "text-gray-500 text-center py-4";
+        noPrompt.textContent = "لا توجد برومبتات مضافة لهذا القسم.";
+        modalContent.appendChild(noPrompt);
+        return;
+      }
+
+      const ul = document.createElement("ul");
+      ul.className = "space-y-4";
+
+      filteredPrompts.forEach(prompt => {
+        const li = document.createElement("li");
+        li.className = "bg-white p-4 rounded shadow-md hover:shadow-lg transition";
+        li.innerHTML = `
+          <div class="font-medium text-indigo-700 mb-2">
+            [${prompt.category}${prompt.subCategory ? ` → ${prompt.subCategory}` : ''}]
+          </div>
+          <p class="text-gray-800 mb-4">${prompt.text}</p>
+          <div class="flex justify-end space-x-3 rtl:space-x-reverse">
+            <button onclick='copyText("${prompt.text}")' class="text-blue-600 hover:text-blue-800">📋 نسخ</button>
+          </div>
+        `;
+        ul.appendChild(li);
+      });
+
+      modalContent.appendChild(ul);
+    }
+
+    function copyText(text) {
+      navigator.clipboard.writeText(text);
+      alert("✅ تم نسخ النص!");
     }
   </script>
 
@@ -87,33 +233,11 @@
       const [itemsPerPage] = useState(4);
       const isUserAdmin = true;
 
-      // قراءة البيانات من localStorage أو استخدام افتراضي
+      // قراءة البيانات من localStorage أو استخدام الافتراضي
       useEffect(() => {
         const savedPrompts = JSON.parse(localStorage.getItem('prompts')) || [];
-        const savedCategories = JSON.parse(localStorage.getItem('categories')) || [
-          'البرمجة والتطوير',
-          'التسويق الرقمي',
-          'الكتابة الإبداعية',
-          'تحليل البيانات',
-          'التصميم والجرافيك',
-          'الترجمة واللغويات',
-          'التعليم والتدريب',
-          'الصحة والطب',
-          'الأعمال والإدارة',
-          'الحياة اليومية'
-        ];
-        const savedSubCategories = JSON.parse(localStorage.getItem('subCategories')) || {
-          'البرمجة والتطوير': ['توليد الأكواد', 'تصحيح الأخطاء', 'شرح المفاهيم'],
-          'التسويق الرقمي': ['إنشاء المحتوى', 'تحليل السوق', 'استراتيجيات الحملات'],
-          'الكتابة الإبداعية': ['القصص القصيرة', 'السيناريوهات', 'الشعر والإنشاءات الأدبية'],
-          'تحليل البيانات': ['تفسير النتائج', 'تصور البيانات', 'التنبؤات'],
-          'التصميم والجرافيك': ['وصف التصاميم', 'أفكار إبداعية بصرية', 'تقييم تجربة المستخدم'],
-          'الترجمة واللغويات': ['الترجمة الاحترافية', 'التدقيق اللغوي', 'تحليل النصوص'],
-          'التعليم والتدريب': ['إنشاء المناهج', 'أسئلة التقييم', 'شرح المفاهيم'],
-          'الصحة والطب': ['تفسير التقارير الطبية', 'نصائح صحية', 'الشرح العلمي'],
-          'الأعمال والإدارة': ['الخطط الاستراتيجية', 'تحليل المشاريع', 'صياغة السياسات'],
-          'الحياة اليومية': ['نصائح شخصية', 'حل المشكلات', 'التخطيط اليومي']
-        };
+        const savedCategories = JSON.parse(localStorage.getItem('categories')) || [];
+        const savedSubCategories = JSON.parse(localStorage.getItem('subCategories')) || {};
 
         setPrompts(savedPrompts);
         setCategories(savedCategories);
@@ -165,7 +289,6 @@
         setPrompts(updatedPrompts);
         setCategories(updatedCategories);
         setSubCategories(updatedSubCategories);
-
         saveToLocalStorage(updatedPrompts, updatedCategories, updatedSubCategories);
         setNewPrompt({ text: '', category: '', tokens: 0 });
       };
@@ -310,12 +433,6 @@
         URL.revokeObjectURL(url);
       };
 
-      // 📋 نسخ نص البرومبت
-      const copyPromptText = (text) => {
-        navigator.clipboard.writeText(text);
-        alert("✅ تم نسخ النص!");
-      };
-
       // 📦 عرض لوحة التحكم
       const renderDashboard = () => {
         const stats = getCategoryStats();
@@ -362,16 +479,23 @@
               <h3 className="text-xl font-semibold text-gray-800 mb-4">الأقسام المتاحة</h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {categories.map(cat => (
-                  <a
+                  <div
                     key={cat}
-                    href={`category-prompts.html?category=${encodeURIComponent(cat)}`}
-                    className="bg-white p-4 rounded shadow hover:bg-gray-50 transition flex justify-between items-center"
+                    className="bg-white p-4 rounded shadow hover:bg-gray-50 transition flex justify-between items-center cursor-pointer"
+                    onClick={() => {
+                      const subcats = Object.keys(subCategories[cat] || {});
+                      if (subcats.length > 0) {
+                        openSubcategoryModal(cat, subcats);
+                      } else {
+                        openPromptsModal(cat);
+                      }
+                    }}
                   >
                     <span className="font-medium text-indigo-600 text-xs sm:text-sm">{cat}</span>
                     <svg className="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
                     </svg>
-                  </a>
+                  </div>
                 ))}
                 {categories.length === 0 && (
                   <p className="text-gray-500 text-center py-4 col-span-full">لا توجد أقسام مضافة بعد.</p>
@@ -379,26 +503,26 @@
               </div>
             </div>
 
-{/* عرض الأقسام الفرعية */}
-{isUserAdmin && (
-  <div className="mt-8">
-    <h3 className="text-xl font-semibold text-gray-800 mb-4">الأقسام مع الأقسام الفرعية</h3>
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-      {Object.entries(subCategories).map(([mainCat, subs]) => (
-        <div key={mainCat} className="bg-white p-4 rounded shadow-md border-l-4 border-indigo-500">
-          <p className="font-semibold text-indigo-700 text-sm mb-2">{mainCat}</p>
-          <ul className="space-y-1">
-            {subs.map((sub, idx) => (
-              <li key={idx} className="text-xs sm:text-sm text-gray-600">
-                ↳ <a href={`popup-subcategory.html?main=${encodeURIComponent(mainCat)}&sub=${encodeURIComponent(sub)}`} target="_blank" className="underline text-purple-600">{sub}</a>
-              </li>
-            )) || <li className="text-xs text-gray-400">لا توجد أقسام فرعية</li>}
-          </ul>
-        </div>
-      ))}
-    </div>
-  </div>
-)}
+            {/* إدارة الأقسام الفرعية */}
+            {isUserAdmin && (
+              <div className="mt-8">
+                <h3 className="text-xl font-semibold text-gray-800 mb-4">الأقسام مع الأقسام الفرعية</h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {Object.entries(subCategories).map(([mainCat, subs]) => (
+                    <div key={mainCat} className="bg-white p-4 rounded shadow-md border-l-4 border-indigo-500">
+                      <p className="font-semibold text-indigo-700 text-sm mb-2">{mainCat}</p>
+                      <ul className="space-y-1">
+                        {subs.map((sub, idx) => (
+                          <li key={idx} className="text-xs sm:text-sm text-gray-600">
+                            ↳ <a href="#" onClick={(e) => { e.preventDefault(); openPromptsModal(mainCat, sub); }} className="underline text-purple-600">{sub}</a>
+                          </li>
+                        )) || <li className="text-xs text-gray-400">لا توجد أقسام فرعية</li>}
+                      </ul>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* زر استيراد البيانات */}
             {isUserAdmin && (
@@ -497,8 +621,8 @@
                 <option value="">اختر قسمًا</option>
                 {categories.map((cat, idx) => (
                   <React.Fragment key={idx}>
-                    <option disabled style={{ fontWeight: 'bold' }} value={cat}>{cat}</option>
-                    {subCategories[cat]?.map((sub, subIdx) => (
+                    <option disabled style={{ fontWeight: 'bold' }} value={cat}>── {cat} ──</option>
+                    {(subCategories[cat] || []).map((sub, subIdx) => (
                       <option key={`${cat}-${subIdx}`} value={`${cat}:${sub}`}>
                         ↳ {sub}
                       </option>
@@ -579,7 +703,7 @@
                       </div>
                       <div className="mt-4 flex justify-end space-x-3 rtl:space-x-reverse">
                         <button
-                          onClick={() => copyPromptText(prompt.text)}
+                          onClick={() => copyText(prompt.text)}
                           className="text-blue-600 hover:text-blue-800"
                         >
                           نسخ
