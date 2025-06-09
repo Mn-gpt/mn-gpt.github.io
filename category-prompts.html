@@ -64,33 +64,34 @@
     function App() {
       const [prompts, setPrompts] = useState([]);
       const [category, setCategory] = useState('');
-      const [subCategory, setSubCategory] = useState(null);
       const [searchTerm, setSearchTerm] = useState('');
+      const [filteredPrompts, setFilteredPrompts] = useState([]);
 
-      // قراءة اسم القسم من URL
+      // قراءة القسم من الرابط وتحميل البيانات
       useEffect(() => {
         const urlParams = new URLSearchParams(window.location.search);
         const categoryFromURL = decodeURIComponent(urlParams.get('category') || '');
         setCategory(categoryFromURL);
 
         const savedPrompts = JSON.parse(localStorage.getItem('prompts')) || [];
-        const filtered = savedPrompts.filter(p => p.category === categoryFromURL);
-        setPrompts(filtered);
+        const filteredByCategory = savedPrompts.filter(p => p.category === categoryFromURL);
+        setPrompts(filteredByCategory);
+        setFilteredPrompts(filteredByCategory);
       }, []);
 
-      // تحديث البحث
+      // 🔍 البحث الديناميكي مع حساسية الاحرف
       useEffect(() => {
         if (!searchTerm.trim()) {
+          setFilteredPrompts(prompts);
           return;
         }
 
         const lowerSearch = searchTerm.toLowerCase();
-        const filtered = prompts.filter(p =>
-          p.text.toLowerCase().includes(lowerSearch) ||
-          (p.subCategory && p.subCategory.toLowerCase().includes(lowerSearch))
+        const results = prompts.filter(prompt =>
+          prompt.text.toLowerCase().includes(lowerSearch)
         );
-        setPrompts(filtered);
-      }, [searchTerm]);
+        setFilteredPrompts(results);
+      }, [searchTerm, prompts]);
 
       // 📋 نسخ النص
       const copyPromptText = (text) => {
@@ -98,31 +99,11 @@
         alert("✅ تم النسخ!");
       };
 
-      // 📊 إحصاءات الأقسام الفرعية
-      const getSubcategoryStats = () => {
-        const stats = {};
-        const subcategories = [...new Set(prompts.map(p => p.subCategory).filter(Boolean))];
-
-        subcategories.forEach(sub => {
-          const subPrompts = prompts.filter(p => p.subCategory === sub);
-          const totalTokens = subPrompts.reduce((sum, p) => sum + p.tokens, 0);
-          const averageTokens = subPrompts.length > 0 ? Math.round(totalTokens / subPrompts.length) : 0;
-          stats[sub] = {
-            count: subPrompts.length,
-            totalTokens: totalTokens,
-            averageTokens: averageTokens
-          };
-        });
-
-        return stats;
-      };
-
-      const subcategoryStats = getSubcategoryStats();
-
       return (
         <div className="container mx-auto max-w-4xl">
-          <h2 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-6">
-            برومبتات القسم: <span className="text-indigo-600">{category}</span>
+          <h2 className="text-2xl font-bold text-gray-800 mb-4">
+            برومبتات القسم:
+            <span className="text-blue-600 mr-2">{category}</span>
           </h2>
 
           {/* شريط البحث */}
@@ -136,29 +117,30 @@
             />
           </div>
 
-          {/* إحصاءات الأقسام الفرعية */}
-          {Object.keys(subcategoryStats).length > 0 && (
-            <div className="mb-8">
-              <h3 className="text-xl font-semibold text-gray-800 mb-4">إحصاءات الأقسام الفرعية</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {Object.entries(subcategoryStats).map(([sub, data]) => (
-                  <div key={sub} className="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition-all duration-200 border-l-4 border-purple-400">
-                    <div className="font-medium text-purple-700">{sub}</div>
-                    <div className="mt-2">
-                      <p className="text-sm text-gray-600">عدد البرومبتات: <strong>{data.count}</strong></p>
-                      <p className="text-sm text-gray-600">إجمالي الكلمات: <strong>{data.totalTokens}</strong></p>
-                      <p className="text-sm text-gray-600">متوسط الكلمات: <strong>{data.averageTokens}</strong></p>
-                    </div>
-                  </div>
-                ))}
-              </div>
+          {/* إحصاءات */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+            <div className="bg-white p-4 rounded-lg shadow-md border-l-4 border-blue-400">
+              <h3 className="font-semibold text-gray-700 mb-1">عدد البرومبتات</h3>
+              <p className="text-xl text-blue-600 font-bold">{filteredPrompts.length}</p>
             </div>
-          )}
+            <div className="bg-white p-4 rounded-lg shadow-md border-l-4 border-green-400">
+              <h3 className="font-semibold text-gray-700 mb-1">إجمالي الكلمات (tokens)</h3>
+              <p className="text-xl text-green-600 font-bold">
+                {filteredPrompts.reduce((sum, p) => sum + p.tokens, 0)}
+              </p>
+            </div>
+            <div className="bg-white p-4 rounded-lg shadow-md border-l-4 border-purple-400">
+              <h3 className="font-semibold text-gray-700 mb-1">متوسط الكلمات</h3>
+              <p className="text-xl text-purple-600 font-bold">
+                {filteredPrompts.length > 0 ? Math.round(filteredPrompts.reduce((sum, p) => sum + p.tokens, 0) / filteredPrompts.length) : 0}
+              </p>
+            </div>
+          </div>
 
           {/* قائمة البرومبتات */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {prompts.length > 0 ? (
-              prompts.map(prompt => {
+            {filteredPrompts.length > 0 ? (
+              filteredPrompts.map(prompt => {
                 const cardColor = (() => {
                   switch (prompt.category) {
                     case 'البرمجة والتطوير': return 'border-red-400';
@@ -182,8 +164,6 @@
                       <span>ID: `{prompt.id}`</span>
                       <span>Tokens: `{prompt.tokens}`</span>
                     </div>
-
-                    {/* زر نسخ بدون نص */}
                     <div className="mt-4 flex justify-end">
                       <button
                         onClick={() => copyPromptText(prompt.text)}
@@ -191,7 +171,7 @@
                         title="نسخ النص"
                       >
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h12a2 2 0 012 2v7.5a2 2 0 01-2 2H10m-2 2h8m-8 2h8" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h12a2 2 0 012 2v2a2 2 0 01-2 2h-2m-8 0H6a2 2 0 00-2 2v8a2 2 0 002 2h8a2 2 0 002-2v-8a2 2 0 00-2-2H6z" />
                         </svg>
                       </button>
                     </div>
@@ -199,7 +179,9 @@
                 );
               })
             ) : (
-              <p className="col-span-full text-center py-10 text-gray-500">لا توجد برومبتات مضافة لهذا القسم بعد.</p>
+              <p className="col-span-full text-center py-10 text-gray-500">
+                لا توجد برومبتات تطابق البحث.
+              </p>
             )}
           </div>
         </div>
