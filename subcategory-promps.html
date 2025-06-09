@@ -2,86 +2,205 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8" />
-  <title>برومبتات القسم الفرعي - Promptica</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <!-- Tailwind CSS -->
+  <title>برومبتات - {subCategory}</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  
+  <!-- React + ReactDOM -->
+  <script src="https://unpkg.com/react@18/umd/react.development.js"  crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"  crossorigin></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>  
+
+  <!-- Tailwind CSS CDN -->
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"  rel="stylesheet" />
+
+  <!-- Internal Styles -->
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f9fafb;
+      color: #1f2937;
+      line-height: 1.8;
+    }
+    .line-clamp-3 {
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    @media (max-width: 640px) {
+      html {
+        font-size: 16px;
+      }
+      textarea {
+        font-size: 0.875rem;
+        padding: 0.75rem;
+      }
+    }
+  </style>
 </head>
 <body class="min-h-screen bg-gray-50 p-4">
-
-  <!-- Banner -->
-  <div class="mb-6">
-    <img src="banner.png" alt="بانير موقع Promptica" class="w-full h-auto rounded-lg shadow-md object-cover max-h-64">
-  </div>
-
   <!-- Header -->
   <header class="flex justify-between items-center pb-4 border-b border-gray-200 mb-6">
     <h1 class="text-2xl sm:text-3xl font-bold text-indigo-700 flex items-center">
-      <img src="logo1.png" alt="شعار Promptica" class="w-8 h-8 ml-2" />
       Promptica
     </h1>
-    <a href="index.html" class="text-indigo-600 hover:text-indigo-800 underline">الرئيسية</a>
+    <div class="space-x-4 rtl:space-x-reverse">
+      <a href="index.html" class="text-indigo-600 hover:text-indigo-800 underline">← الرجوع إلى لوحة التحكم</a>
+    </div>
   </header>
 
-  <main class="max-w-4xl mx-auto">
-    <section class="bg-white p-6 rounded-lg shadow-md space-y-6">
-      <h2 id="promptTitle" class="text-xl font-bold text-gray-800">جاري التحميل...</h2>
-      <div id="promptsList" class="space-y-4 mt-4"></div>
-    </section>
-  </main>
+  <!-- Root Div for React App -->
+  <div id="root"></div>
 
+  <!-- Footer -->
   <footer class="mt-8 pt-4 border-t border-gray-200 text-center text-sm text-gray-500">
     &copy; {{new Date().getFullYear()}} Promptica. جميع الحقوق محفوظة.
   </footer>
 
-  <script>
-    // قراءة المعلمات من الرابط
-    const urlParams = new URLSearchParams(window.location.search);
-    const mainCategory = decodeURIComponent(urlParams.get('main') || '');
-    const subCategory = decodeURIComponent(urlParams.get('sub') || '');
+  <!-- React Code -->
+  <script type="text/babel">
+    const { useState, useEffect } = window.React;
 
-    // عنوان الصفحة
-    const titleElement = document.getElementById("promptTitle");
-    if (!mainCategory || !subCategory) {
-      titleElement.textContent = "لم يتم تحديد القسم الفرعي";
-    } else {
-      titleElement.textContent = `برومبتات القسم الفرعي: ${mainCategory} → ${subCategory}`;
-    }
+    function App() {
+      // قراءة القسم الفرعي من الرابط
+      const [prompts, setPrompts] = useState([]);
+      const [mainCategory, setMainCategory] = useState('');
+      const [subCategory, setSubCategory] = useState('');
+      const [searchTerm, setSearchTerm] = useState('');
 
-    // قراءة البيانات من localStorage
-    const prompts = JSON.parse(localStorage.getItem('prompts')) || [];
+      // تحميل البيانات عند بدء الصفحة
+      useEffect(() => {
+        const urlParams = new URLSearchParams(window.location.search);
+        const main = decodeURIComponent(urlParams.get('main') || '');
+        const sub = decodeURIComponent(urlParams.get('sub') || '');
 
-    // تصفية البرومبتات بناءً على القسم الرئيسي والفرعي
-    const listContainer = document.getElementById("promptsList");
-    const filteredPrompts = prompts.filter(p =>
-      p.category === mainCategory && p.subCategory === subCategory
-    );
+        setMainCategory(main);
+        setSubCategory(sub);
 
-    if (filteredPrompts.length === 0) {
-      const noPrompt = document.createElement("p");
-      noPrompt.className = "text-gray-500 text-center py-4";
-      noPrompt.textContent = "لا توجد برومبتات مضافة لهذا القسم الفرعي.";
-      listContainer.appendChild(noPrompt);
-    } else {
-      filteredPrompts.forEach(prompt => {
-        const div = document.createElement("div");
-        div.className = "bg-white p-4 rounded shadow hover:bg-gray-50 transition";
-        div.innerHTML = `
-          <div class="font-medium text-indigo-700 mb-2">[${prompt.category} → ${prompt.subCategory}]</div>
-          <p class="text-gray-800 mb-4">${prompt.text}</p>
-          <div class="flex justify-end space-x-3 rtl:space-x-reverse">
-            <button onclick='copyText("${prompt.text}")' class="text-blue-600 hover:text-blue-800">نسخ</button>
+        const savedPrompts = JSON.parse(localStorage.getItem('prompts')) || [];
+        const filtered = savedPrompts.filter(p => p.subCategory === sub && p.category === main);
+        setPrompts(filtered);
+      }, []);
+
+      // تحديث البحث
+      useEffect(() => {
+        const urlParams = new URLSearchParams(window.location.search);
+        const main = decodeURIComponent(urlParams.get('main') || '');
+        const sub = decodeURIComponent(urlParams.get('sub') || '');
+        const savedPrompts = JSON.parse(localStorage.getItem('prompts')) || [];
+
+        const filtered = savedPrompts.filter(p => p.subCategory === sub && p.category === main);
+        const lowerSearch = searchTerm.toLowerCase();
+
+        if (!searchTerm.trim()) {
+          setPrompts(filtered);
+          return;
+        }
+
+        const searched = filtered.filter(p =>
+          p.text.toLowerCase().includes(lowerSearch)
+        );
+        setPrompts(searched);
+      }, [searchTerm]);
+
+      // 📋 نسخ النص
+      const copyPromptText = (text) => {
+        navigator.clipboard.writeText(text);
+        alert("✅ تم النسخ!");
+      };
+
+      // 📊 إحصاءات القسم الفرعي
+      const getStats = () => {
+        const count = prompts.length;
+        const totalTokens = prompts.reduce((sum, p) => sum + p.tokens, 0);
+        const averageTokens = count > 0 ? Math.round(totalTokens / count) : 0;
+        return { count, totalTokens, averageTokens };
+      };
+
+      const stats = getStats();
+
+      return (
+        <div className="container mx-auto max-w-4xl">
+          <h2 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-6">
+            برومبتات القسم:
+            <span className="text-blue-600 mr-2">{mainCategory}</span> → 
+            <span className="text-purple-600 mr-2">{subCategory}</span>
+          </h2>
+
+          {/* شريط البحث */}
+          <div className="mb-6">
+            <input
+              type="text"
+              placeholder="🔍 ابحث في برومبتات هذا القسم..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 shadow-sm hover:shadow transition-shadow"
+            />
           </div>
-        `;
-        listContainer.appendChild(div);
-      });
+
+          {/* إحصاءات */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+            <div className="bg-white p-4 rounded-lg shadow-md border-l-4 border-blue-400">
+              <h3 className="font-semibold text-gray-700 mb-1">عدد البرومبتات</h3>
+              <p className="text-xl text-blue-600 font-bold">{stats.count}</p>
+            </div>
+            <div className="bg-white p-4 rounded-lg shadow-md border-l-4 border-green-400">
+              <h3 className="font-semibold text-gray-700 mb-1">إجمالي الكلمات (tokens)</h3>
+              <p className="text-xl text-green-600 font-bold">{stats.totalTokens}</p>
+            </div>
+            <div className="bg-white p-4 rounded-lg shadow-md border-l-4 border-purple-400">
+              <h3 className="font-semibold text-gray-700 mb-1">متوسط الكلمات</h3>
+              <p className="text-xl text-purple-600 font-bold">{stats.averageTokens}</p>
+            </div>
+          </div>
+
+          {/* قائمة البرومبتات */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {prompts.length > 0 ? (
+              prompts.map(prompt => (
+                <div
+                  key={prompt.id}
+                  className={`bg-white p-5 rounded-lg shadow-sm hover:shadow-md transition-all duration-200 border-l-4 ${(() => {
+                    switch (prompt.category) {
+                      case 'البرمجة والتطوير': return 'border-red-400';
+                      case 'التسويق الرقمي': return 'border-blue-400';
+                      case 'الكتابة الإبداعية': return 'border-purple-400';
+                      case 'تحليل البيانات': return 'border-green-400';
+                      default: return 'border-gray-300';
+                    }
+                  })()}`}
+                >
+                  <div className="font-medium text-indigo-700 mb-3">
+                    [{prompt.category} → {prompt.subCategory}]
+                  </div>
+                  <p className="text-gray-800 mb-4 line-clamp-3">{prompt.text}</p>
+                  <div className="flex justify-between items-center text-xs text-gray-500">
+                    <span>ID: `{prompt.id}`</span>
+                    <span>Tokens: `{prompt.tokens}`</span>
+                  </div>
+                  <div className="mt-4 flex justify-end">
+                    <button
+                      onClick={() => copyPromptText(prompt.text)}
+                      className="text-blue-600 hover:text-blue-800 transition-colors flex items-center space-x-1 rtl:space-x-reverse"
+                      title="نسخ النص"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h12a2 2 0 012 2v2a2 2 0 01-2 2h-2m-4 10H8a2 2 0 01-2-2v-4a2 2 0 012-2h10a2 2 0 012 2v4a2 2 0 01-2 2z" />
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <p className="col-span-full text-center py-10 text-gray-500">لا توجد برومبتات مضافة لهذا القسم الفرعي بعد.</p>
+            )}
+          </div>
+        </div>
+      );
     }
 
-    // 📋 نسخ نص البرومبت
-    function copyText(text) {
-      navigator.clipboard.writeText(text);
-      alert("تم النسخ!");
-    }
+    const root = window.ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
   </script>
 </body>
 </html>
