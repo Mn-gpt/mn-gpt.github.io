@@ -1,4 +1,4 @@
-<DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8" />
@@ -68,6 +68,12 @@
       useEffect(() => {
         const urlParams = new URLSearchParams(window.location.search);
         const main = decodeURIComponent(urlParams.get('main') || '');
+        if (!main) {
+          alert("خطأ: لم يتم تحديد القسم الرئيسي.");
+          window.location.href = "index.html";
+          return;
+        }
+
         setMainCategory(main);
 
         const savedSubCategories = JSON.parse(localStorage.getItem('subCategories')) || {};
@@ -218,7 +224,7 @@
       );
     }
 
-    const root = window.ReactDOM.createRoot(document.getElementById('root'));
+    const root = ReactDOM.createRoot(document.getElementById('root'));
     root.render(<App />);
   </script>
 </body>
