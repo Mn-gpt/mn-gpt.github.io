@@ -5,12 +5,15 @@
   <title>استيراد البيانات - Promptica</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <!-- Tailwind CSS -->
-  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"  rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet" />
   <style>
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       background-color: #f9fafb;
       color: #1f2937;
+    }
+    .alert {
+      transition: opacity 0.3s ease;
     }
   </style>
 </head>
@@ -33,40 +36,77 @@
   <main class="max-w-4xl mx-auto">
     <section class="bg-white p-6 rounded-lg shadow-md space-y-6">
       <h2 class="text-xl font-bold text-gray-800">استيراد البيانات من Markdown</h2>
-      <p class="text-sm text-gray-600">ألصق النص الكامل هنا، وسنقوم باستيراد الأقسام الرئيسية والفرعية تلقائيًا.</p>
+      <p class="text-sm text-gray-600">ألصق النص الكامل هنا، وسنقوم باستيراد الأقسام الرئيسية والفرعية تلقائيًا مع الاحتفاظ بالبيانات السابقة.</p>
 
       <textarea id="markdownInput" rows="20"
         placeholder="ضع نص Markdown هنا..."
         class="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"></textarea>
 
-      <button onclick="importData()"
-        class="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded transition">
-        ➕ استيراد البيانات
-      </button>
+      <div class="flex gap-3">
+        <button onclick="importData()"
+          class="flex-1 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded transition">
+          ➕ استيراد البيانات
+        </button>
+        
+        <button onclick="clearData()"
+          class="flex-1 py-3 bg-gray-500 hover:bg-gray-600 text-white font-medium rounded transition">
+          🗑️ مسح جميع البيانات
+        </button>
+      </div>
 
-      <div id="output" class="mt-4 text-sm text-gray-600"></div>
+      <div id="output" class="mt-4 p-4 rounded-lg alert hidden"></div>
     </section>
   </main>
 
   <footer class="mt-8 pt-4 border-t border-gray-200 text-center text-sm text-gray-500">
-    &copy; {{new Date().getFullYear()}} Promptica. جميع الحقوق محفوظة.
+    &copy; <span id="currentYear"></span> Promptica. جميع الحقوق محفوظة.
   </footer>
 
   <script>
+    // تحديد سنة حقوق النشر
+    document.getElementById('currentYear').textContent = new Date().getFullYear();
+
+    // دالة مسح جميع البيانات
+    function clearData() {
+      if(confirm('هل أنت متأكد من رغبتك في مسح جميع البيانات؟ لا يمكن التراجع عن هذا الإجراء.')) {
+        localStorage.clear();
+        showAlert('تم مسح جميع البيانات بنجاح!', 'green');
+      }
+    }
+
+    // دالة عرض التنبيهات
+    function showAlert(message, color = 'blue') {
+      const outputDiv = document.getElementById('output');
+      outputDiv.innerHTML = message;
+      outputDiv.className = `mt-4 p-4 rounded-lg alert bg-${color}-100 text-${color}-800`;
+      outputDiv.classList.remove('hidden');
+      
+      setTimeout(() => {
+        outputDiv.classList.add('hidden');
+      }, 5000);
+    }
+
+    // دالة استيراد البيانات (معدلة)
     function importData() {
       const input = document.getElementById("markdownInput").value.trim();
       if (!input) {
-        alert("يرجى إدخال نص");
+        showAlert("يرجى إدخال نص", "red");
         return;
       }
 
       const lines = input.split("\n");
-
       let currentCategory = "";
       let currentSubCategory = "";
-      const prompts = [];
-      const categories = new Set();
-      const subCategories = {};
+      
+      // جلب البيانات الحالية
+      const existingPrompts = JSON.parse(localStorage.getItem("prompts")) || [];
+      const existingCategories = JSON.parse(localStorage.getItem("categories")) || [];
+      const existingSubCategories = JSON.parse(localStorage.getItem("subCategories")) || {};
+      
+      // إنشاء مجموعات للبيانات الجديدة
+      const newPrompts = [];
+      const newCategoriesSet = new Set(existingCategories);
+      const newSubCategories = {...existingSubCategories};
 
       lines.forEach(line => {
         line = line.trim();
@@ -75,9 +115,9 @@
         if (line.startsWith("# ")) {
           currentCategory = line.substring(2).trim();
           if (currentCategory) {
-            categories.add(currentCategory);
-            if (!subCategories[currentCategory]) {
-              subCategories[currentCategory] = new Set();
+            newCategoriesSet.add(currentCategory);
+            if (!newSubCategories[currentCategory]) {
+              newSubCategories[currentCategory] = new Set(existingSubCategories[currentCategory] || []);
             }
           }
           currentSubCategory = "";
@@ -86,56 +126,73 @@
         } else if (line.startsWith("## ")) {
           currentSubCategory = line.substring(3).trim();
           if (currentCategory && currentSubCategory) {
-            subCategories[currentCategory].add(currentSubCategory);
+            if (newSubCategories[currentCategory]) {
+              newSubCategories[currentCategory].add(currentSubCategory);
+            } else {
+              newSubCategories[currentCategory] = new Set([currentSubCategory]);
+            }
           }
 
         // البرومبت
         } else if (line.startsWith("- ") && currentCategory) {
           const promptText = line.substring(2).trim();
           if (promptText) {
-            prompts.push({
-              id: Date.now() + Math.floor(Math.random() * 1000),
-              text: promptText,
-              category: currentCategory,
-              subCategory: currentSubCategory || "",
-              tokens: Math.ceil(promptText.split(/\s+/).length * 1.25)
-            });
+            // تجنب التكرار
+            const isDuplicate = existingPrompts.some(p => 
+              p.text === promptText && 
+              p.category === currentCategory && 
+              p.subCategory === currentSubCategory
+            );
+            
+            if (!isDuplicate) {
+              newPrompts.push({
+                id: Date.now() + Math.floor(Math.random() * 1000),
+                text: promptText,
+                category: currentCategory,
+                subCategory: currentSubCategory || "",
+                tokens: Math.ceil(promptText.split(/\s+/).length * 1.25),
+                createdAt: new Date().toISOString()
+              });
+            }
           }
-        }
       });
 
-      // تحويل البيانات إلى صيغة JSON
-      const processedCategories = Array.from(categories);
+      // تحويل المجموعات إلى مصفوفات
+      const allPrompts = [...existingPrompts, ...newPrompts];
+      const allCategories = Array.from(newCategoriesSet);
+      
+      // تحويل Set إلى Array للأقسام الفرعية
       const processedSubCategories = {};
-      Object.keys(subCategories).forEach(cat => {
-        processedSubCategories[cat] = Array.from(subCategories[cat]);
+      Object.keys(newSubCategories).forEach(cat => {
+        processedSubCategories[cat] = Array.from(newSubCategories[cat]);
       });
 
-      // حفظ البيانات في localStorage
-      localStorage.setItem("prompts", JSON.stringify(prompts));
-      localStorage.setItem("categories", JSON.stringify(processedCategories));
+      // حفظ البيانات المحدثة
+      localStorage.setItem("prompts", JSON.stringify(allPrompts));
+      localStorage.setItem("categories", JSON.stringify(allCategories));
       localStorage.setItem("subCategories", JSON.stringify(processedSubCategories));
 
-      // عرض رسالة نجاح
-      const outputDiv = document.getElementById("output");
-      outputDiv.innerHTML = `
-        ✅ تم استيراد البيانات بنجاح!
-        <ul class="list-disc mt-2 mr-5 space-y-1">
-          <li><strong>عدد البرومبتات:</strong> ${prompts.length}</li>
-          <li><strong>الأقسام الرئيسية:</strong> ${processedCategories.join(", ")}</li>
-          <li><strong>الأقسام الفرعية:</strong></li>
-          <ul class="list-inside list-disc mr-5 space-y-1">
-            ${Object.entries(processedSubCategories).map(([main, subs]) =>
-              `<li>${main}: ${subs.join(", ")}</li>`
-            ).join("")}
-          </ul>
-        </ul>
-        <p class="mt-4 text-green-600">→ سيتم إعادة توجيهك إلى الصفحة الرئيسية...</p>
-      `;
+      // إعداد رسالة النجاح
+      const addedCount = newPrompts.length;
+      const duplicateCount = lines.filter(l => l.startsWith("- ")).length - addedCount;
+      
+      let message = `✅ تم استيراد البيانات بنجاح!`;
+      message += `<ul class="list-disc mt-2 mr-5 space-y-1">`;
+      message += `<li><strong>البرومبتات المضافة:</strong> ${addedCount}</li>`;
+      
+      if (duplicateCount > 0) {
+        message += `<li><strong>البرومبتات المكررة (لم تتم إضافتها):</strong> ${duplicateCount}</li>`;
+      }
+      
+      message += `<li><strong>إجمالي البرومبتات:</strong> ${allPrompts.length}</li>`;
+      message += `<li><strong>الأقسام الرئيسية:</strong> ${allCategories.join(", ")}</li>`;
+      message += `</ul>`;
+      
+      // عرض رسالة النجاح
+      showAlert(message, 'green');
 
-      setTimeout(() => {
-        window.location.href = "index.html";
-      }, 3000);
+      // مسح حقل الإدخال بعد الاستيراد
+      document.getElementById("markdownInput").value = "";
     }
   </script>
 </body>
