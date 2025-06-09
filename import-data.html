@@ -1,127 +1,178 @@
-<!DOCTYPE html>
+<DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8" />
   <title>استيراد البيانات</title>
+  <!-- React + ReactDOM -->
   <script src="https://unpkg.com/react@18/umd/react.development.js"  crossorigin></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"  crossorigin></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script> 
+  <!-- Tailwind CSS -->
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"  rel="stylesheet" />
 </head>
-<body class="bg-gray-50 p-6 min-h-screen">
+<body class="bg-gray-50 p-6 min-h-screen font-sans">
   <div id="root"></div>
 
   <script type="text/babel">
     const App = () => {
       const [message, setMessage] = React.useState('');
-      const fileInputRef = React.useRef(null);
+      const [markdownText, setMarkdownText] = React.useState('');
 
-      // معالجة ملف Markdown
+      // معالجة النص المنسوخ
+      const handlePaste = (e) => {
+        const text = e.target.value;
+        setMarkdownText(text);
+      };
+
+      // معالجة رفع الملف
       const handleFileUpload = (e) => {
         const file = e.target.files[0];
         if (!file) return;
 
         const reader = new FileReader();
         reader.onload = (event) => {
-          const content = event.target.result;
-          const existingPrompts = JSON.parse(localStorage.getItem('prompts')) || [];
-
-          // استخراج البرومبتات من النص
-          const lines = content.split('\n');
-          const newPrompts = [];
-
-          let currentCategory = '';
-          let currentSubCategory = '';
-
-          lines.forEach(line => {
-            line = line.trim();
-            const promptMatch = line.match(/^(\d+\.|\-|\*)\s+\$\$(.*?)\$\$\s+(.+?)(?:\s*-\s*`ID:\s*(\d+)`)?(?:\s*-\s*`tokens:\s*(\d+)`)?$/);
-            if (!promptMatch) return;
-
-            const [, , categoryPart = '', text = '', idStr = '', tokensStr = ''] = promptMatch;
-            let mainCat = 'عام';
-            let subCat = '';
-
-            if (categoryPart.includes('→')) {
-              [mainCat, subCat] = categoryPart.split('→').map(s => s.trim());
-            } else if (categoryPart.includes(':')) {
-              [mainCat, subCat] = categoryPart.split(':').map(s => s.trim());
-            } else {
-              mainCat = categoryPart.trim() || 'عام';
-            }
-
-            const id = parseInt(idStr) || Date.now() + Math.floor(Math.random() * 1000);
-            const tokens = parseInt(tokensStr) || Math.ceil(text.split(/\s+/).length * 1.25);
-
-            newPrompts.push({
-              id,
-              text,
-              category: mainCat,
-              subCategory: subCat,
-              tokens,
-            });
-          });
-
-          // تحديث الأقسام الفرعية
-          const existingCategories = JSON.parse(localStorage.getItem('categories')) || [];
-          const existingSubCategories = JSON.parse(localStorage.getItem('subCategories')) || {};
-
-          newPrompts.forEach(prompt => {
-            const { category, subCategory } = prompt;
-
-            // إضافة القسم الرئيسي إذا لم يكن موجودًا
-            if (!existingCategories.includes(category)) {
-              existingCategories.push(category);
-            }
-
-            // إضافة القسم الفرعي إذا كان موجودًا
-            if (subCategory) {
-              if (!existingSubCategories[category]) {
-                existingSubCategories[category] = [];
-              }
-              if (!existingSubCategories[category].includes(subCategory)) {
-                existingSubCategories[category].push(subCategory);
-              }
-            }
-          });
-
-          // دمج البرومبتات الجديدة مع القائمة الحالية
-          const updatedPrompts = [...existingPrompts, ...newPrompts];
-          localStorage.setItem('prompts', JSON.stringify(updatedPrompts));
-          localStorage.setItem('categories', JSON.stringify(existingCategories));
-          localStorage.setItem('subCategories', JSON.stringify(existingSubCategories));
-
-          setMessage(`✅ تم استيراد ${newPrompts.length} برومبت جديد.`);
-          fileInputRef.current.value = '';
+          setMarkdownText(event.target.result);
         };
-
         reader.readAsText(file);
       };
 
+      // استخراج البرومبتات من النص
+      const parsePromptsFromMarkdown = (content) => {
+        const lines = content.split('\n');
+        const newPrompts = [];
+
+        let currentCategory = '';
+        let currentSubCategory = '';
+
+        lines.forEach(line => {
+          line = line.trim();
+          // البحث عن القسم الرئيسي أو الفرعي
+          const categoryMatch = line.match(/^##\s*(.+?)(:\s*(.+))?$/);
+          if (categoryMatch) {
+            currentCategory = (categoryMatch[1] || '').trim();
+            currentSubCategory = (categoryMatch[3] || '').trim();
+          }
+
+          // البحث عن برومبت
+          const promptMatch = line.match(/^(\d+\.|\-|\*)\s*\$\$(.*?)\$\$\s+(.+?)(?:\s*-\s*`ID:\s*(\d+)`)?(?:\s*-\s*`tokens:\s*(\d+)`)?$/);
+          if (!promptMatch) return;
+
+          const [, , categoryPart = '', text = '', idStr = '', tokensStr = ''] = promptMatch;
+          let mainCat = 'عام';
+          let subCat = '';
+
+          if (categoryPart.includes('→')) {
+            [mainCat, subCat] = categoryPart.split('→').map(s => s.trim());
+          } else if (categoryPart.includes(':')) {
+            [mainCat, subCat] = categoryPart.split(':').map(s => s.trim());
+          } else if (categoryPart.trim()) {
+            mainCat = categoryPart.trim();
+          }
+
+          const id = parseInt(idStr) || Date.now() + Math.floor(Math.random() * 1000);
+          const tokens = parseInt(tokensStr) || Math.ceil(text.split(/\s+/).length * 1.25);
+
+          newPrompts.push({
+            id,
+            text,
+            category: mainCat,
+            subCategory: subCat,
+            tokens,
+          });
+        });
+
+        return newPrompts;
+      };
+
+      // عند الضغط على زر الاستيراد
+      const handleImport = () => {
+        if (!markdownText.trim()) {
+          alert("الرجاء إدخال بيانات صحيحة.");
+          return;
+        }
+
+        const existingPrompts = JSON.parse(localStorage.getItem('prompts')) || [];
+        const existingCategories = JSON.parse(localStorage.getItem('categories')) || [];
+        const existingSubCategories = JSON.parse(localStorage.getItem('subCategories')) || {};
+
+        const newPrompts = parsePromptsFromMarkdown(markdownText);
+
+        // تحديث الأقسام
+        newPrompts.forEach(prompt => {
+          const { category, subCategory } = prompt;
+
+          // إضافة القسم إن لم يكن موجودًا
+          if (!existingCategories.includes(category)) {
+            existingCategories.push(category);
+          }
+
+          // إضافة القسم الفرعي إن لم يكن موجودًا
+          if (subCategory) {
+            if (!existingSubCategories[category]) {
+              existingSubCategories[category] = [];
+            }
+            if (!existingSubCategories[category].includes(subCategory)) {
+              existingSubCategories[category].push(subCategory);
+            }
+          }
+        });
+
+        // دمج البرومبتات الجديدة مع القائمة الحالية
+        const updatedPrompts = [...existingPrompts, ...newPrompts];
+
+        localStorage.setItem('prompts', JSON.stringify(updatedPrompts));
+        localStorage.setItem('categories', JSON.stringify(existingCategories));
+        localStorage.setItem('subCategories', JSON.stringify(existingSubCategories));
+
+        setMessage(`✅ تم استيراد ${newPrompts.length} برومبت جديد.`);
+      };
+
       return (
-        <div className="max-w-2xl mx-auto bg-white p-6 rounded shadow-md">
+        <div className="max-w-4xl mx-auto bg-white p-6 rounded-lg shadow-md">
           <h1 className="text-2xl font-bold mb-6">استيراد البيانات</h1>
           <p className="mb-4 text-gray-700">
-            ارفع ملف Markdown (.md) أو نصي (.txt) يحتوي على برومبتات جديدة. سيتم إضافتها إلى بياناتك الحالية.
+            يمكنك نسخ لصق ملف Markdown (.md) أو TXT يحتوي على برومبتات جديدة أدناه، أو رفع ملف.
+            سيتم إضافة البرومبتات إلى بياناتك الحالية دون حذفها.
           </p>
 
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept=".md,.txt"
-            onChange={handleFileUpload}
-            className="mb-4"
+          {/* نسخ ولصق */}
+          <textarea
+            value={markdownText}
+            onChange={handlePaste}
+            placeholder="ألصق محتوى Markdown هنا..."
+            className="w-full h-64 p-4 border border-gray-300 rounded mb-4"
           />
 
+          {/* رفع ملف */}
+          <div className="mb-6">
+            <label className="block text-sm font-medium text-gray-700 mb-2">أو ارفع ملف:</label>
+            <input
+              type="file"
+              accept=".md,.txt"
+              onChange={handleFileUpload}
+              className="w-full"
+            />
+          </div>
+
+          {/* زر الاستيراد */}
+          <button
+            onClick={handleImport}
+            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+          >
+            📥 استيراد البيانات
+          </button>
+
+          {/* رسالة النجاح */}
           {message && (
             <div className="mt-4 p-3 bg-green-100 text-green-800 rounded border border-green-300">
               {message}
             </div>
           )}
 
-          <div className="mt-6 text-sm text-gray-500">
-            <h3 className="font-semibold mb-2">مثال على تنسيق الملف:</h3>
-            <pre className="bg-gray-100 p-3 rounded overflow-x-auto">
+          {/* مثال على التنسيق */}
+          <div className="mt-6 text-sm text-gray-600">
+            <h3 className="font-semibold mb-2">مثال على التنسيق:</h3>
+            <pre className="bg-gray-100 p-3 rounded overflow-x-auto whitespace-pre-wrap">
 {`## تعليمي: رياضيات
 1. **[تعليمي]:[رياضيات]** اشرح مفهوم التفاضل بطريقة بسيطة.
    - \`ID: 101\`
