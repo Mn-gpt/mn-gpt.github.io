@@ -503,11 +503,6 @@
               </div>
             </div>
 
-            {/* إدارة الأقسام الفرعية */}
-
-
-            
-
             {/* إحصاءات الأقسام */}
             {categories.length > 0 && (
               <div className="mt-8">
@@ -639,8 +634,7 @@
                   ➕ إضافة قسم رئيسي جديد
                 </button>
               </div>
-            </form>
-{isUserAdmin && (
+              {isUserAdmin && (
   <div className="mt-8">
     <a href="edit-subcategories.html?main={{encodeURIComponent(category)}}" className="text-purple-600 hover:text-purple-800 underline">→ إدارة الأقسام الفرعية</a>
     
@@ -676,6 +670,9 @@
     </div>
   </div>
 )}
+            </form>
+  {/* إدارة الأقسام الفرعية */}
+
             {/* زر استيراد البيانات */}
             {isUserAdmin && (
               <div className="mt-4">
