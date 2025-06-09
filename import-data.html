@@ -69,7 +69,9 @@
     // دالة مسح جميع البيانات
     function clearData() {
       if(confirm('هل أنت متأكد من رغبتك في مسح جميع البيانات؟ لا يمكن التراجع عن هذا الإجراء.')) {
-        localStorage.clear();
+        localStorage.removeItem('prompts');
+        localStorage.removeItem('categories');
+        localStorage.removeItem('subCategories');
         showAlert('تم مسح جميع البيانات بنجاح!', 'green');
       }
     }
@@ -86,7 +88,7 @@
       }, 5000);
     }
 
-    // دالة استيراد البيانات (معدلة)
+    // دالة استيراد البيانات (معدلة للتوافق مع باقي الصفحات)
     function importData() {
       const input = document.getElementById("markdownInput").value.trim();
       if (!input) {
@@ -98,7 +100,7 @@
       let currentCategory = "";
       let currentSubCategory = "";
       
-      // جلب البيانات الحالية
+      // جلب البيانات الحالية (باستخدام نفس المفاتيح المستخدمة في باقي الصفحات)
       const existingPrompts = JSON.parse(localStorage.getItem("prompts")) || [];
       const existingCategories = JSON.parse(localStorage.getItem("categories")) || [];
       const existingSubCategories = JSON.parse(localStorage.getItem("subCategories")) || {};
@@ -111,18 +113,18 @@
       lines.forEach(line => {
         line = line.trim();
 
-        // القسم الرئيسي
+        // القسم الرئيسي (يجب أن يبدأ بـ # مع مسافة)
         if (line.startsWith("# ")) {
           currentCategory = line.substring(2).trim();
           if (currentCategory) {
             newCategoriesSet.add(currentCategory);
             if (!newSubCategories[currentCategory]) {
-              newSubCategories[currentCategory] = new Set(existingSubCategories[currentCategory] || []);
+              newSubCategories[currentCategory] = new Set();
             }
           }
           currentSubCategory = "";
 
-        // القسم الفرعي
+        // القسم الفرعي (يجب أن يبدأ بـ ## مع مسافة)
         } else if (line.startsWith("## ")) {
           currentSubCategory = line.substring(3).trim();
           if (currentCategory && currentSubCategory) {
@@ -133,15 +135,14 @@
             }
           }
 
-        // البرومبت
+        // البرومبت (يجب أن يبدأ بـ - مع مسافة)
         } else if (line.startsWith("- ") && currentCategory) {
           const promptText = line.substring(2).trim();
           if (promptText) {
-            // تجنب التكرار
+            // تجنب التكرار بناءً على النص والقسم
             const isDuplicate = existingPrompts.some(p => 
               p.text === promptText && 
-              p.category === currentCategory && 
-              p.subCategory === currentSubCategory
+              p.category === currentCategory
             );
             
             if (!isDuplicate) {
@@ -149,12 +150,12 @@
                 id: Date.now() + Math.floor(Math.random() * 1000),
                 text: promptText,
                 category: currentCategory,
-                subCategory: currentSubCategory || "",
-                tokens: Math.ceil(promptText.split(/\s+/).length * 1.25),
-                createdAt: new Date().toISOString()
+                subCategory: currentSubCategory || "عام",
+                tokens: Math.ceil(promptText.split(/\s+/).length * 1.25)
               });
             }
           }
+        }
       });
 
       // تحويل المجموعات إلى مصفوفات
@@ -167,7 +168,7 @@
         processedSubCategories[cat] = Array.from(newSubCategories[cat]);
       });
 
-      // حفظ البيانات المحدثة
+      // حفظ البيانات المحدثة (باستخدام نفس المفاتيح)
       localStorage.setItem("prompts", JSON.stringify(allPrompts));
       localStorage.setItem("categories", JSON.stringify(allCategories));
       localStorage.setItem("subCategories", JSON.stringify(processedSubCategories));
