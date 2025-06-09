@@ -1,4 +1,4 @@
-<DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8" />
@@ -64,112 +64,68 @@
     function App() {
       const [mainCategory, setMainCategory] = useState('');
       const [subCategory, setSubCategory] = useState('');
-      const [markdownText, setMarkdownText] = useState('');
+      const [promptTexts, setPromptTexts] = useState(['']);
       const [message, setMessage] = useState('');
 
-      // قراءة اسم القسم من الرابط
-      useEffect(() => {
-        const urlParams = new URLSearchParams(window.location.search);
-        const main = decodeURIComponent(urlParams.get('main') || '');
-        if (!main) {
-          alert("خطأ: لم يتم تحديد القسم الرئيسي.");
-          window.location.href = "index.html";
-          return;
-        }
-
-        setMainCategory(main);
-      }, []);
-
-      // معالجة رفع الملف
-      const handleFileUpload = (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
-
-        const reader = new FileReader();
-        reader.onload = (event) => {
-          setMarkdownText(event.target.result);
-        };
-        reader.readAsText(file);
+      // إضافة نص برومبت جديد
+      const handleAddPrompt = () => {
+        setPromptTexts([...promptTexts, '']);
       };
 
-      // استخراج البيانات من Markdown
-      const parseSubCategoryFromMarkdown = (content) => {
-        const lines = content.split('\n');
-        let subCat = '';
-        const prompts = [];
+      // تحديث نص معين
+      const handlePromptChange = (e, index) => {
+        const newPrompts = [...promptTexts];
+        newPrompts[index] = e.target.value;
+        setPromptTexts(newPrompts);
+      };
 
-        // التقاط القسم الفرعي
-        lines.forEach(line => {
-          line = line.trim();
-
-          const categoryMatch = line.match(/^##\s*(.+?):\s*(.+)$/);
-          if (categoryMatch) {
-            const [, main, sub] = categoryMatch;
-            if (decodeURIComponent(main).trim() === mainCategory) {
-              subCat = decodeURIComponent(sub).trim();
-            }
-          }
-
-          const promptMatch = line.match(/^\-\s*(.+?)(?:\s*-\s*`ID:\s*(\d+)`)?(?:\s*-\s*`tokens:\s*(\d+)`)?$/);
-          if (promptMatch) {
-            const text = promptMatch[1].trim();
-            const id = parseInt(promptMatch[2]) || Date.now() + Math.floor(Math.random() * 1000);
-            const tokens = parseInt(promptMatch[3]) || Math.ceil(text.split(/\s+/).length * 1.25);
-
-            prompts.push({
-              id,
-              text,
-              category: mainCategory,
-              subCategory: subCat,
-              tokens
-            });
-          }
-        });
-
-        return {
-          subCategory: subCat,
-          prompts
-        };
+      // حذف نص برومبت
+      const handleRemovePrompt = (index) => {
+        if (promptTexts.length === 1) return;
+        const newPrompts = promptTexts.filter((_, i) => i !== index);
+        setPromptTexts(newPrompts);
       };
 
       // عند الضغط على زر الاستيراد
-      const handleImport = () => {
-        if (!markdownText.trim()) {
-          alert("الرجاء إدخال بيانات صحيحة.");
+      const handleSubmit = () => {
+        if (!mainCategory || !subCategory) {
+          alert("الرجاء اختيار القسم الرئيسي وإدخال اسم القسم الفرعي.");
           return;
         }
 
-        const data = parseSubCategoryFromMarkdown(markdownText);
-        if (!data.subCategory || data.prompts.length === 0) {
-          alert("تنسيق غير صحيح، يرجى اتباع الصيغة المطلوبة");
+        const promptsToAdd = promptTexts
+          .filter(text => text.trim())
+          .map(text => ({
+            id: Date.now() + Math.floor(Math.random() * 1000),
+            text,
+            category: mainCategory,
+            subCategory,
+            tokens: Math.ceil(text.split(/\s+/).length * 1.25)
+          }));
+
+        if (promptsToAdd.length === 0) {
+          alert("الرجاء إدخال نصوص البرومبتات.");
           return;
         }
 
-        const existingSubCategories = JSON.parse(localStorage.getItem('subCategories')) || {};
         const existingPrompts = JSON.parse(localStorage.getItem('prompts')) || [];
-        const existingCategories = JSON.parse(localStorage.getItem('categories')) || [];
-
-        // تحديث الأقسام
-        if (!existingCategories.includes(mainCategory)) {
-          existingCategories.push(mainCategory);
-        }
+        const existingSubCategories = JSON.parse(localStorage.getItem('subCategories')) || {};
 
         // تحديث الأقسام الفرعية
         if (!existingSubCategories[mainCategory]) {
           existingSubCategories[mainCategory] = [];
         }
-        if (!existingSubCategories[mainCategory].includes(data.subCategory)) {
-          existingSubCategories[mainCategory].push(data.subCategory);
+        if (!existingSubCategories[mainCategory].includes(subCategory)) {
+          existingSubCategories[mainCategory].push(subCategory);
         }
 
-        // دمج البرومبتات الجديدة مع الموجودة
-        const updatedPrompts = [...existingPrompts, ...data.prompts];
+        // تحديث البرومبتات
+        const updatedPrompts = [...existingPrompts, ...promptsToAdd];
 
         localStorage.setItem('prompts', JSON.stringify(updatedPrompts));
-        localStorage.setItem('categories', JSON.stringify(existingCategories));
         localStorage.setItem('subCategories', JSON.stringify(existingSubCategories));
 
-        setMessage(`✅ تم استيراد ${data.prompts.length} برومبت جديد.`);
+        setMessage(`✅ تم استيراد ${promptsToAdd.length} برومبت جديد.`);
         
         setTimeout(() => {
           window.location.href = "index.html"; // إعادة التوجيه بعد 2 ثانية
@@ -178,43 +134,86 @@
 
       return (
         <div className="container mx-auto max-w-4xl">
-          <h2 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-6">إضافة قسم فرعي جديد</h2>
+          <h2 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-6">إضافة قسم فرعي وبرومبتاته</h2>
 
-          {/* عرض القسم الرئيسي */}
-          <div className="bg-white p-4 sm:p-6 rounded-lg shadow-md mb-6">
+          {/* تحديد القسم الرئيسي */}
+          <div className="bg-white p-6 rounded-lg shadow-md mb-6">
             <label className="block text-sm font-medium text-gray-700 mb-2">القسم الرئيسي</label>
-            <p className="font-semibold text-blue-600">{mainCategory}</p>
+            <select
+              value={mainCategory}
+              onChange={(e) => setMainCategory(e.target.value)}
+              className="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            >
+              <option value="">اختر قسمًا رئيسيًا</option>
+              <option value="البرمجة والتطوير">البرمجة والتطوير</option>
+              <option value="التسويق الرقمي">التسويق الرقمي</option>
+              <option value="الكتابة الإبداعية">الكتابة الإبداعية</option>
+              <option value="تحليل البيانات">تحليل البيانات</option>
+              <option value="التصميم والجرافيك">التصميم والجرافيك</option>
+              <option value="الترجمة واللغويات">الترجمة واللغويات</option>
+              <option value="التعليم والتدريب">التعليم والتدريب</option>
+              <option value="الصحة والطب">الصحة والطب</option>
+              <option value="الأعمال والإدارة">الأعمال والإدارة</option>
+              <option value="الحياة اليومية">الحياة اليومية</option>
+            </select>
           </div>
 
-          {/* منطقة لصق النص */}
-          <div className="mb-6">
-            <label className="block text-sm font-medium text-gray-700 mb-2">أو ألصق محتوى Markdown هنا:</label>
-            <textarea
-              value={markdownText}
-              onChange={(e) => setMarkdownText(e.target.value)}
-              placeholder={`## ${mainCategory}:مثال\n- نص البرومبت الأول\`ID: 101\`\n- نص البرومبت الثاني\`ID: 102\``}
-              className="w-full h-64 p-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 shadow-sm hover:shadow transition-shadow"
-            ></textarea>
-          </div>
-
-          {/* رفع ملف */}
-          <div className="mb-6">
-            <label className="block text-sm font-medium text-gray-700 mb-2">أو ارفع ملف:</label>
+          {/* إدخال اسم القسم الفرعي */}
+          <div className="bg-white p-6 rounded-lg shadow-md mb-6">
+            <label className="block text-sm font-medium text-gray-700 mb-2">اسم القسم الفرعي الجديد</label>
             <input
-              type="file"
-              accept=".md,.txt"
-              onChange={handleFileUpload}
-              className="w-full"
+              type="text"
+              placeholder="مثال: JavaScript"
+              value={subCategory}
+              onChange={(e) => setSubCategory(e.target.value)}
+              className="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
             />
           </div>
 
+          {/* إدخال البرومبتات */}
+          <div className="bg-white p-6 rounded-lg shadow-md mb-6 space-y-4">
+            <h3 className="font-semibold text-lg mb-4">أدخل البرومبتات:</h3>
+            {promptTexts.map((text, index) => (
+              <div key={index} className="relative">
+                <textarea
+                  rows="3"
+                  placeholder={`مثال: اكتب كودًا لحساب العوامل (${index + 1})`}
+                  value={text}
+                  onChange={(e) => handlePromptChange(e, index)}
+                  className="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                />
+                {promptTexts.length > 1 && (
+                  <button
+                    onClick={() => handleRemovePrompt(index)}
+                    className="absolute top-2 left-2 text-red-600 hover:text-red-800"
+                  >
+                    ❌
+                  </button>
+                )}
+              </div>
+            ))}
+            <button
+              onClick={handleAddPrompt}
+              className="mt-2 inline-flex items-center space-x-2 rtl:space-x-reverse px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded transition"
+            >
+              <span>➕ إضافة برومبت جديد</span>
+            </button>
+          </div>
+
           {/* زر الاستيراد */}
-          <button
-            onClick={handleImport}
-            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition w-full sm:w-auto"
-          >
-            📥 استيراد البيانات
-          </button>
+          <div className="flex justify-end">
+            <button
+              onClick={handleSubmit}
+              disabled={!mainCategory || !subCategory || promptTexts.every(t => !t.trim())}
+              className={`px-4 py-2 rounded ${
+                mainCategory && subCategory && promptTexts.some(t => t.trim())
+                  ? 'bg-green-600 hover:bg-green-700 text-white'
+                  : 'bg-gray-200 cursor-not-allowed text-gray-500'
+              }`}
+            >
+              📥 استيراد البيانات
+            </button>
+          </div>
 
           {/* رسالة النجاح */}
           {message && (
@@ -223,16 +222,16 @@
             </div>
           )}
 
-          {/* أمثلة على التنسيق */}
+          {/* مثال على التنسيق */}
           <div className="mt-6 text-sm text-gray-600">
-            <h3 className="font-semibold mb-2">مثال على تنسيق الملف:</h3>
+            <h3 className="font-semibold mb-2">مثال على تنسيق البرومبتات:</h3>
             <pre className="bg-gray-100 p-3 rounded overflow-x-auto whitespace-pre-wrap example-pre">
-{`## ${mainCategory}:مثال
-- نص البرومبت الأول
+{`## ${mainCategory}:${subCategory}
+- أنشئ برنامجًا لحساب العوامل.
   - \`ID: 101\`
   - \`tokens: 23\`
 
-- نص البرومبت الثاني
+- اكتب كودًا لقراءة ملف CSV وعرض البيانات.
   - \`ID: 102\`
   - \`tokens: 45\``}
             </pre>
