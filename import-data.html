@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <title>استيراد البيانات - Promptica</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <!-- Tailwind CSS -->
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"  rel="stylesheet" />
 </head>
@@ -18,7 +18,7 @@
   <header class="flex justify-between items-center pb-4 border-b border-gray-200 mb-6">
     <h1 class="text-2xl sm:text-3xl font-bold text-indigo-700 flex items-center">
       <img src="logo1.png" alt="شعار Promptica" class="w-8 h-8 ml-2" />
-      Promptica | استيراد بيانات
+      Promptica | استيراد البيانات
     </h1>
     <a href="index.html" class="text-indigo-600 hover:text-indigo-800 underline">الرئيسية</a>
   </header>
@@ -61,40 +61,37 @@
       const categories = new Set();
       const subCategories = {};
 
-      // 🧠 نظام تحليل ذكي يدعم أي تنسيق
       lines.forEach(line => {
         line = line.trim();
 
-        // 📁 القسم الرئيسي (أي سطر يبدأ بـ #)
-        if (line.startsWith("#")) {
-          const mainCat = line.replace(/^#+\s*/, "").split(":")[0].trim();
-          if (mainCat) {
-            currentCategory = mainCat;
-            currentSubCategory = "";
+        // القسم الرئيسي (مثال: # التصنيف الرئيسي: الذكاء الاصطناعي التوليدي)
+        if (line.startsWith("# ")) {
+          currentCategory = line.replace("# ", "").split(":")[0].trim();
+          if (currentCategory) {
             categories.add(currentCategory);
             if (!subCategories[currentCategory]) {
               subCategories[currentCategory] = new Set();
             }
           }
+          currentSubCategory = "";
 
-        // 📂 القسم الفرعي (أي سطر يبدأ بـ ##)
-        } else if (line.startsWith("##")) {
-          const subCat = line.replace(/^##+\s*/, "").split(":")[0].trim();
-          if (currentCategory && subCat) {
-            currentSubCategory = subCat;
+        // القسم الفرعي (مثال: ## الفرع 1: إنشاء المحتوى التخصصي)
+        } else if (line.startsWith("## ")) {
+          currentSubCategory = line.replace("## ", "").split(":")[0].trim();
+          if (currentCategory && currentSubCategory) {
             subCategories[currentCategory].add(currentSubCategory);
           }
 
-        // 📄 البرومبتات (أي سطر يبدأ بـ - )
-        } else if (line.startsWith("- ")) {
+        // البرومبت (مثال: - برومبت المحتوى الطبي: ...)
+        } else if (line.startsWith("- ") && currentCategory) {
           const promptText = line.substring(2).trim();
-          if (promptText && currentCategory) {
+          if (promptText) {
             prompts.push({
               id: Date.now() + Math.floor(Math.random() * 1000),
               text: promptText,
               category: currentCategory,
               subCategory: currentSubCategory || "",
-              tokens: Math.ceil(promptText.split(/\s+/).length * 1.25)
+              tokens: Math.ceil(promptText.split(/\s+/).length * 1.25),
             });
           }
         }
