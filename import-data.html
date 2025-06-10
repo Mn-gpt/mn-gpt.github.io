@@ -5,7 +5,7 @@
   <title>استيراد بيانات - Promptica</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <!-- Tailwind CSS CDN -->
-  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"  rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"  rel="stylesheet" />
   <!-- Internal Styles -->
   <style>
     body {
@@ -34,23 +34,23 @@
     <div class="bg-white rounded-lg shadow-md p-6">
       <h2 class="text-2xl font-bold text-gray-800 mb-6">📥 استيراد بيانات من Markdown</h2>
 
-      <!-- أقسام رئيسية وفرعية -->
-      <div class="mb-6">
-        <label class="block text-sm font-medium text-gray-700 mb-2">اختر القسم الرئيسي</label>
-        <select id="mainCategorySelect" class="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500">
-          <!-- يتم ملؤه ديناميكيًا من localStorage -->
-        </select>
+      <!-- اختيار الأقسام -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">القسم الرئيسي</label>
+          <select id="mainCategorySelect" class="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500">
+            <option value="">اختر القسم الرئيسي</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">القسم الفرعي (اختياري)</label>
+          <select id="subCategorySelect" class="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500">
+            <option value="">-- لا يوجد --</option>
+          </select>
+        </div>
       </div>
 
-      <div class="mb-6">
-        <label class="block text-sm font-medium text-gray-700 mb-2">اختر القسم الفرعي (اختياري)</label>
-        <select id="subCategorySelect" class="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500">
-          <option value="">-- لا يوجد --</option>
-          <!-- يتم ملؤه ديناميكيًا عند اختيار القسم الرئيسي -->
-        </select>
-      </div>
-
-      <!-- رفع الملف -->
+      <!-- رفع الملف أو لصقه -->
       <div class="mb-6">
         <label class="block text-sm font-medium text-gray-700 mb-2">رفع ملف Markdown (.md)</label>
         <input type="file" accept=".md" id="markdownFileInput" class="w-full p-2 border border-gray-300 rounded">
@@ -127,32 +127,53 @@
       reader.readAsText(file);
     });
 
-    // معالجة النصوص
+    // تحليل النصوص
     function parseMarkdown(md) {
       const lines = md.split('\n');
-      const prompts = [];
-      let currentPrompt = { title: '', description: '', category: '', subCategory: '' };
+      let prompts = [];
+      let currentSection = { title: '', description: '', category: '', subCategory: '' };
+
+      let currentMain = '';
+      let currentSub = '';
 
       lines.forEach(line => {
-        if (line.startsWith('###')) {
-          if (currentPrompt.title && currentPrompt.description) {
-            prompts.push(currentPrompt);
-            currentPrompt = { title: '', description: '', category: '', subCategory: '' };
+        // مستوى 1: قسم رئيسي
+        if (line.startsWith('# ')) {
+          if (currentSection.title && currentSection.description) {
+            prompts.push(currentSection);
+            currentSection = { title: '', description: '', category: currentMain, subCategory: currentSub };
           }
-          currentPrompt.title = line.replace(/^###\s*/, '').trim();
-        } else if (line.trim()) {
-          currentPrompt.description += line + '\n';
+          currentMain = line.replace(/^#\s*/, '').trim();
+          currentSub = '';
+        }
+        // مستوى 2: قسم فرعي
+        else if (line.startsWith('## ')) {
+          if (currentSection.title && currentSection.description) {
+            prompts.push(currentSection);
+            currentSection = { title: '', description: '', category: currentMain, subCategory: currentSub };
+          }
+          currentSub = line.replace(/^##\s*/, '').trim();
+        }
+        // مستوى 3: عنوان البرومبت
+        else if (line.startsWith('### ')) {
+          if (currentSection.title && currentSection.description) {
+            prompts.push(currentSection);
+            currentSection = { title: '', description: '', category: currentMain, subCategory: currentSub };
+          }
+          currentSection.title = line.replace(/^###\s*/, '').trim();
+        }
+        // وصف البرومبت
+        else if (line.trim()) {
+          currentSection.description += line + '\n';
         }
       });
 
-      if (currentPrompt.title && currentPrompt.description) {
-        prompts.push(currentPrompt);
+      if (currentSection.title && currentSection.description) {
+        prompts.push(currentSection);
       }
 
       return prompts.map(p => ({
         ...p,
-        category: mainCategorySelect.value,
-        subCategory: subCategorySelect.value,
         tokens: p.description.split(/\s+/).length
       }));
     }
@@ -200,7 +221,6 @@
       }
     });
 
-    // تحميل الأقسام عند التهيئة
     window.onload = loadCategories;
   </script>
 </body>
