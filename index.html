@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8" />
@@ -62,10 +62,9 @@
   <!-- Logout Function -->
   <script>
     function logout() {
-      // ❗ اختبار سريع - تفعيل الدور يدويًا
-localStorage.setItem('loggedInUser', JSON.stringify({ username: 'test-admin', role: 'admin' }));
-alert("تم تفعيل وضع المسؤول يدويًا!");
-window.location.reload();
+      localStorage.removeItem("loggedInUser");
+      alert("تم تسجيل الخروج.");
+      window.location.href = "login.html";
     }
 
     // 🔒 حماية الصفحة - لا يمكن الوصول إليها بدون تسجيل دخول
