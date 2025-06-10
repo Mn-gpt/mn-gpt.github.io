@@ -66,6 +66,25 @@
       alert("تم تسجيل الخروج.");
       window.location.href = "login.html";
     }
+
+    // 🔒 حماية الصفحة - لا يمكن الوصول إليها بدون تسجيل دخول
+    window.addEventListener('DOMContentLoaded', () => {
+      const user = JSON.parse(localStorage.getItem('loggedInUser'));
+      
+      // إذا لم يكن هناك مستخدم مسجل دخول → إعادة التوجيه
+      if (!user || !user.username) {
+        alert("❌ يجب تسجيل الدخول أولاً");
+        window.location.href = "login.html";
+        return;
+      }
+
+      // إذا كان ليس مسؤولًا ولكن يحاول الوصول عبر الرابط مباشرة
+      const isAccessingAdminTab = window.location.hash === '#prompts' && user.role !== 'admin';
+      if (isAccessingAdminTab) {
+        alert("🚫 ليس لديك صلاحية للوصول إلى هذا القسم");
+        window.location.href = "index.html"; // إعادة إلى الصفحة الرئيسية
+      }
+    });
   </script>
 
   <!-- React Code -->
@@ -79,30 +98,31 @@
       const [categories, setCategories] = useState([]);
       const [subCategories, setSubCategories] = useState({});
       const [searchTerm, setSearchTerm] = useState('');
-      const isUserAdmin = JSON.parse(localStorage.getItem('loggedInUser'))?.role === 'admin';
+      const [currentPage, setCurrentPage] = useState(1);
+      const [itemsPerPage] = useState(6); // عدد العناصر لكل صفحة
+      const [user, setUser] = useState(null);
+      const [isUserAdmin, setIsUserAdmin] = useState(false);
 
-      // تحميل البيانات عند تشغيل الصفحة
+      // 🔐 التحقق من المستخدم عند تشغيل الصفحة
       useEffect(() => {
+        const userData = JSON.parse(localStorage.getItem('loggedInUser'));
+
+        if (!userData || !userData.username) {
+          window.location.href = "login.html";
+          return;
+        }
+
+        setUser(userData);
+        setIsUserAdmin(userData.role === 'admin');
+
+        // تحميل البيانات
         const savedPrompts = JSON.parse(localStorage.getItem('prompts')) || [];
         const savedCategories = JSON.parse(localStorage.getItem('categories')) || ['عام'];
         const savedSubCategories = JSON.parse(localStorage.getItem('subCategories')) || {};
+        
         setPrompts(savedPrompts);
         setCategories(savedCategories);
         setSubCategories(savedSubCategories);
-
-        // تسجيل زيارة المستخدم
-        const visits = JSON.parse(localStorage.getItem('visitLog')) || [];
-        const now = new Date();
-        const user = JSON.parse(localStorage.getItem('loggedInUser'));
-        const visitEntry = {
-          timestamp: now.toLocaleString(),
-          username: user?.username || 'زائر',
-          role: user?.role || 'guest',
-          action: 'زيارة الموقع'
-        };
-        visits.push(visitEntry);
-        localStorage.setItem('visitLog', JSON.stringify(visits));
-
       }, []);
 
       // 🔍 استخدام Fuse.js للبحث الذكي
@@ -117,30 +137,12 @@
         ? fuse.search(searchTerm).map(result => result.item)
         : [];
 
-      // تسجيل النسخ
-      const copyPromptText = (text) => {
-        navigator.clipboard.writeText(text);
-        const copies = JSON.parse(localStorage.getItem('copyLog')) || [];
-        const now = new Date();
-        const copyEntry = {
-          timestamp: now.toLocaleString(),
-          username: JSON.parse(localStorage.getItem('loggedInUser'))?.username || 'زائر',
-          prompt: text.slice(0, 50) + (text.length > 50 ? '...' : ''),
-          action: 'نسخ برومبت'
-        };
-        copies.push(copyEntry);
-        localStorage.setItem('copyLog', JSON.stringify(copies));
-        alert("✅ تم النسخ!");
-      };
-
-      // عرض الأقسام الفرعية في Accordion
-      const [expandedCategory, setExpandedCategory] = useState(null);
-      const toggleCategory = (cat) => {
-        setExpandedCategory(expandedCategory === cat ? null : cat);
-      };
-
       // عرض لوحة التحكم
       const renderDashboard = () => {
+        const totalPrompts = prompts.length;
+        const totalTokens = prompts.reduce((sum, p) => sum + p.tokens, 0);
+        const averageTokens = totalPrompts > 0 ? Math.round(totalTokens / totalPrompts) : 0;
+
         return (
           <div className="space-y-6">
             <h2 className="text-2xl sm:text-3xl font-bold text-gray-800">لوحة التحكم</h2>
@@ -151,7 +153,10 @@
                 type="text"
                 placeholder="🔍 ابحث في البرومبتات أو الأقسام..."
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                onChange={(e) => {
+                  setSearchTerm(e.target.value);
+                  setCurrentPage(1);
+                }}
                 className="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
               />
               <button
@@ -162,37 +167,25 @@
               </button>
             </div>
 
-            {/* قائمة الأقسام القابلة للتوسيع */
-            }
+            {/* قائمة الأقسام للمستخدم العادي */}
             <div className="mt-6">
               <h3 className="text-xl font-semibold text-gray-800 mb-4">الأقسام والبرومبتات</h3>
               {searchTerm.trim() === '' && (
-                <div className="grid grid-cols-1 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                   {categories.map(cat => (
-                    <div key={cat} className="bg-white p-4 rounded shadow hover:shadow-md transition">
-                      <div className="flex justify-between items-center cursor-pointer" onClick={() => toggleCategory(cat)}>
-                        <span className="font-medium text-indigo-600">{cat}</span>
-                        <svg className={`w-5 h-5 text-indigo-600 transform ${expandedCategory === cat ? 'rotate-90' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
-                        </svg>
-                      </div>
-                      {expandedCategory === cat && (
-                        <ul className="mt-2 space-y-1 pl-4 border-l-2 border-indigo-100">
-                          {subCategories[cat]?.length > 0 ? (
-                            subCategories[cat].map((sub, idx) => (
-                              <li key={idx} className="text-xs sm:text-sm text-gray-600">
-                                ↳ <a href={`category-prompts.html?category=${encodeURIComponent(cat)}&sub=${encodeURIComponent(sub)}`} target="_blank" className="underline text-purple-600">{sub}</a>
-                              </li>
-                            ))
-                          ) : (
-                            <li className="text-xs text-gray-400">لا توجد أقسام فرعية</li>
-                          )}
-                        </ul>
-                      )}
-                    </div>
+                    <a
+                      key={cat}
+                      href={`category-prompts.html?category=${encodeURIComponent(cat)}`}
+                      className="bg-white p-4 rounded shadow hover:bg-gray-50 transition flex justify-between items-center"
+                    >
+                      <span className="font-medium text-indigo-600 text-xs sm:text-sm">{cat}</span>
+                      <svg className="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
+                      </svg>
+                    </a>
                   ))}
                   {categories.length === 0 && (
-                    <p className="text-gray-500 text-center py-4">لا توجد أقسام مضافة بعد.</p>
+                    <p className="text-gray-500 text-center py-4 col-span-full">لا توجد أقسام مضافة بعد.</p>
                   )}
                 </div>
               )}
@@ -234,69 +227,6 @@
                 </div>
               )}
             </div>
-
-            {/* زر استيراد البيانات */}
-            {isUserAdmin && (
-              <div className="mt-4">
-                <a href="import-data.html" className="inline-block px-6 py-3 bg-gradient-to-r from-pink-500 to-purple-600 text-white font-semibold rounded-full shadow hover:from-pink-600 hover:to-purple-700 transition transform hover:scale-105">
-                  📥 استيراد بيانات من Markdown
-                </a>
-              </div>
-            )}
-
-            {/* عرض سجل الزيارات (للمسؤول فقط) */}
-            {isUserAdmin && (
-              <div className="mt-8">
-                <h3 className="font-semibold text-lg mb-4">سجل زيارات المستخدمين</h3>
-                <div className="bg-white rounded shadow overflow-hidden">
-                  <table className="min-w-full divide-y divide-gray-200">
-                    <thead className="bg-gray-50">
-                      <tr>
-                        <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">المستخدم</th>
-                        <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">الحدث</th>
-                        <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">الوقت</th>
-                      </tr>
-                    </thead>
-                    <tbody className="bg-white divide-y divide-gray-200">
-                      {JSON.parse(localStorage.getItem('visitLog'))?.slice(-5).reverse().map((log, idx) => (
-                        <tr key={idx} className="hover:bg-gray-50">
-                          <td className="px-4 py-4 whitespace-nowrap">{log.username}</td>
-                          <td className="px-4 py-4 whitespace-nowrap">{log.action}</td>
-                          <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">{log.timestamp}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            )}
-
-            {/* عرض سجل النسخ (للمسؤول فقط) */}
-            {isUserAdmin && (
-              <div className="mt-8">
-                <h3 className="font-semibold text-lg mb-4">سجل نسخ البرومبتات</h3>
-                <div className="bg-white rounded shadow overflow-hidden">
-                  <table className="min-w-full divide-y divide-gray-200">
-                    <thead className="bg-gray-50">
-                      <tr>
-                        <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">المستخدم</th>
-                        <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">محتوى البرومبت</th>
-                        <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">الوقت</th>
-                      </tr>
-                    </thead>
-                    <tbody className="bg-white divide-y divide-gray-200">
-                      {JSON.parse(localStorage.getItem('copyLog'))?.slice(-5).reverse().map((log, idx) => (
-                        <tr key={idx} className="hover:bg-gray-50">
-                          <td className="px-4 py-4 whitespace-nowrap">{log.username}</td>
-                          <td className="px-4 py-4 whitespace-nowrap truncate max-w-xs">{log.prompt}</td>
-                          <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">{log.timestamp}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            )}
           </div>
         );
       };
@@ -469,7 +399,7 @@
               </div>
             </div>
 
-            {/* زر الاستيراد */}
+            {/* زر استيراد البيانات */}
             <div className="mt-4">
               <a href="import-data.html" className="inline-block px-6 py-3 bg-gradient-to-r from-pink-500 to-purple-600 text-white font-semibold rounded-full shadow hover:from-pink-600 hover:to-purple-700 transition transform hover:scale-105">
                 📥 استيراد بيانات من Markdown
@@ -509,7 +439,12 @@
 
           {/* Tab Content */}
           {activeTab === 'dashboard' && renderDashboard()}
-          {activeTab === 'prompts' && renderManagePrompts()}
+          {activeTab === 'prompts' && isUserAdmin && renderManagePrompts()}
+          {activeTab === 'prompts' && !isUserAdmin && (
+            <div className="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 rounded shadow-inner">
+              <p>🚫 ليس لديك صلاحية للوصول إلى هذا القسم. يمكنك فقط مشاهدة البيانات.</p>
+            </div>
+          )}
         </div>
       );
     }
