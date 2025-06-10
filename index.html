@@ -60,20 +60,7 @@
   </footer>
 
   <!-- Logout Function -->
-  <script>
-  // ✅ تفريغ localStorage مؤقتًا عند الحاجة
-  // لإعادة ضبط النظام (استخدمه لمرة واحدة فقط عند التجربة)
-  localStorage.removeItem("loggedInUser");
-
-  // أو استخدم هذا لإزالة جميع البيانات
-  // localStorage.clear();
-
-  function logout() {
-    localStorage.removeItem("loggedInUser");
-    alert("تم تسجيل الخروج.");
-    window.location.href = "login.html";
-  }
-</script>
+  
   <script>
     function logout() {
       localStorage.removeItem("loggedInUser");
