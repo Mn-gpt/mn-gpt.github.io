@@ -1,59 +1,56 @@
-<DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8" />
-  <title>إعادة تعيين البيانات - MN.gpt</title>
-  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"  rel="stylesheet">
+  <title>إعادة ضبط البيانات</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      background: #f9fafb;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+    .container {
+      background: white;
+      padding: 2rem;
+      border-radius: 8px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.1);
+      text-align: center;
+    }
+    button {
+      margin-top: 1rem;
+      padding: 0.75rem 1.5rem;
+      background: #ef4444;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #dc2626;
+    }
+  </style>
 </head>
-<body class="min-h-screen bg-gray-50 flex items-center justify-center p-6">
-  <div class="bg-white p-6 rounded shadow-md text-center max-w-md w-full">
-    <h1 class="text-2xl font-bold text-indigo-700 mb-4">إعادة تعيين البيانات</h1>
-    <p class="mb-6 text-gray-700">هل تريد حقًا إعادة تعيين البيانات؟ سيتم استعادة الحساب الافتراضي للمسؤول وكلمات المرور الافتراضية.</p>
-    <div class="space-x-4 rtl:space-x-reverse">
-      <button onclick="resetData()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded">نعم، أعد التعيين</button>
-      <a href="index.html" class="inline-block bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded">لا، العودة</a>
-    </div>
+<body>
+  <div class="container">
+    <h1 class="text-xl font-bold mb-4">هل تريد إعادة ضبط البيانات؟</h1>
+    <p class="mb-4 text-gray-600">سيتم حذف جميع البيانات المحفوظة.</p>
+    <button onclick="resetData()">إعادة الضبط</button>
   </div>
 
   <script>
     function resetData() {
-      // إنشاء بيانات المستخدم الافتراضية
-      const defaultUsers = [
-        {
-          username: 'admin',
-          email: 'admin@example.com',
-          password: btoa('123456'),
-          role: 'admin',
-          timestamp: new Date().getTime()
-        }
-      ];
+      // ⚠️ تحذير قبل الحذف
+      if (!confirm("هل أنت متأكد من رغبتك في إعادة ضبط البيانات؟ سيتم حذف جميع البيانات المحلية.")) {
+        return;
+      }
 
-      // إنشاء البرومبتات الافتراضية
-      const defaultPrompts = [
-        { id: 1, text: 'اشرح مفهوم الذكاء الاصطناعي بطريقة بسيطة.', category: 'تعليمي', tokens: 23 },
-        { id: 2, text: 'اكتب قصة قصيرة عن رحلة إلى الفضاء.', category: 'إبداعي', tokens: 45 },
-        { id: 3, text: 'ما هو تأثير التكنولوجيا على التعليم؟', category: 'تحليل بيانات', tokens: 18 },
-        { id: 4, text: 'اشرح كيف تعمل خوارزميات التعلم العميق.', category: 'تعليمي', tokens: 37 },
-        { id: 5, text: 'اكتب برنامجًا بلغة جافاسكربت لحساب العوامل.', category: 'برمجة', tokens: 41 }
-      ];
-
-      const defaultCategories = ['عام', 'تعليمي', 'إبداعي', 'تحليل بيانات', 'برمجة'];
-
-      // حفظ البيانات
-      localStorage.setItem('users', JSON.stringify(defaultUsers));
-      localStorage.setItem('prompts', JSON.stringify(defaultPrompts));
-      localStorage.setItem('categories', JSON.stringify(defaultCategories));
-      localStorage.setItem('isAdmin', 'true');
-
-      // تسجيل الدخول التلقائي
-      localStorage.setItem('loggedInUser', JSON.stringify({
-        username: 'admin',
-        role: 'admin',
-        timestamp: new Date().getTime()
-      }));
-
-      alert("تم إعادة تعيين البيانات بنجاح!\nاسم المستخدم: admin\nكلمة المرور: 123456");
-      window.location.href = 'index.html';
+      // 🔥 مسح كامل localStorage
+      localStorage.clear();
+      alert("✅ تم مسح البيانات بنجاح");
+      window.location.href = "admin-login.html"; // ← نوجه المستخدم لتسجيل دخول جديد
     }
   </script>
 </body>
