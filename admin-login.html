@@ -1,91 +1,48 @@
-<DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8" />
-  <title>دخول المسؤول - MN.gpt</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>دخول المسؤول</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <!-- Tailwind CSS -->
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"  rel="stylesheet">
 </head>
-<body class="min-h-screen bg-gray-50 flex items-center justify-center px-4">
-  <div class="w-full max-w-md bg-white p-6 rounded shadow-md">
-    <h1 class="text-2xl sm:text-3xl font-bold text-indigo-700 mb-6 text-center">MN.gpt</h1>
-    <h2 class="text-xl font-semibold text-gray-800 mb-6 text-center">دخول المسؤول</h2>
-
+<body class="bg-gray-100 flex items-center justify-center min-h-screen">
+  <div class="w-full max-w-md bg-white p-8 rounded shadow-lg">
+    <h2 class="text-2xl font-bold text-center mb-6">تسجيل الدخول (مسؤول)</h2>
     <form id="adminLoginForm" class="space-y-4">
       <div>
-        <label for="username" class="block text-sm font-medium text-gray-700 mb-1">اسم المستخدم</label>
-        <input type="text" id="username" name="username" required
-          class="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
-          placeholder="أدخل اسم المستخدم" />
+        <label class="block text-sm font-medium text-gray-700 mb-1">اسم المستخدم</label>
+        <input type="text" id="username" required
+               class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
+               placeholder="أدخل اسم المستخدم">
       </div>
-
       <div>
-        <label for="password" class="block text-sm font-medium text-gray-700 mb-1">كلمة المرور</label>
-        <input type="password" id="password" name="password" required
-          class="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
-          placeholder="أدخل كلمة المرور" />
+        <label class="block text-sm font-medium text-gray-700 mb-1">كلمة المرور</label>
+        <input type="password" id="password" required
+               class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
+               placeholder="أدخل كلمة المرور">
       </div>
-
       <button type="submit"
-        class="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded transition">
-        دخول المسؤول
+              class="w-full bg-purple-600 hover:bg-purple-700 text-white font-semibold py-2 px-4 rounded transition">
+        تسجيل الدخول كمسؤول
       </button>
     </form>
-
-    <div class="mt-4 text-center">
-      <p class="text-sm text-gray-600">ليس لديك حساب مسؤول؟ 
-        <a href="#" id="contactAdminLink" class="text-indigo-600 hover:underline">تواصل مع المدير</a>
-      </p>
-    </div>
-
-    <div class="mt-6 text-center">
-      <a href="index.html" class="text-sm text-gray-600 hover:text-indigo-600">العودة إلى لوحة التحكم</a>
-    </div>
-
-    <footer class="mt-8 pt-4 border-t border-gray-200 text-sm text-gray-500 text-center">
-      &copy; {{new Date().getFullYear()}} MN.gpt. جميع الحقوق محفوظة.
-    </footer>
+    <p class="mt-4 text-center text-sm text-gray-600">
+      هل تريد تسجيل دخول عادي؟ <a href="login.html" class="text-indigo-600 hover:underline">اضغط هنا</a>
+    </p>
   </div>
 
   <script>
-    const storedUsers = JSON.parse(localStorage.getItem('users')) || [
-      { username: 'admin', password: btoa('123456'), role: 'admin' },
-    ];
-
-    document.getElementById('adminLoginForm').addEventListener('submit', function(e) {
+    document.getElementById('adminLoginForm').addEventListener('submit', function (e) {
       e.preventDefault();
       const username = document.getElementById('username').value.trim();
-      const password = document.getElementById('password').value.trim();
+      const password = document.getElementById('password').value;
 
-      if (!username || !password) {
-        alert("يرجى إدخال اسم المستخدم وكلمة المرور.");
-        return;
-      }
-
-      const hashedPassword = btoa(password);
-      const user = storedUsers.find(u => u.username === username && u.password === hashedPassword);
-
-      if (user && user.role === 'admin') {
-        // تخزين بيانات المستخدم والصلاحيات
-        localStorage.setItem('loggedInUser', JSON.stringify({
-          username: user.username,
-          role: user.role,
-          timestamp: new Date().getTime()
-        }));
-        localStorage.setItem('isAdmin', 'true');
-
-        alert("تم تسجيل دخول المسؤول بنجاح!");
-        window.location.href = 'index.html';
-      } else {
-        alert("غير مصرح لك بالدخول. هذا القسم خاص بالمسؤولين فقط.");
-      }
-    });
-
-    // تفعيل رابط "تواصل مع المدير"
-    document.getElementById('contactAdminLink').addEventListener('click', function(e) {
-      e.preventDefault();
-      const adminEmail = 'admin@example.com'; // يمكنك استبداله ببريد حقيقي
-      window.location.href = `mailto:${adminEmail}?subject=طلب%20تسجيل%20مسؤول&body=مرحبًا،%20أرغب%20في%20التواصل%20للحصول%20على%20صلاحية%20المسؤول.`;
+      // تخزين بيانات المسؤول
+      localStorage.setItem('loggedInUser', JSON.stringify({ username, role: 'admin' }));
+      alert("🔐 تم تسجيل الدخول كمسؤول");
+      window.location.href = "index.html";
     });
   </script>
 </body>
