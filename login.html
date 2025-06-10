@@ -1,107 +1,49 @@
-<DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8" />
-  <title>تسجيل الدخول - MN.gpt</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>تسجيل الدخول</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <!-- Tailwind CSS -->
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"  rel="stylesheet">
-  <style>
-    body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background-color: #f9fafb;
-      color: #1f2937;
-    }
-  </style>
 </head>
-<body class="min-h-screen bg-gray-50 flex items-center justify-center px-4">
-  <div class="w-full max-w-md bg-white p-6 rounded shadow-md">
-    <h1 class="text-2xl sm:text-3xl font-bold text-indigo-700 mb-6 text-center">MN.gpt</h1>
-
+<body class="bg-gray-100 flex items-center justify-center min-h-screen">
+  <div class="w-full max-w-md bg-white p-8 rounded shadow-lg">
+    <h2 class="text-2xl font-bold text-center mb-6">تسجيل الدخول (مستخدم)</h2>
     <form id="loginForm" class="space-y-4">
       <div>
-        <label for="username" class="block text-sm font-medium text-gray-700 mb-1">اسم المستخدم</label>
-        <input type="text" id="username" name="username" required
-          class="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
-          placeholder="أدخل اسم المستخدم" />
+        <label class="block text-sm font-medium text-gray-700 mb-1">اسم المستخدم</label>
+        <input type="text" id="username" required
+               class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
+               placeholder="أدخل اسم المستخدم">
       </div>
-
       <div>
-        <label for="password" class="block text-sm font-medium text-gray-700 mb-1">كلمة المرور</label>
-        <input type="password" id="password" name="password" required
-          class="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
-          placeholder="أدخل كلمة المرور" />
+        <label class="block text-sm font-medium text-gray-700 mb-1">كلمة المرور</label>
+        <input type="password" id="password" required
+               class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
+               placeholder="أدخل كلمة المرور">
       </div>
-
-      <div class="flex items-center">
-        <input type="checkbox" id="rememberMe" name="rememberMe" class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded" />
-        <label for="rememberMe" class="mr-2 block text-sm text-gray-700">تذكرني</label>
-      </div>
-
       <button type="submit"
-        class="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded transition">
-        دخول
+              class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-4 rounded transition">
+        تسجيل الدخول كمستخدم
       </button>
     </form>
-
-    <div class="mt-4 text-center">
-      <p class="text-sm text-gray-600">ليس لديك حساب؟ <a href="#" class="text-indigo-600 hover:underline">تواصل مع المدير</a></p>
-    </div>
-
-    <div class="mt-6 text-center">
-      <a href="index.html" class="text-sm text-gray-600 hover:text-indigo-600">العودة إلى لوحة التحكم</a>
-    </div>
-
-    <footer class="mt-8 pt-4 border-t border-gray-200 text-sm text-gray-500 text-center">
-      &copy; {{new Date().getFullYear()}} MN.gpt. جميع الحقوق محفوظة.
-    </footer>
+    <p class="mt-4 text-center text-sm text-gray-600">
+      ليس لديك حساب؟ <a href="register.html" class="text-indigo-600 hover:underline">سجل هنا</a>
+    </p>
   </div>
 
   <script>
-    // تخزين بيانات المستخدم الافتراضية (في بيئة حقيقية، ستكون من الخادم)
-    const storedUsers = JSON.parse(localStorage.getItem('users')) || [
-      { username: 'admin', password: btoa('123456'), role: 'admin' },
-    ];
-
-    // عند تقديم النموذج
-    document.getElementById('loginForm').addEventListener('submit', function(e) {
+    document.getElementById('loginForm').addEventListener('submit', function (e) {
       e.preventDefault();
       const username = document.getElementById('username').value.trim();
-      const password = document.getElementById('password').value.trim();
-      const rememberMe = document.getElementById('rememberMe').checked;
+      const password = document.getElementById('password').value;
 
-      if (!username || !password) {
-        alert("يرجى إدخال اسم المستخدم وكلمة المرور.");
-        return;
-      }
-
-      const hashedPassword = btoa(password);
-      const user = storedUsers.find(u => u.username === username && u.password === hashedPassword);
-
-      if (user) {
-        // تسجيل الدخول ناجح
-        localStorage.setItem('loggedInUser', JSON.stringify({
-          username: user.username,
-          role: user.role,
-          timestamp: new Date().getTime(),
-          rememberMe
-        }));
-
-        alert("تم تسجيل الدخول بنجاح!");
-        window.location.href = 'index.html';
-      } else {
-        alert("اسم المستخدم أو كلمة المرور غير صحيحة.");
-      }
+      // تخزين بيانات المستخدم العادي
+      localStorage.setItem('loggedInUser', JSON.stringify({ username, role: 'user' }));
+      alert("✅ تم تسجيل الدخول كمستخدم");
+      window.location.href = "index.html";
     });
   </script>
-  <script>
-  document.addEventListener("DOMContentLoaded", function () {
-    document.querySelector('a[href="#"]').addEventListener("click", function (e) {
-      e.preventDefault();
-      const adminEmail = 'admin@example.com'; // استبدل بهذا البريد الحقيقي
-      window.location.href = `mailto:${adminEmail}?subject=طلب%20تسجيل%20مسؤول&body=مرحبًا،%20أرغب%20في%20الحصول%20على%20صلاحية%20المسؤول.`;
-    });
-  });
-</script>
 </body>
 </html>
