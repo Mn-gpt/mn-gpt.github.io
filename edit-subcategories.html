@@ -81,7 +81,15 @@
 
     // 📡 قراءة اسم القسم الرئيسي من الرابط
     
-
+    useEffect(() => {
+      const urlParams = new URLSearchParams(window.location.search);
+      const main = decodeURIComponent(urlParams.get('main') || '');
+      if (!main) {
+        alert("خطأ: لم يتم تحديد القسم الرئيسي.");
+        window.location.href = "index.html";
+        return;
+      }
+      setMainCategory(main);
       // 🔢 تحميل الأقسام الفرعية من localStorage
       const savedSubCategories = JSON.parse(localStorage.getItem('subCategories')) || {};
       if (savedSubCategories[main]) {
