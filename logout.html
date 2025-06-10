@@ -1,5 +1,29 @@
 <!DOCTYPE html>
+<html lang="ar"<!DOCTYPE html>
 <html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <title>تسجيل الخروج</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body class="bg-gray-50 min-h-screen flex items-center justify-center">
+  <div class="text-center p-6 bg-white rounded shadow-lg">
+    <h1 class="text-2xl font-bold text-gray-800 mb-4">جارٍ تسجيل الخروج...</h1>
+    <p class="text-gray-600 mb-6">سيتم تحويلك إلى صفحة تسجيل الدخول.</p>
+  </div>
+
+  <script>
+    // حذف بيانات المستخدم
+    localStorage.removeItem("loggedInUser");
+
+    // عرض رسالة قصيرة ثم إعادة التوجيه
+    setTimeout(() => {
+      alert("✅ تم تسجيل الخروج بنجاح");
+      window.location.href = "login.html";
+    }, 1000);
+  </script>
+</body>
+</html> dir="rtl">
 <head>
   <meta charset="UTF-8">
   <title>تسجيل الخروج</title>
