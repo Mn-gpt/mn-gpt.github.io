@@ -3,14 +3,16 @@
 <head>
   <meta charset="UTF-8" />
   <title>برومبتات القسم - Promptica</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <!-- Tailwind CSS -->
-  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"  rel="stylesheet" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <!-- Tailwind CSS CDN -->
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"  rel="stylesheet">
+  <!-- Internal Styles -->
   <style>
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       background-color: #f9fafb;
       color: #1f2937;
+      line-height: 1.8;
     }
     .line-clamp-3 {
       display: -webkit-box;
@@ -19,55 +21,45 @@
       overflow: hidden;
     }
     @media (max-width: 640px) {
-      .prompt-card p { font-size: 0.875rem; }
+      html { font-size: 16px; }
     }
   </style>
 </head>
 <body class="min-h-screen bg-gray-50 p-4">
   <!-- Header -->
-  <header class="mb-6">
-    <div class="flex justify-between items-center pb-4 border-b border-gray-200 mb-6">
-      <h1 class="text-2xl sm:text-3xl font-bold text-indigo-700">Promptica</h1>
-      <a href="index.html" class="text-indigo-600 hover:text-indigo-800 underline">← العودة إلى لوحة التحكم</a>
-    </div>
+  <header class="flex justify-between items-center pb-4 border-b border-gray-200 mb-6">
+    <h1 class="text-2xl sm:text-3xl font-bold text-indigo-700 flex items-center">Promptica</h1>
+    <a href="index.html" class="text-indigo-600 hover:text-indigo-800 underline">← العودة إلى لوحة التحكم</a>
   </header>
 
-  <!-- Section Name Display -->
-  <div id="section-name" class="mb-6">
-    <p class="text-sm text-gray-600">جارٍ تحميل القسم...</p>
-  </div>
+  <!-- Title -->
+  <div class="container mx-auto max-w-4xl">
+    <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+      <h2 id="category-title" class="text-2xl font-bold text-gray-800">جارٍ التحميل...</h2>
+    </div>
 
-  <!-- Search Bar -->
-  <div class="mb-6">
-    <input
-      type="text"
-      id="searchInput"
-      placeholder="🔍 ابحث في البرومبتات..."
-      class="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
-    />
-  </div>
+    <!-- شريط البحث -->
+    <div class="mb-6">
+      <input
+        type="text"
+        id="searchInput"
+        placeholder="🔍 ابحث في البرومبتات..."
+        class="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
+      />
+    </div>
 
-  <!-- Prompts Grid -->
-  <div id="prompts-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+    <!-- Cards Grid -->
+    <div id="promptGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+  </div>
 
   <!-- Footer -->
-  <footer class="mt-10 pt-6 border-t border-gray-200 text-center text-sm text-gray-500">
+  <footer class="mt-12 pt-4 border-t border-gray-200 text-center text-sm text-gray-500">
     &copy; {{new Date().getFullYear()}} Promptica. جميع الحقوق محفوظة.
   </footer>
 
-  <!-- Modal Popup -->
-  <div id="copy-history-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-black bg-opacity-50">
-    <div class="bg-white w-11/12 sm:w-3/4 lg:w-1/2 max-h-[80vh] overflow-y-auto rounded shadow-lg p-6 relative">
-      <!-- زر الإغلاق (X) -->
-      <button onclick="closeModal()" class="absolute top-2 right-2 text-xl font-bold text-gray-500 hover:text-gray-700">&times;</button>
-      <h3 class="text-xl font-semibold mb-4">سجل النسخ لهذا البرومبت</h3>
-      <ul id="copy-history-list" class="space-y-2"></ul>
-    </div>
-  </div>
-
-  <!-- Scripts -->
+  <!-- Script -->
   <script>
-    // 📌 الحصول على المعاملات من الرابط
+    // 🔍 الحصول على المعلمات من الرابط
     function getURLParams() {
       const params = new URLSearchParams(window.location.search);
       return {
@@ -76,151 +68,95 @@
       };
     }
 
-    // 📦 تخزين سجل النسخ
-    const copyHistoryKey = 'prompt_copy_history';
-    function getCopyHistory(promptId) {
-      const history = JSON.parse(localStorage.getItem(copyHistoryKey)) || {};
-      return history[promptId] || [];
-    }
-
-    function saveCopyHistory(promptId, text) {
-      let history = JSON.parse(localStorage.getItem(copyHistoryKey)) || {};
-      if (!history[promptId]) history[promptId] = [];
-      history[promptId].push({
-        text: text,
-        timestamp: new Date().toLocaleString('ar-SA')
-      });
-      localStorage.setItem(copyHistoryKey, JSON.stringify(history));
-    }
-
-    // 📤 تصدير البيانات
-    function exportToCSV(data, filename = 'prompts.csv') {
-      let csv = 'البرومبت,التاريخ\n';
-      data.forEach(p => {
-        csv += `"${p.text.replace(/"/g, '""')}","${p.date}"\n`;
-      });
-
-      const blob = new Blob([csv], { type: 'text/csv' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = filename;
-      a.click();
-      URL.revokeObjectURL(url);
-    }
-
-    // 🧠 البحث الذكي
-    function filterPrompts(prompts, query) {
-      if (!query.trim()) return prompts;
-      const lowerQuery = query.toLowerCase();
-      return prompts.filter(p =>
-        p.text.toLowerCase().includes(lowerQuery) ||
-        p.category.toLowerCase().includes(lowerQuery) ||
-        p.subCategory?.toLowerCase().includes(lowerQuery)
-      );
-    }
-
-    // 📝 دالة نسخ البرومبت
-    function copyPrompt(text, promptId) {
+    // 📋 نسخ النص إلى الحافظة
+    function copyToClipboard(text, element) {
       navigator.clipboard.writeText(text).then(() => {
-        alert("✅ تم النسخ!");
-        saveCopyHistory(promptId, text);
+        const originalText = element.textContent;
+        element.innerHTML = '✅ تم النسخ!';
+        element.classList.add("bg-green-100", "text-green-600");
+        setTimeout(() => {
+          element.textContent = originalText;
+          element.classList.remove("bg-green-100", "text-green-600");
+        }, 1500);
       });
     }
 
-    // 📁 دالة عرض سجل النسخ
-    function showCopyHistory(promptId) {
-      const modal = document.getElementById('copy-history-modal');
-      const list = document.getElementById('copy-history-list');
-      list.innerHTML = '';
-      const history = JSON.parse(localStorage.getItem(copyHistoryKey))?.[promptId] || [];
+    // 🔎 عرض البرومبتات
+    function renderPrompts(prompts, category, subCategory = '') {
+      const titleElement = document.getElementById('category-title');
+      const grid = document.getElementById('promptGrid');
+      grid.innerHTML = '';
 
-      if (history.length === 0) {
-        list.innerHTML = '<li class="py-2 text-gray-500">لا يوجد سجل نسخ لهذا البرومبت.</li>';
+      if (subCategory) {
+        titleElement.innerHTML = `برومبتات القسم: <span class="text-indigo-600">${category} → ${subCategory}</span>`;
       } else {
-        history.forEach(entry => {
-          const li = document.createElement('li');
-          li.className = 'py-2 border-b border-gray-200';
-          li.innerHTML = `<strong>${entry.text}</strong><br/><small class="text-gray-500">${entry.timestamp}</small>`;
-          list.appendChild(li);
-        });
+        titleElement.innerHTML = `برومبتات القسم: <span class="text-indigo-600">${category}</span>`;
       }
-      modal.classList.remove('hidden');
-    }
 
-    function closeModal() {
-      document.getElementById('copy-history-modal').classList.add('hidden');
-    }
-
-    // 🚀 عند تحميل الصفحة
-    window.onload = () => {
-      const { category, sub } = getURLParams();
-      const sectionNameDiv = document.getElementById('section-name');
-      const searchInput = document.getElementById('searchInput');
-
-      if (!category) {
-        sectionNameDiv.innerHTML = '<p class="text-red-600">❌ لم يتم تحديد القسم الرئيسي.</p>';
+      if (!prompts.length) {
+        const emptyCard = document.createElement('div');
+        emptyCard.className = "col-span-full text-center py-10";
+        emptyCard.innerHTML = `<p class="text-gray-500">لا توجد برومبتات لهذا القسم.</p>`;
+        grid.appendChild(emptyCard);
         return;
       }
 
-      sectionNameDiv.innerHTML = `
-        <h2 class="text-xl font-bold text-gray-800">${sub ? `${sub} ← ${category}` : `جميع البرومبتات في: ${category}`}</h2>
-        <button onclick="exportCurrentPrompts()" class="mt-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded">
-          📤 تصدير البرومبتات (CSV)
-        </button>
-      `;
+      prompts.forEach(prompt => {
+        const card = document.createElement('div');
+        card.className = "bg-white p-5 rounded shadow hover:shadow-md transition relative";
 
-      const savedPrompts = JSON.parse(localStorage.getItem('prompts')) || [];
+        const subCategoryDisplay = prompt.subCategory ? ` (${prompt.subCategory})` : '';
+        card.innerHTML = `
+          <h3 class="font-semibold text-indigo-700 mb-2">${prompt.text.split('\n')[0].substring(0, 50)}${prompt.text.length > 50 ? '...' : ''}</h3>
+          <p class="text-sm text-gray-600 mb-4">${prompt.text.substring(0, 120)}${prompt.text.length > 120 ? '...' : ''}</p>
+          <button class="absolute bottom-4 right-4 px-3 py-1 text-xs text-white bg-indigo-600 rounded hover:bg-indigo-700 transition" onclick="copyPrompt('${prompt.text}', this)">📋 نسخ</button>
+        `;
+        grid.appendChild(card);
+      });
+    }
 
-      let filteredPrompts = sub
-        ? savedPrompts.filter(p => p.category === category && p.subCategory === sub)
-        : savedPrompts.filter(p => p.category === category);
+    // 🔍 البحث داخل الصفحة
+    function setupSearch() {
+      const searchInput = document.getElementById('searchInput');
+      const allCards = document.querySelectorAll('#promptGrid div');
 
-      function renderPrompts(promptsToShow) {
-        const container = document.getElementById('prompts-grid');
-        container.innerHTML = '';
-
-        if (promptsToShow.length === 0) {
-          container.innerHTML = '<p class="col-span-full text-gray-500 text-center py-4">لا توجد برومبتات لهذا القسم.</p>';
-          return;
-        }
-
-        promptsToShow.forEach(prompt => {
-          const card = document.createElement('div');
-          card.className = 'bg-white p-4 rounded shadow-md prompt-card hover:shadow-lg transition';
-
-          card.innerHTML = `
-            <p class="text-sm text-gray-600">${prompt.category} → ${prompt.subCategory || 'عام'}</p>
-            <p class="mt-2 line-clamp-3">${prompt.text}</p>
-            <div class="mt-3 flex justify-between items-center">
-              <button onclick="copyPrompt('${prompt.text}', '${prompt.id}')" class="text-indigo-600 hover:text-indigo-800">📋 نسخ</button>
-              <button onclick="showCopyHistory('${prompt.id}')" class="text-gray-500 hover:text-gray-700">📜 السجل</button>
-            </div>
-          `;
-          container.appendChild(card);
+      searchInput.addEventListener('input', () => {
+        const term = searchInput.value.toLowerCase();
+        allCards.forEach(card => {
+          const text = card.querySelector('p').textContent.toLowerCase();
+          card.style.display = text.includes(term) ? 'block' : 'none';
         });
+      });
+    }
+
+    // 🚀 تحميل البيانات
+    window.onload = () => {
+      const { category, sub } = getURLParams();
+      const allPrompts = JSON.parse(localStorage.getItem('prompts')) || [];
+
+      let results = [];
+      if (sub) {
+        results = allPrompts.filter(p => p.category === category && p.subCategory === sub);
+      } else {
+        results = allPrompts.filter(p => p.category === category);
       }
 
-      renderPrompts(filteredPrompts);
+      renderPrompts(results, category, sub);
+      setupSearch();
+    };
 
-      // 🔍 تحديث البحث
-      searchInput.addEventListener('input', () => {
-        const query = searchInput.value;
-        const results = filterPrompts(filteredPrompts, query);
-        renderPrompts(results);
+    // 📋 الدالة المسؤولة عن النسخ
+    window.copyPrompt = (text, btn) => {
+      navigator.clipboard.writeText(text).then(() => {
+        const originalText = btn.textContent;
+        btn.textContent = "✅ نُسخت!";
+        btn.classList.replace("bg-indigo-600", "bg-green-600");
+
+        setTimeout(() => {
+          btn.textContent = originalText;
+          btn.classList.replace("bg-green-600", "bg-indigo-600");
+        }, 1500);
       });
-
-      // 📤 تصدير البرومبتات الحالية
-      window.exportCurrentPrompts = () => {
-        if (filteredPrompts.length === 0) {
-          alert("❌ لا توجد برومبتات لتصديرها.");
-          return;
-        }
-        exportToCSV(
-          filteredPrompts.map(p => ({ text: p.text, date: new Date().toLocaleDateString('ar-SA') })),
-          `${sub ? `${sub}-${category}.csv` : `${category}-prompts.csv`}`
-        );
-      };
     };
   </script>
 </body>
