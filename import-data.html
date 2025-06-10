@@ -2,125 +2,206 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8" />
-  <title>استيراد البيانات</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <!-- Tailwind CSS -->
-  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"  rel="stylesheet" />
+  <title>استيراد بيانات - Promptica</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  
+  <!-- React + ReactDOM -->
+  <script src="https://unpkg.com/react@18/umd/react.development.js"  crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"  crossorigin></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script> 
+
+  <!-- Tailwind CSS CDN -->
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"  rel="stylesheet">
+
+  <!-- Internal Styles -->
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f9fafb;
+      color: #1f2937;
+      line-height: 1.8;
+    }
+    .line-clamp-3 {
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    @media (max-width: 640px) {
+      html { font-size: 16px; }
+      textarea { font-size: 0.875rem; padding: 0.75rem; }
+    }
+  </style>
 </head>
 <body class="min-h-screen bg-gray-50 p-4">
+  <!-- Header -->
   <header class="flex justify-between items-center pb-4 border-b border-gray-200 mb-6">
-    <h1 class="text-2xl font-bold text-indigo-700">Promptica - استيراد البيانات</h1>
-    <a href="index.html" class="text-indigo-600 hover:text-indigo-800 underline">← العودة</a>
+    <h1 class="text-2xl sm:text-3xl font-bold text-indigo-700 flex items-center">Promptica</h1>
+    <div class="space-x-4 rtl:space-x-reverse">
+      <a href="index.html" class="text-indigo-600 hover:text-indigo-800 underline">← الرجوع إلى لوحة التحكم</a>
+    </div>
   </header>
 
-  <div class="container mx-auto max-w-4xl">
-    <h2 class="text-xl font-semibold text-gray-800 mb-4">رفع ملف Markdown لاستيراد البيانات</h2>
-    <p class="text-sm text-gray-600 mb-4">
-      يجب أن يكون الملف بصيغة Markdown مثل:
-    </p>
-    <pre class="bg-gray-100 p-4 rounded mb-6">
-{`# قسم رئيسي: المساعد الشخصي
+  <!-- Root Div for React App -->
+  <div id="root"></div>
 
-## قسم فرعي: كتابة النصوص
-- **برومبت:** كيف أكتب رسالة تقديم لنفسي؟
-- **الوصف:** هذا البرومبت يساعد في كتابة رسالة تعريفية.
-- **الكلمات:** 200`}
-    </pre>
-
-    <input
-      type="file"
-      accept=".md"
-      onChange={(e) => importMarkdown(e)}
-      class="mb-6"
-    />
-
-    <div id="results" class="space-y-4"></div>
-  </div>
-
+  <!-- Footer -->
   <footer class="mt-8 pt-4 border-t border-gray-200 text-center text-sm text-gray-500">
-    &copy; {{new Date().getFullYear()}} Promptica
+    &copy; {{new Date().getFullYear()}} Promptica. جميع الحقوق محفوظة.
   </footer>
 
-  <script>
-    function importMarkdown(event) {
-      const file = event.target.files[0];
-      if (!file) return;
+  <!-- React Code -->
+  <script type="text/babel">
+    const { useState } = window.React;
 
-      const reader = new FileReader();
-      reader.onload = async function (e) {
-        const text = e.target.result;
-        const lines = text.split(/\r?\n/).filter(Boolean);
-        let currentCategory = '';
-        let currentSubCategory = '';
-        const prompts = [];
+    function App() {
+      const [rawText, setRawText] = useState('');
+      const [fileContent, setFileContent] = useState('');
+      const [parsedPrompts, setParsedPrompts] = useState([]);
+      const [copiedCount, setCopiedCount] = useState(0);
+      const [dropZoneActive, setDropZoneActive] = useState(false);
 
-        lines.forEach(line => {
-          line = line.trim();
-          if (line.startsWith('# قسم رئيسي:')) {
-            currentCategory = line.replace('# قسم رئيسي:', '').trim();
-          } else if (line.startsWith('## قسم فرعي:')) {
-            currentSubCategory = line.replace('## قسم فرعي:', '').trim();
-          } else if (line.startsWith('- **برومبت:**')) {
-            const promptText = line.replace('- **برومпт:**', '').trim();
-            const descriptionLine = lines[lines.indexOf(line) + 1]?.replace('- **الوصف:**', '').trim() || '';
-            const tokensLine = lines[lines.indexOf(line) + 2]?.replace('- **الكلمات:**', '').trim() || '0';
-
-            if (currentCategory && currentSubCategory && promptText) {
-              prompts.push({
-                id: Date.now() + Math.random(),
-                text: promptText,
-                category: currentCategory,
-                subCategory: currentSubCategory,
-                description: descriptionLine,
-                tokens: parseInt(tokensLine) || 0
-              });
-            }
-          }
-        });
-
-        // حفظ البيانات
-        const existingPrompts = JSON.parse(localStorage.getItem('prompts')) || [];
-        localStorage.setItem('prompts', JSON.stringify([...existingPrompts, ...prompts]));
-
-        const existingCategories = JSON.parse(localStorage.getItem('categories')) || [];
-        if (!existingCategories.includes(currentCategory)) {
-          localStorage.setItem('categories', JSON.stringify([...existingCategories, currentCategory]));
-        }
-
-        const existingSubCategories = JSON.parse(localStorage.getItem('subCategories')) || {};
-        if (!existingSubCategories[currentCategory]) {
-          existingSubCategories[currentCategory] = [];
-        }
-        if (!existingSubCategories[currentCategory].includes(currentSubCategory)) {
-          existingSubCategories[currentCategory].push(currentSubCategory);
-        }
-        localStorage.setItem('subCategories', JSON.stringify(existingSubCategories));
-
-        displayResults(prompts);
+      // 📥 معالجة لصق النص
+      const handlePaste = (e) => {
+        const text = e.clipboardData.getData('text');
+        setRawText(text);
+        parsePrompts(text);
       };
-      reader.readAsText(file);
+
+      // 📁 قراءة ملف
+      const handleFileUpload = (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          const content = event.target.result;
+          setFileContent(content);
+          parsePrompts(content);
+        };
+        reader.readAsText(file);
+      };
+
+      // 🧠 استخراج البرومبتات (مثال بسيط)
+      const parsePrompts = (text) => {
+        const lines = text.split('\n').filter(line => line.trim());
+        const prompts = lines.map((line, index) => ({
+          id: index,
+          text: line.trim(),
+          wordCount: line.trim().split(/\s+/).length
+        }));
+        setParsedPrompts(prompts);
+      };
+
+      // 🖱️ drag and drop events
+      const handleDragOver = (e) => {
+        e.preventDefault();
+        setDropZoneActive(true);
+      };
+
+      const handleDragLeave = () => {
+        setDropZoneActive(false);
+      };
+
+      const handleDrop = (e) => {
+        e.preventDefault();
+        setDropZoneActive(false);
+        if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+          const file = e.dataTransfer.files[0];
+          const reader = new FileReader();
+          reader.onload = (event) => {
+            const content = event.target.result;
+            setFileContent(content);
+            parsePrompts(content);
+          };
+          reader.readAsText(file);
+        }
+      };
+
+      // 📋 نسخ النص
+      const copyToClipboard = (text) => {
+        navigator.clipboard.writeText(text).then(() => {
+          setCopiedCount(prev => prev + 1);
+          alert("✅ تم النسخ!");
+        });
+      };
+
+      return (
+        <div className="container mx-auto max-w-4xl">
+          <h2 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-6">استيراد بيانات من ملف أو نص</h2>
+
+          {/* منطقة لصق */}
+          <div className="bg-white p-6 rounded shadow-md mb-8">
+            <h3 className="font-semibold text-lg mb-4">لصق نص مباشر</h3>
+            <textarea
+              placeholder="ضع هنا النصوص أو اسحب ملفًا..."
+              value={rawText}
+              onPaste={handlePaste}
+              onChange={(e) => setRawText(e.target.value)}
+              className="w-full h-32 p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            ></textarea>
+          </div>
+
+          {/* رفع ملف */}
+          <div 
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop}
+            className={`bg-white p-6 rounded shadow-md mb-8 border-2 border-dashed ${dropZoneActive ? 'border-indigo-500 bg-indigo-50' : 'border-gray-300'}`}
+          >
+            <h3 className="font-semibold text-lg mb-2">رفع ملف (.txt أو .md)</h3>
+            <p className="text-sm text-gray-600 mb-4">اسحب الملف هنا أو انقر للاختيار</p>
+            <input
+              type="file"
+              accept=".txt,.md"
+              onChange={handleFileUpload}
+              className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:bg-indigo-600 file:text-white hover:file:bg-indigo-700"
+            />
+          </div>
+
+          {/* عرض النتائج */}
+          <div className="bg-white p-6 rounded shadow-md mb-8">
+            <h3 className="font-semibold text-lg mb-4">نتائج الاستيراد</h3>
+            <div className="mb-4">
+              <p className="text-gray-700">عدد البرومبتات المستخرجة: <span className="font-medium">{parsedPrompts.length}</span></p>
+              <p className="text-gray-700 mt-1">عدد الكلمات الإجمالي: <span className="font-medium">
+                {parsedPrompts.reduce((sum, p) => sum + p.wordCount, 0)}
+              </span></p>
+              <p className="text-gray-700 mt-1">عدد مرات النسخ: <span className="font-medium">{copiedCount}</span></p>
+            </div>
+            <div className="space-y-2">
+              {parsedPrompts.length === 0 && (
+                <p className="text-gray-500 text-center py-4">لم يتم العثور على برومبتات بعد.</p>
+              )}
+              {parsedPrompts.map(prompt => (
+                <div key={prompt.id} className="bg-gray-50 p-3 rounded hover:bg-gray-100 flex justify-between items-center">
+                  <span className="text-sm md:text-base">{prompt.text}</span>
+                  <button
+                    onClick={() => copyToClipboard(prompt.text)}
+                    className="text-indigo-600 hover:text-indigo-800 px-3 py-1 rounded hover:bg-indigo-50"
+                  >
+                    📋 نسخ
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* أزرار التنقل */}
+          <div className="flex space-x-4 rtl:space-x-reverse">
+            <a href="index.html?tab=prompts" className="px-6 py-3 bg-indigo-600 text-white rounded hover:bg-indigo-700 transition">
+              ➕ الذهاب إلى إدارة البرومبتات
+            </a>
+            <a href="index.html" className="px-6 py-3 bg-gray-600 text-white rounded hover:bg-gray-700 transition">
+              🏠 الذهاب إلى لوحة التحكم
+            </a>
+          </div>
+        </div>
+      );
     }
 
-    function displayResults(prompts) {
-      const container = document.getElementById('results');
-      container.innerHTML = '';
-
-      if (prompts.length === 0) {
-        container.innerHTML = '<p class="text-red-600">لم يتم العثور على بيانات صالحة.</p>';
-        return;
-      }
-
-      container.innerHTML = `<p class="text-green-600 mb-4">✅ تم استيراد ${prompts.length} برومبت بنجاح!</p>`;
-      const ul = document.createElement('ul');
-      ul.className = 'space-y-2';
-      prompts.forEach(prompt => {
-        const li = document.createElement('li');
-        li.className = 'bg-white p-3 rounded shadow-sm text-sm';
-        li.textContent = `${prompt.text} (${prompt.category} → ${prompt.subCategory})`;
-        ul.appendChild(li);
-      });
-      container.appendChild(ul);
-    }
+    const root = window.ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
   </script>
 </body>
 </html>
