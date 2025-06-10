@@ -26,7 +26,10 @@
 <body class="min-h-screen bg-gray-50 p-4">
   <!-- Header -->
   <header class="mb-6">
-    <h1 class="text-2xl sm:text-3xl font-bold text-indigo-700">برومبتات القسم</h1>
+    <div class="flex justify-between items-center pb-4 border-b border-gray-200 mb-6">
+      <h1 class="text-2xl sm:text-3xl font-bold text-indigo-700">Promptica</h1>
+      <a href="index.html" class="text-indigo-600 hover:text-indigo-800 underline">← العودة إلى لوحة التحكم</a>
+    </div>
   </header>
 
   <!-- Section Name Display -->
@@ -55,7 +58,8 @@
   <!-- Modal Popup -->
   <div id="copy-history-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-black bg-opacity-50">
     <div class="bg-white w-11/12 sm:w-3/4 lg:w-1/2 max-h-[80vh] overflow-y-auto rounded shadow-lg p-6 relative">
-      <button onclick="closeModal()" class="absolute top-2 right-2 text-gray-500 hover:text-gray-700">&times;</button>
+      <!-- زر الإغلاق (X) -->
+      <button onclick="closeModal()" class="absolute top-2 right-2 text-xl font-bold text-gray-500 hover:text-gray-700">&times;</button>
       <h3 class="text-xl font-semibold mb-4">سجل النسخ لهذا البرومبت</h3>
       <ul id="copy-history-list" class="space-y-2"></ul>
     </div>
@@ -126,10 +130,11 @@
 
     // 📁 دالة عرض سجل النسخ
     function showCopyHistory(promptId) {
-      const history = JSON.parse(localStorage.getItem(copyHistoryKey))?.[promptId] || [];
       const modal = document.getElementById('copy-history-modal');
       const list = document.getElementById('copy-history-list');
       list.innerHTML = '';
+      const history = JSON.parse(localStorage.getItem(copyHistoryKey))?.[promptId] || [];
+
       if (history.length === 0) {
         list.innerHTML = '<li class="py-2 text-gray-500">لا يوجد سجل نسخ لهذا البرومبت.</li>';
       } else {
