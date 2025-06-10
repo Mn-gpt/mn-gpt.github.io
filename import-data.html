@@ -2,49 +2,84 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8" />
-  <title>استيراد البيانات - Promptica</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <!-- Tailwind CSS -->
-  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"  rel="stylesheet" />
+  <title>استيراد بيانات - Promptica</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <!-- Tailwind CSS CDN -->
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"  rel="stylesheet">
+  <!-- Internal Styles -->
   <style>
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f9fafb;
+      color: #1f2937;
+      line-height: 1.8;
+    }
+    .line-clamp-2 {
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
     }
   </style>
 </head>
-<body class="bg-gray-50 min-h-screen p-6">
+<body class="min-h-screen bg-gray-50 p-4">
+  <!-- Header -->
+  <header class="flex justify-between items-center pb-4 border-b border-gray-200 mb-6">
+    <h1 class="text-2xl sm:text-3xl font-bold text-indigo-700 flex items-center">Promptica</h1>
+    <a href="index.html" class="text-indigo-600 hover:text-indigo-800 underline">← العودة إلى لوحة التحكم</a>
+  </header>
+
+  <!-- Import Form -->
   <div class="container mx-auto max-w-4xl">
-    <h1 class="text-3xl font-bold text-indigo-700 mb-6">📥 استيراد البيانات</h1>
+    <div class="bg-white rounded-lg shadow-md p-6">
+      <h2 class="text-2xl font-bold text-gray-800 mb-6">📥 استيراد بيانات من Markdown</h2>
 
-    <!-- اختيار القسم -->
-    <div class="mb-6 bg-white p-6 rounded shadow-md">
-      <label class="block text-sm font-medium text-gray-700 mb-2">القسم الرئيسي</label>
-      <select id="mainCategorySelect" class="w-full p-3 border border-gray-300 rounded"></select>
+      <!-- أقسام رئيسية وفرعية -->
+      <div class="mb-6">
+        <label class="block text-sm font-medium text-gray-700 mb-2">اختر القسم الرئيسي</label>
+        <select id="mainCategorySelect" class="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500">
+          <!-- يتم ملؤه ديناميكيًا من localStorage -->
+        </select>
+      </div>
 
-      <label class="block text-sm font-medium text-gray-700 mt-4 mb-2">القسم الفرعي (اختياري)</label>
-      <select id="subCategorySelect" class="w-full p-3 border border-gray-300 rounded">
-        <option value="">-- لا يوجد --</option>
-      </select>
+      <div class="mb-6">
+        <label class="block text-sm font-medium text-gray-700 mb-2">اختر القسم الفرعي (اختياري)</label>
+        <select id="subCategorySelect" class="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500">
+          <option value="">-- لا يوجد --</option>
+          <!-- يتم ملؤه ديناميكيًا عند اختيار القسم الرئيسي -->
+        </select>
+      </div>
+
+      <!-- رفع الملف -->
+      <div class="mb-6">
+        <label class="block text-sm font-medium text-gray-700 mb-2">رفع ملف Markdown (.md)</label>
+        <input type="file" accept=".md" id="markdownFileInput" class="w-full p-2 border border-gray-300 rounded">
+      </div>
+
+      <div class="mb-6">
+        <label class="block text-sm font-medium text-gray-700 mb-2">أو الصق محتوى Markdown هنا</label>
+        <textarea id="markdownText" rows="10" placeholder="ضع محتوى markdown هنا..." class="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"></textarea>
+      </div>
+
+      <!-- زر الاستيراد -->
+      <button id="importButton" class="px-6 py-3 bg-gradient-to-r from-green-500 to-teal-600 text-white font-semibold rounded shadow hover:from-green-600 hover:to-teal-700 transition transform hover:scale-105">
+        🔽 استيراد البيانات
+      </button>
     </div>
-
-    <!-- رفع الملف أو لصقه -->
-    <div class="bg-white p-6 rounded shadow-md mb-6">
-      <label class="block text-sm font-medium text-gray-700 mb-2">رفع ملف (.md)</label>
-      <input type="file" accept=".md" id="markdownFileInput" class="w-full mb-4" />
-
-      <label class="block text-sm font-medium text-gray-700 mb-2">أو الصق النص هنا:</label>
-      <textarea id="markdownText" rows="10" placeholder="ضع محتوى markdown هنا..." class="w-full p-3 border border-gray-300 rounded"></textarea>
-    </div>
-
-    <!-- زر الاستيراد -->
-    <button id="importButton" class="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded shadow transition transform hover:scale-105">
-      🔽 استيراد البيانات
-    </button>
 
     <!-- نتائج الاستيراد -->
-    <div id="outputArea" class="mt-8 bg-gray-100 p-4 rounded min-h-[200px] whitespace-pre-wrap overflow-auto"></div>
+    <div id="results" class="mt-8 space-y-4">
+      <h3 class="text-xl font-semibold text-gray-800">نتائج الاستيراد</h3>
+      <div id="outputArea" class="bg-gray-50 p-4 rounded border border-gray-200 min-h-[200px] whitespace-pre-wrap"></div>
+    </div>
   </div>
 
+  <!-- Footer -->
+  <footer class="mt-12 pt-4 border-t border-gray-200 text-center text-sm text-gray-500">
+    &copy; {{new Date().getFullYear()}} Promptica. جميع الحقوق محفوظة.
+  </footer>
+
+  <!-- Script -->
   <script>
     const mainCategorySelect = document.getElementById('mainCategorySelect');
     const subCategorySelect = document.getElementById('subCategorySelect');
@@ -82,88 +117,47 @@
     });
 
     // قراءة ملف Markdown
-    markdownFileInput.addEventListener('change', e => {
+    markdownFileInput.addEventListener('change', (e) => {
       const file = e.target.files[0];
       if (!file) return;
       const reader = new FileReader();
-      reader.onload = event => markdownText.value = event.target.result;
+      reader.onload = (event) => {
+        markdownText.value = event.target.result;
+      };
       reader.readAsText(file);
     });
 
-    // دالة تحليل النصوص
-function parseMarkdown(md) {
-  const lines = md.split('\n');
-  let prompts = [];
-  let currentMain = '';
-  let currentSub = '';
-  let currentPrompt = { title: '', description: '' };
+    // معالجة النصوص
+    function parseMarkdown(md) {
+      const lines = md.split('\n');
+      const prompts = [];
+      let currentPrompt = { title: '', description: '', category: '', subCategory: '' };
 
-  // دالة لإضافة البرومبت إذا كان موجودًا
-  function addCurrentPrompt() {
-    if (currentPrompt.title && currentPrompt.description.trim()) {
-      prompts.push({
-        ...currentPrompt,
-        category: currentMain,
-        subCategory: currentSub,
-        tokens: currentPrompt.description.split(/\s+/).length
+      lines.forEach(line => {
+        if (line.startsWith('###')) {
+          if (currentPrompt.title && currentPrompt.description) {
+            prompts.push(currentPrompt);
+            currentPrompt = { title: '', description: '', category: '', subCategory: '' };
+          }
+          currentPrompt.title = line.replace(/^###\s*/, '').trim();
+        } else if (line.trim()) {
+          currentPrompt.description += line + '\n';
+        }
       });
-      currentPrompt = { title: '', description: '' };
-    }
-  }
 
-  lines.forEach(line => {
-    line = line.trim();
-
-    // 1. تحليل العناوين باستخدام # أو ## أو ###
-    const headingMatch = line.match(/^(#{1,3})\s+(.*)/);
-    if (headingMatch) {
-      addCurrentPrompt(); // إضافة البرومبت الحالي قبل التبديل
-
-      const level = headingMatch[1].length;
-      const title = headingMatch[2];
-
-      if (level === 1) {
-        currentMain = title;
-      } else if (level === 2) {
-        currentSub = title;
-      } else if (level === 3) {
-        currentPrompt.title = title;
+      if (currentPrompt.title && currentPrompt.description) {
+        prompts.push(currentPrompt);
       }
-      return;
+
+      return prompts.map(p => ({
+        ...p,
+        category: mainCategorySelect.value,
+        subCategory: subCategorySelect.value,
+        tokens: p.description.split(/\s+/).length
+      }));
     }
 
-    // 2. تحليل العناوين باستخدام * أو - (قائمة غير مرتبة)
-    const listMatch = line.match(/^[\*\-]\s+(.*)/);
-    if (listMatch) {
-      addCurrentPrompt();
-      currentPrompt.title = listMatch[1];
-      return;
-    }
-
-    // 3. اكتشاف النصوص العادية كعناوين بناءً على شروط ذكية
-    if (!line.startsWith('>') && !line.includes(':') && /^[A-Z]/.test(line) && !/[.:،;]/.test(line.slice(-1))) {
-      addCurrentPrompt();
-      currentPrompt.title = line;
-      return;
-    }
-
-    // 4. التعامل مع النصوص العادية كوصف للبرومبت
-    if (line && !line.startsWith('#') && !line.startsWith('*') && !line.startsWith('-')) {
-      if (currentPrompt.title) {
-        currentPrompt.description += line + '\n';
-      } else if (currentMain && !currentSub) {
-        // يمكن اعتبار هذا وصف القسم الرئيسي
-        // أو تجاهله حسب الحاجة
-      }
-    }
-  });
-
-  // إضافة آخر برومبت إن وُجد
-  addCurrentPrompt();
-
-  return prompts;
-}
-    // معالجة الزر عند الضغط
+    // زر الاستيراد
     importButton.addEventListener('click', () => {
       const selectedMain = mainCategorySelect.value;
       const selectedSub = subCategorySelect.value;
@@ -180,60 +174,33 @@ function parseMarkdown(md) {
       }
 
       try {
-        const structure = parseMarkdown(content);
+        const prompts = parseMarkdown(content);
 
-        // حفظ البرومبتات المستخلصة في localStorage
-        const promptsToSave = flattenStructure(structure, selectedMain, selectedSub);
-        savePromptsToLocalStorage(promptsToSave);
+        if (!prompts.length) {
+          outputArea.textContent = "🚫 لم يتم العثور على أي برومبتات صالحة في النص.";
+          return;
+        }
+
+        // حفظ البرومبتات في localStorage
+        const existingPrompts = JSON.parse(localStorage.getItem('prompts')) || [];
+        const updatedPrompts = [...existingPrompts, ...prompts];
+
+        localStorage.setItem('prompts', JSON.stringify(updatedPrompts));
 
         // عرض النتيجة
         outputArea.innerHTML = `
-          ✅ تم استيراد ${promptsToSave.length} برومبتات بنجاح!<br><br>
-          <strong>الهيكل المتعرف عليه:</strong><br>
-          <pre>${JSON.stringify(structure, null, 2)}</pre>
+          ✅ تم استيراد ${prompts.length} برومبتات بنجاح!<br><br>
+          <strong>أول 3 برومبتات:</strong><br>
+          ${prompts.slice(0, 3).map((p, i) => `${i+1}. ${p.title}`).join('<br>')}
+          <br><br>
+          يمكنك مراجعة جميع البرومبتات في قسم "لوحة التحكم".
         `;
       } catch (error) {
-        outputArea.textContent = `❌ خطأ أثناء المعالجة: ${error.message}`;
+        outputArea.textContent = `❌ حدث خطأ أثناء المعالجة: ${error.message}`;
       }
     });
 
-    // تحويل الهيكل إلى برومبتات
-    function flattenStructure(nodes, category, subCategory = '') {
-      let results = [];
-
-      nodes.forEach(node => {
-        if (node.type === "main-title" || node.type === "sub-title" || node.type === "star-title" || node.type === "plain-title") {
-          if (node.content?.trim()) {
-            results.push({
-              title: node.text,
-              description: node.content,
-              category,
-              subCategory,
-              tokens: countTokens(node.content)
-            });
-          }
-        }
-
-        if (node.children && node.children.length) {
-          results = results.concat(flattenStructure(node.children, category, subCategory));
-        }
-      });
-
-      return results;
-    }
-
-    // حساب عدد الكلمات (tokens)
-    function countTokens(text) {
-      return text.split(/\s+/).length;
-    }
-
-    // حفظ البرومبتات في localStorage
-    function savePromptsToLocalStorage(newPrompts) {
-      const existingPrompts = JSON.parse(localStorage.getItem('prompts')) || [];
-      const updatedPrompts = [...existingPrompts, ...newPrompts];
-      localStorage.setItem('prompts', JSON.stringify(updatedPrompts));
-    }
-
+    // تحميل الأقسام عند التهيئة
     window.onload = loadCategories;
   </script>
 </body>
