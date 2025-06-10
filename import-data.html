@@ -91,116 +91,78 @@
     });
 
     // دالة تحليل النصوص
-    function parseMarkdown(md) {
-      const lines = md.split('\n');
-      let structure = [];
-      let currentLevel = 0;
-      let currentObj = null;
-      let currentParent = null;
+function parseMarkdown(md) {
+  const lines = md.split('\n');
+  let prompts = [];
+  let currentMain = '';
+  let currentSub = '';
+  let currentPrompt = { title: '', description: '' };
 
-      lines.forEach(line => {
-        const trimmedLine = line.trim();
-
-        // تحديد نوع السطر
-        const hashtagMatch = line.match(/^([#]{1,6})\s+(.*)/);
-        if (hashtagMatch) {
-          const level = hashtagMatch[1].length;
-          const title = hashtagMatch[2];
-
-          const obj = {
-            type: level === 1 ? "main-title" : level <= 3 ? "sub-title" : "leaf-title",
-            text: title,
-            format: "hashtag",
-            level,
-            content: "",
-            children: []
-          };
-
-          if (!currentLevel || level <= currentLevel) {
-            // إضافة كعنصر علوي جديد
-            structure.push(obj);
-            currentParent = structure[structure.length - 1];
-            currentObj = obj;
-          } else if (level > currentLevel) {
-            // إضافة كطفل للعنصر الحالي
-            if (currentObj && currentObj.type !== "leaf-title") {
-              currentObj.children.push(obj);
-            } else if (currentParent && currentParent.type !== "leaf-title") {
-              currentParent.children.push(obj);
-            }
-          }
-
-          currentLevel = level;
-          return;
-        }
-
-        const starMatch = line.match(/^(\*{1,3})\s+(.*)/);
-        if (starMatch) {
-          const stars = starMatch[1].length;
-          const title = starMatch[2];
-
-          const obj = {
-            type: stars === 1 ? "star-title" : "bullet",
-            text: title,
-            format: "star",
-            level: stars,
-            content: ""
-          };
-
-          if (currentObj && currentObj.type !== "leaf-title") {
-            currentObj.children.push(obj);
-          } else if (currentParent && currentParent.type !== "leaf-title") {
-            currentParent.children.push(obj);
-          }
-
-          return;
-        }
-
-        // التعرف على العناوين العادية
-        if (
-          trimmedLine &&
-          !trimmedLine.startsWith('#') &&
-          !trimmedLine.startsWith('*') &&
-          isPotentialTitle(trimmedLine)
-        ) {
-          const obj = {
-            type: "plain-title",
-            text: trimmedLine,
-            format: "none",
-            content: ""
-          };
-
-          if (currentObj && currentObj.type !== "leaf-title") {
-            structure.push(obj);
-            currentParent = obj;
-          } else {
-            structure.push(obj);
-            currentParent = obj;
-          }
-
-          return;
-        }
-
-        // محتوى العناصر
-        if (trimmedLine && currentParent && currentParent.type) {
-          if (currentParent.content) {
-            currentParent.content += '\n' + line;
-          } else {
-            currentParent.content = line;
-          }
-        }
+  // دالة لإضافة البرومبت إذا كان موجودًا
+  function addCurrentPrompt() {
+    if (currentPrompt.title && currentPrompt.description.trim()) {
+      prompts.push({
+        ...currentPrompt,
+        category: currentMain,
+        subCategory: currentSub,
+        tokens: currentPrompt.description.split(/\s+/).length
       });
+      currentPrompt = { title: '', description: '' };
+    }
+  }
 
-      return structure.filter(item => item.text); // إزالة العناصر الفارغة
+  lines.forEach(line => {
+    line = line.trim();
+
+    // 1. تحليل العناوين باستخدام # أو ## أو ###
+    const headingMatch = line.match(/^(#{1,3})\s+(.*)/);
+    if (headingMatch) {
+      addCurrentPrompt(); // إضافة البرومبت الحالي قبل التبديل
+
+      const level = headingMatch[1].length;
+      const title = headingMatch[2];
+
+      if (level === 1) {
+        currentMain = title;
+      } else if (level === 2) {
+        currentSub = title;
+      } else if (level === 3) {
+        currentPrompt.title = title;
+      }
+      return;
     }
 
-    // دالة اكتشاف العنوان العادي
-    function isPotentialTitle(text) {
-      const startsWithCapital = text.charAt(0).toUpperCase() === text.charAt(0);
-      const endsWithColonOrNoPunctuation = /[a-zA-Z0-9\u0600-\u06FF]$/.test(text);
-      return startsWithCapital && endsWithColonOrNoPunctuation;
+    // 2. تحليل العناوين باستخدام * أو - (قائمة غير مرتبة)
+    const listMatch = line.match(/^[\*\-]\s+(.*)/);
+    if (listMatch) {
+      addCurrentPrompt();
+      currentPrompt.title = listMatch[1];
+      return;
     }
 
+    // 3. اكتشاف النصوص العادية كعناوين بناءً على شروط ذكية
+    if (!line.startsWith('>') && !line.includes(':') && /^[A-Z]/.test(line) && !/[.:،;]/.test(line.slice(-1))) {
+      addCurrentPrompt();
+      currentPrompt.title = line;
+      return;
+    }
+
+    // 4. التعامل مع النصوص العادية كوصف للبرومبت
+    if (line && !line.startsWith('#') && !line.startsWith('*') && !line.startsWith('-')) {
+      if (currentPrompt.title) {
+        currentPrompt.description += line + '\n';
+      } else if (currentMain && !currentSub) {
+        // يمكن اعتبار هذا وصف القسم الرئيسي
+        // أو تجاهله حسب الحاجة
+      }
+    }
+  });
+
+  // إضافة آخر برومبت إن وُجد
+  addCurrentPrompt();
+
+  return prompts;
+}
     // معالجة الزر عند الضغط
     importButton.addEventListener('click', () => {
       const selectedMain = mainCategorySelect.value;
