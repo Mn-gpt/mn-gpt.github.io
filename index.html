@@ -283,15 +283,17 @@
                 إدارة البرومبتات
               </button>
             )}
-          </div>
 
-          
             {/* زر استيراد البيانات */}
             {isUserAdmin && (
               <div className="mt-4">
                 <a href="import-data.html" className="text-purple-600 hover:text-purple-800 underline">📥 استيراد بيانات من Markdown</a>
               </div>
             )}
+            
+          </div>
+
+          
           {/* Tab Content */}
           {activeTab === 'dashboard' && renderDashboard()}
         </div>
