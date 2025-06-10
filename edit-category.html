@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <title>تعديل القسم</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <!-- React + ReactDOM -->
+  <script src="https://unpkg.com/react@18/umd/react.development.js"  crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"  crossorigin></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script> 
+  <!-- Tailwind CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"  rel="stylesheet" />
+</head>
+<body class="min-h-screen bg-gray-50 p-4">
+  <header class="flex justify-between items-center pb-4 border-b border-gray-200 mb-6">
+    <h1 class="text-2xl font-bold text-indigo-700">تعديل القسم</h1>
+    <a href="index.html" class="text-indigo-600 hover:text-indigo-800 underline">← العودة</a>
+  </header>
+
+  <div id="root"></div>
+
+  <footer class="mt-8 pt-4 border-t border-gray-200 text-center text-sm text-gray-500">
+    &copy; {{new Date().getFullYear()}} Promptica
+  </footer>
+
+  <script type="text/babel">
+    const { useState, useEffect } = window.React;
+
+    function App() {
+      const [mainCategory, setMainCategory] = useState('');
+      const [categories, setCategories] = useState([]);
+      const [editingName, setEditingName] = useState('');
+
+      // قراءة اسم القسم من الرابط
+      useEffect(() => {
+        const urlParams = new URLSearchParams(window.location.search);
+        const cat = decodeURIComponent(urlParams.get('category') || '');
+        if (!cat) {
+          alert("خطأ: لم يتم تحديد القسم.");
+          window.location.href = "index.html";
+          return;
+        }
+        setMainCategory(cat);
+        setEditingName(cat);
+
+        const savedCategories = JSON.parse(localStorage.getItem('categories')) || [];
+        setCategories(savedCategories);
+      }, []);
+
+      // حفظ التعديل
+      const saveEdit = () => {
+        if (!editingName.trim()) return;
+        if (categories.includes(editingName)) {
+          alert("الاسم الجديد موجود بالفعل!");
+          return;
+        }
+
+        const updatedCategories = categories.map(c => c === mainCategory ? editingName : c);
+        setCategories(updatedCategories);
+        localStorage.setItem('categories', JSON.stringify(updatedCategories));
+
+        // تحديث البرومبتات
+        const prompts = JSON.parse(localStorage.getItem('prompts')) || [];
+        const updatedPrompts = prompts.map(p =>
+          p.category === mainCategory ? { ...p, category: editingName } : p
+        );
+        localStorage.setItem('prompts', JSON.stringify(updatedPrompts));
+
+        alert("✅ تم تعديل القسم بنجاح");
+        window.location.href = "index.html";
+      };
+
+      // حذف القسم
+      const deleteCategory = () => {
+        if (!window.confirm(`هل أنت متأكد من حذف "${mainCategory}" وجميع البرومبتات المرتبطة به؟`)) return;
+
+        const updatedCategories = categories.filter(c => c !== mainCategory);
+        setCategories(updatedCategories);
+        localStorage.setItem('categories', JSON.stringify(updatedCategories));
+
+        const prompts = JSON.parse(localStorage.getItem('prompts')) || [];
+        const filteredPrompts = prompts.filter(p => p.category !== mainCategory);
+        localStorage.setItem('prompts', JSON.stringify(filteredPrompts));
+
+        alert("🗑️ تم حذف القسم والبرومبتات المرتبطة به");
+        window.location.href = "index.html";
+      };
+
+      return (
+        <div className="container mx-auto max-w-2xl">
+          <h2 className="text-xl font-semibold mb-4">تعديل اسم القسم:</h2>
+          <div className="bg-white p-6 rounded shadow-md">
+            <input
+              type="text"
+              value={editingName}
+              onChange={(e) => setEditingName(e.target.value)}
+              className="w-full p-3 border border-gray-300 rounded mb-4"
+            />
+            <div className="space-x-4 rtl:space-x-reverse">
+              <button
+                onClick={saveEdit}
+                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
+              >
+                💾 حفظ التعديل
+              </button>
+              <button
+                onClick={deleteCategory}
+                className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition"
+              >
+                ❌ حذف القسم
+              </button>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    const root = window.ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+</body>
+</html>
