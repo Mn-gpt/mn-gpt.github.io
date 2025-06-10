@@ -2,12 +2,10 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8" />
-  <title>Promptica - استيراد بيانات</title>
+  <title>استيراد بيانات - Promptica</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-
-  <!-- Tailwind CSS -->
+  <!-- Tailwind CSS CDN -->
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"  rel="stylesheet">
-
   <!-- Internal Styles -->
   <style>
     body {
@@ -16,15 +14,11 @@
       color: #1f2937;
       line-height: 1.8;
     }
-    .line-clamp-3 {
+    .line-clamp-2 {
       display: -webkit-box;
-      -webkit-line-clamp: 3;
+      -webkit-line-clamp: 2;
       -webkit-box-orient: vertical;
       overflow: hidden;
-    }
-    @media (max-width: 640px) {
-      html { font-size: 16px; }
-      textarea { font-size: 0.875rem; padding: 0.75rem; }
     }
   </style>
 </head>
@@ -32,202 +26,182 @@
   <!-- Header -->
   <header class="flex justify-between items-center pb-4 border-b border-gray-200 mb-6">
     <h1 class="text-2xl sm:text-3xl font-bold text-indigo-700 flex items-center">Promptica</h1>
-    <a href="index.html" class="text-indigo-600 hover:text-indigo-800 underline">← الرجوع إلى لوحة التحكم</a>
+    <a href="index.html" class="text-indigo-600 hover:text-indigo-800 underline">← العودة إلى لوحة التحكم</a>
   </header>
 
-  <!-- Main Content -->
+  <!-- Import Form -->
   <div class="container mx-auto max-w-4xl">
-    <h2 class="text-2xl sm:text-3xl font-bold text-gray-800 mb-6">استيراد بيانات</h2>
+    <div class="bg-white rounded-lg shadow-md p-6">
+      <h2 class="text-2xl font-bold text-gray-800 mb-6">📥 استيراد بيانات من Markdown</h2>
 
-    <!-- Upload File Section -->
-    <div class="bg-white rounded shadow-md p-6 mb-6">
-      <h3 class="font-semibold text-lg mb-4">رفع ملف (Markdown أو TXT)</h3>
-      <input type="file" id="fileInput" accept=".txt,.md" class="w-full mb-4">
-      <p id="fileStats" class="text-sm text-gray-500"></p>
-    </div>
+      <!-- أقسام رئيسية وفرعية -->
+      <div class="mb-6">
+        <label class="block text-sm font-medium text-gray-700 mb-2">اختر القسم الرئيسي</label>
+        <select id="mainCategorySelect" class="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500">
+          <!-- يتم ملؤه ديناميكيًا من localStorage -->
+        </select>
+      </div>
 
-    <!-- Paste Text Section -->
-    <div class="bg-white rounded shadow-md p-6 mb-6">
-      <h3 class="font-semibold text-lg mb-4">لصق نص مباشر</h3>
-      <textarea
-        id="pasteArea"
-        rows="8"
-        placeholder="الصق النص هنا..."
-        class="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
-      ></textarea>
-      <button
-        onclick="processPastedText()"
-        class="mt-3 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded"
-      >
-        ✅ معالجة النص
+      <div class="mb-6">
+        <label class="block text-sm font-medium text-gray-700 mb-2">اختر القسم الفرعي (اختياري)</label>
+        <select id="subCategorySelect" class="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500">
+          <option value="">-- لا يوجد --</option>
+          <!-- يتم ملؤه ديناميكيًا عند اختيار القسم الرئيسي -->
+        </select>
+      </div>
+
+      <!-- رفع الملف -->
+      <div class="mb-6">
+        <label class="block text-sm font-medium text-gray-700 mb-2">رفع ملف Markdown (.md)</label>
+        <input type="file" accept=".md" id="markdownFileInput" class="w-full p-2 border border-gray-300 rounded">
+      </div>
+
+      <div class="mb-6">
+        <label class="block text-sm font-medium text-gray-700 mb-2">أو الصق محتوى Markdown هنا</label>
+        <textarea id="markdownText" rows="10" placeholder="ضع محتوى markdown هنا..." class="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"></textarea>
+      </div>
+
+      <!-- زر الاستيراد -->
+      <button id="importButton" class="px-6 py-3 bg-gradient-to-r from-green-500 to-teal-600 text-white font-semibold rounded shadow hover:from-green-600 hover:to-teal-700 transition transform hover:scale-105">
+        🔽 استيراد البيانات
       </button>
     </div>
 
-    <!-- Import History -->
-    <div class="bg-white rounded shadow-md p-6 mb-6">
-      <h3 class="font-semibold text-lg mb-4">سجل الاستيراد</h3>
-      <ul id="importHistoryList" class="space-y-2 text-sm text-gray-600"></ul>
-    </div>
-
-    <!-- Stats Summary -->
-    <div class="grid grid-cols-1 gap-4 sm:grid-cols-3 sm:gap-6 mt-6">
-      <div class="bg-white p-4 rounded shadow hover:shadow-md transition-colors">
-        <h3 class="text-lg font-semibold text-gray-700 mb-2">عدد الأسطر</h3>
-        <p id="totalLines" class="text-3xl font-bold text-indigo-600">0</p>
-      </div>
-      <div class="bg-white p-4 rounded shadow hover:shadow-md transition-colors">
-        <h3 class="text-lg font-semibold text-gray-700 mb-2">عدد الكلمات</h3>
-        <p id="totalWords" class="text-3xl font-bold text-blue-600">0</p>
-      </div>
-      <div class="bg-white p-4 rounded shadow hover:shadow-md transition-colors">
-        <h3 class="text-lg font-semibold text-gray-700 mb-2">عدد البرومبتات</h3>
-        <p id="totalPrompts" class="text-3xl font-bold text-green-600">0</p>
-      </div>
+    <!-- نتائج الاستيراد -->
+    <div id="results" class="mt-8 space-y-4">
+      <h3 class="text-xl font-semibold text-gray-800">نتائج الاستيراد</h3>
+      <div id="outputArea" class="bg-gray-50 p-4 rounded border border-gray-200 min-h-[200px] whitespace-pre-wrap"></div>
     </div>
   </div>
 
   <!-- Footer -->
-  <footer class="mt-8 pt-4 border-t border-gray-200 text-center text-sm text-gray-500">
+  <footer class="mt-12 pt-4 border-t border-gray-200 text-center text-sm text-gray-500">
     &copy; {{new Date().getFullYear()}} Promptica. جميع الحقوق محفوظة.
   </footer>
 
-  <!-- Scripts -->
+  <!-- Script -->
   <script>
-    const promptStorageKey = "prompts";
-    const importHistoryKey = "import_history";
+    const mainCategorySelect = document.getElementById('mainCategorySelect');
+    const subCategorySelect = document.getElementById('subCategorySelect');
+    const markdownText = document.getElementById('markdownText');
+    const markdownFileInput = document.getElementById('markdownFileInput');
+    const importButton = document.getElementById('importButton');
+    const outputArea = document.getElementById('outputArea');
 
-    function updateImportHistory(method) {
-      let history = JSON.parse(localStorage.getItem(importHistoryKey)) || [];
-      const timestamp = new Date().toLocaleString('ar-SA');
-      history.push({ method, timestamp });
-      localStorage.setItem(importHistoryKey, JSON.stringify(history));
-      renderImportHistory();
-    }
-
-    function renderImportHistory() {
-      const list = document.getElementById("importHistoryList");
-      const history = JSON.parse(localStorage.getItem(importHistoryKey)) || [];
-
-      list.innerHTML = "";
-      if (history.length === 0) {
-        list.innerHTML = "<li class='py-2 text-gray-500'>لا يوجد سجل استيراد.</li>";
-        return;
-      }
-
-      history.forEach((entry, index) => {
-        const li = document.createElement("li");
-        li.className = "py-2 border-b border-gray-200";
-        li.textContent = `${entry.method} ← ${entry.timestamp}`;
-        list.appendChild(li);
+    // تحميل الأقسام من localStorage
+    function loadCategories() {
+      const categories = JSON.parse(localStorage.getItem('categories')) || ['عام'];
+      categories.forEach(cat => {
+        const option = document.createElement('option');
+        option.value = cat;
+        option.textContent = cat;
+        mainCategorySelect.appendChild(option);
       });
     }
 
-    function extractPromptsFromText(text) {
-      const lines = text.split(/\r?\n/).filter(line => line.trim());
-      const prompts = [];
+    // تحديث الأقسام الفرعية بناءً على القسم الرئيسي
+    mainCategorySelect.addEventListener('change', () => {
+      subCategorySelect.innerHTML = '<option value="">-- لا يوجد --</option>';
+      const selectedMain = mainCategorySelect.value;
+      if (!selectedMain) return;
 
-      let currentPrompt = "";
+      const subCategories = JSON.parse(localStorage.getItem('subCategories')) || {};
+      if (subCategories[selectedMain]) {
+        subCategories[selectedMain].forEach(sub => {
+          const option = document.createElement('option');
+          option.value = sub;
+          option.textContent = sub;
+          subCategorySelect.appendChild(option);
+        });
+      }
+    });
+
+    // قراءة ملف Markdown
+    markdownFileInput.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        markdownText.value = event.target.result;
+      };
+      reader.readAsText(file);
+    });
+
+    // معالجة النصوص
+    function parseMarkdown(md) {
+      const lines = md.split('\n');
+      const prompts = [];
+      let currentPrompt = { title: '', description: '', category: '', subCategory: '' };
 
       lines.forEach(line => {
-        if (line.startsWith("# ") || line.trim() === "---") {
-          if (currentPrompt.trim()) {
-            prompts.push({
-              id: Date.now() + Math.floor(Math.random() * 1000),
-              text: currentPrompt.trim(),
-              category: "مستورد",
-              subCategory: "عامة",
-              tokens: currentPrompt.trim().split(/\s+/).length,
-              date: new Date().toISOString()
-            });
-            currentPrompt = "";
+        if (line.startsWith('###')) {
+          if (currentPrompt.title && currentPrompt.description) {
+            prompts.push(currentPrompt);
+            currentPrompt = { title: '', description: '', category: '', subCategory: '' };
           }
-          if (line.startsWith("# ")) {
-            // يمكنك هنا استخلاص القسم من العنوان الأولي
-            currentPrompt += line.replace(/^#+\s*/, '') + "\n";
-          }
-        } else {
-          currentPrompt += line + "\n";
+          currentPrompt.title = line.replace(/^###\s*/, '').trim();
+        } else if (line.trim()) {
+          currentPrompt.description += line + '\n';
         }
       });
 
-      if (currentPrompt.trim()) {
-        prompts.push({
-          id: Date.now() + Math.floor(Math.random() * 1000),
-          text: currentPrompt.trim(),
-          category: "مستورد",
-          subCategory: "عامة",
-          tokens: currentPrompt.trim().split(/\s+/).length,
-          date: new Date().toISOString()
-        });
+      if (currentPrompt.title && currentPrompt.description) {
+        prompts.push(currentPrompt);
       }
 
-      return prompts;
+      return prompts.map(p => ({
+        ...p,
+        category: mainCategorySelect.value,
+        subCategory: subCategorySelect.value,
+        tokens: p.description.split(/\s+/).length
+      }));
     }
 
-    function savePrompts(prompts) {
-      const existingPrompts = JSON.parse(localStorage.getItem(promptStorageKey)) || [];
-      const updatedPrompts = [...existingPrompts, ...prompts];
-      localStorage.setItem(promptStorageKey, JSON.stringify(updatedPrompts));
-    }
+    // زر الاستيراد
+    importButton.addEventListener('click', () => {
+      const selectedMain = mainCategorySelect.value;
+      const selectedSub = subCategorySelect.value;
+      const content = markdownText.value.trim();
 
-    function calculateAndDisplayStats(text) {
-      const linesCount = text.split(/\r?\n/).filter(l => l.trim()).length;
-      const wordsCount = text.split(/\s+/).filter(w => w.trim()).length;
-
-      document.getElementById("totalLines").textContent = linesCount;
-      document.getElementById("totalWords").textContent = wordsCount;
-      document.getElementById("totalPrompts").textContent = prompts.length;
-    }
-
-    function handleFileUpload(event) {
-      const file = event.files[0];
-      if (!file) return;
-
-      const reader = new FileReader();
-      reader.onload = function (e) {
-        const text = e.target.result;
-        updateImportHistory(`رفع ملف: ${file.name}`);
-        processText(text);
-      };
-      reader.readAsText(file);
-    }
-
-    function processPastedText() {
-      const text = document.getElementById("pasteArea").value.trim();
-      if (!text) return alert("❌ لا يمكن معالجة نص فارغ.");
-      updateImportHistory("لصق نص يدوي");
-      processText(text);
-    }
-
-    function processText(text) {
-      const prompts = extractPromptsFromText(text);
-      savePrompts(prompts);
-
-      calculateAndDisplayStats(text);
-
-      alert(`✅ تم استيراد ${prompts.length} برومبت بنجاح!`);
-      window.location.href = "index.html#dashboard"; // إعادة توجيه تلقائية
-    }
-
-    // عند تحميل الصفحة
-    window.onload = () => {
-      renderImportHistory();
-
-      // إذا كان هناك ملف محمل عبر الرابط (مثل ?file=prompts.md)
-      const urlParams = new URLSearchParams(window.location.search);
-      const fileParam = urlParams.get('file');
-      if (fileParam) {
-        fetch(decodeURIComponent(fileParam))
-          .then(response => response.text())
-          .then(data => {
-            updateImportHistory(`رفع ملف من الرابط: ${fileParam}`);
-            processText(data);
-          })
-          .catch(() => {
-            alert("❌ لم تتمكن الصفحة من قراءة الملف من الرابط.");
-          });
+      if (!selectedMain) {
+        alert("⚠️ يرجى اختيار القسم الرئيسي");
+        return;
       }
-    };
+
+      if (!content) {
+        alert("⚠️ لا يوجد محتوى للاستيراد!");
+        return;
+      }
+
+      try {
+        const prompts = parseMarkdown(content);
+
+        if (!prompts.length) {
+          outputArea.textContent = "🚫 لم يتم العثور على أي برومبتات صالحة في النص.";
+          return;
+        }
+
+        // حفظ البرومبتات في localStorage
+        const existingPrompts = JSON.parse(localStorage.getItem('prompts')) || [];
+        const updatedPrompts = [...existingPrompts, ...prompts];
+
+        localStorage.setItem('prompts', JSON.stringify(updatedPrompts));
+
+        // عرض النتيجة
+        outputArea.innerHTML = `
+          ✅ تم استيراد ${prompts.length} برومبتات بنجاح!<br><br>
+          <strong>أول 3 برومبتات:</strong><br>
+          ${prompts.slice(0, 3).map((p, i) => `${i+1}. ${p.title}`).join('<br>')}
+          <br><br>
+          يمكنك مراجعة جميع البرومبتات في قسم "لوحة التحكم".
+        `;
+      } catch (error) {
+        outputArea.textContent = `❌ حدث خطأ أثناء المعالجة: ${error.message}`;
+      }
+    });
+
+    // تحميل الأقسام عند التهيئة
+    window.onload = loadCategories;
   </script>
 </body>
 </html>
