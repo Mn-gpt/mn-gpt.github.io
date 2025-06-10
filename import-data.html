@@ -5,7 +5,7 @@
   <title>Promptica - استيراد بيانات</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
 
-  <!-- Tailwind CSS CDN -->
+  <!-- Tailwind CSS -->
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"  rel="stylesheet">
 
   <!-- Internal Styles -->
@@ -32,9 +32,7 @@
   <!-- Header -->
   <header class="flex justify-between items-center pb-4 border-b border-gray-200 mb-6">
     <h1 class="text-2xl sm:text-3xl font-bold text-indigo-700 flex items-center">Promptica</h1>
-    <div class="space-x-4 rtl:space-x-reverse">
-      <a href="index.html" class="text-indigo-600 hover:text-indigo-800 underline">← الرجوع إلى لوحة التحكم</a>
-    </div>
+    <a href="index.html" class="text-indigo-600 hover:text-indigo-800 underline">← الرجوع إلى لوحة التحكم</a>
   </header>
 
   <!-- Main Content -->
@@ -93,7 +91,7 @@
     &copy; {{new Date().getFullYear()}} Promptica. جميع الحقوق محفوظة.
   </footer>
 
-  <!-- Script -->
+  <!-- Scripts -->
   <script>
     const promptStorageKey = "prompts";
     const importHistoryKey = "import_history";
@@ -125,16 +123,13 @@
     }
 
     function extractPromptsFromText(text) {
-      // يمكنك تعديل هذه الدالة لدعم تنسيقات متقدمة مثل:
-      // - Markdown Headers
-      // - خطوط فاصلة بين البرومبتات
       const lines = text.split(/\r?\n/).filter(line => line.trim());
       const prompts = [];
 
       let currentPrompt = "";
 
       lines.forEach(line => {
-        if (line.trim() === "---") {
+        if (line.startsWith("# ") || line.trim() === "---") {
           if (currentPrompt.trim()) {
             prompts.push({
               id: Date.now() + Math.floor(Math.random() * 1000),
@@ -145,6 +140,10 @@
               date: new Date().toISOString()
             });
             currentPrompt = "";
+          }
+          if (line.startsWith("# ")) {
+            // يمكنك هنا استخلاص القسم من العنوان الأولي
+            currentPrompt += line.replace(/^#+\s*/, '') + "\n";
           }
         } else {
           currentPrompt += line + "\n";
@@ -171,26 +170,17 @@
       localStorage.setItem(promptStorageKey, JSON.stringify(updatedPrompts));
     }
 
-    function calculateAndDisplayStats(lines, words, promptsCount) {
-      document.getElementById("totalLines").textContent = lines;
-      document.getElementById("totalWords").textContent = words;
-      document.getElementById("totalPrompts").textContent = promptsCount;
-    }
-
-    function processText(text) {
+    function calculateAndDisplayStats(text) {
       const linesCount = text.split(/\r?\n/).filter(l => l.trim()).length;
       const wordsCount = text.split(/\s+/).filter(w => w.trim()).length;
 
-      const prompts = extractPromptsFromText(text);
-      savePrompts(prompts);
-
-      calculateAndDisplayStats(linesCount, wordsCount, prompts.length);
-      alert(`✅ تم استيراد ${prompts.length} برومبتات بنجاح!`);
-      window.location.href = "index.html#dashboard"; // إعادة توجيه تلقائي
+      document.getElementById("totalLines").textContent = linesCount;
+      document.getElementById("totalWords").textContent = wordsCount;
+      document.getElementById("totalPrompts").textContent = prompts.length;
     }
 
     function handleFileUpload(event) {
-      const file = event.target.files[0];
+      const file = event.files[0];
       if (!file) return;
 
       const reader = new FileReader();
@@ -205,14 +195,38 @@
     function processPastedText() {
       const text = document.getElementById("pasteArea").value.trim();
       if (!text) return alert("❌ لا يمكن معالجة نص فارغ.");
-
       updateImportHistory("لصق نص يدوي");
       processText(text);
     }
 
-    // Initial Load
+    function processText(text) {
+      const prompts = extractPromptsFromText(text);
+      savePrompts(prompts);
+
+      calculateAndDisplayStats(text);
+
+      alert(`✅ تم استيراد ${prompts.length} برومبت بنجاح!`);
+      window.location.href = "index.html#dashboard"; // إعادة توجيه تلقائية
+    }
+
+    // عند تحميل الصفحة
     window.onload = () => {
       renderImportHistory();
+
+      // إذا كان هناك ملف محمل عبر الرابط (مثل ?file=prompts.md)
+      const urlParams = new URLSearchParams(window.location.search);
+      const fileParam = urlParams.get('file');
+      if (fileParam) {
+        fetch(decodeURIComponent(fileParam))
+          .then(response => response.text())
+          .then(data => {
+            updateImportHistory(`رفع ملف من الرابط: ${fileParam}`);
+            processText(data);
+          })
+          .catch(() => {
+            alert("❌ لم تتمكن الصفحة من قراءة الملف من الرابط.");
+          });
+      }
     };
   </script>
 </body>
