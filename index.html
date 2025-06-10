@@ -62,9 +62,10 @@
   <!-- Logout Function -->
   <script>
     function logout() {
-      localStorage.removeItem("loggedInUser");
-      alert("تم تسجيل الخروج.");
-      window.location.href = "login.html";
+      // ❗ اختبار سريع - تفعيل الدور يدويًا
+localStorage.setItem('loggedInUser', JSON.stringify({ username: 'test-admin', role: 'admin' }));
+alert("تم تفعيل وضع المسؤول يدويًا!");
+window.location.reload();
     }
 
     // 🔒 حماية الصفحة - لا يمكن الوصول إليها بدون تسجيل دخول
