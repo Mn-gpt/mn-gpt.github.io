@@ -1,243 +1,126 @@
-<DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8" />
-  <title>Promptica - استيراد البيانات</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <!-- React + ReactDOM -->
-  <script src="https://unpkg.com/react@18/umd/react.development.js"  crossorigin></script>
-  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"  crossorigin></script>
-  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script> 
-  <!-- Tailwind CSS CDN -->
+  <title>استيراد البيانات</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <!-- Tailwind CSS -->
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"  rel="stylesheet" />
-  <!-- Internal Styles -->
-  <style>
-    body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background-color: #f9fafb;
-      color: #1f2937;
-      line-height: 1.8;
-    }
-    .line-clamp-3 {
-      display: -webkit-box;
-      -webkit-line-clamp: 3;
-      -webkit-box-orient: vertical;
-      overflow: hidden;
-    }
-    @media (max-width: 640px) {
-      html {
-        font-size: 16px;
-      }
-      textarea {
-        font-size: 0.875rem;
-        padding: 0.75rem;
-      }
-      .example-pre {
-        font-size: 0.75rem;
-      }
-    }
-  </style>
 </head>
 <body class="min-h-screen bg-gray-50 p-4">
-  <!-- Header -->
   <header class="flex justify-between items-center pb-4 border-b border-gray-200 mb-6">
-    <h1 class="text-2xl sm:text-3xl font-bold text-indigo-700 flex items-center">
-      Promptica
-    </h1>
-    <div class="space-x-4 rtl:space-x-reverse">
-      <a href="index.html" class="text-indigo-600 hover:text-indigo-800 underline">رجوع</a>
-    </div>
+    <h1 class="text-2xl font-bold text-indigo-700">Promptica - استيراد البيانات</h1>
+    <a href="index.html" class="text-indigo-600 hover:text-indigo-800 underline">← العودة</a>
   </header>
 
-  <!-- Root Div for React App -->
-  <div id="root"></div>
+  <div class="container mx-auto max-w-4xl">
+    <h2 class="text-xl font-semibold text-gray-800 mb-4">رفع ملف Markdown لاستيراد البيانات</h2>
+    <p class="text-sm text-gray-600 mb-4">
+      يجب أن يكون الملف بصيغة Markdown مثل:
+    </p>
+    <pre class="bg-gray-100 p-4 rounded mb-6">
+{`# قسم رئيسي: المساعد الشخصي
 
-  <!-- Footer -->
+## قسم فرعي: كتابة النصوص
+- **برومبت:** كيف أكتب رسالة تقديم لنفسي؟
+- **الوصف:** هذا البرومبت يساعد في كتابة رسالة تعريفية.
+- **الكلمات:** 200`}
+    </pre>
+
+    <input
+      type="file"
+      accept=".md"
+      onChange={(e) => importMarkdown(e)}
+      class="mb-6"
+    />
+
+    <div id="results" class="space-y-4"></div>
+  </div>
+
   <footer class="mt-8 pt-4 border-t border-gray-200 text-center text-sm text-gray-500">
-    &copy; {{new Date().getFullYear()}} Promptica. جميع الحقوق محفوظة.
+    &copy; {{new Date().getFullYear()}} Promptica
   </footer>
 
-  <!-- Logout Function -->
   <script>
-    function logout() {
-      localStorage.removeItem("loggedInUser");
-      alert("تم تسجيل الخروج.");
-      window.location.href = "login.html";
-    }
-  </script>
+    function importMarkdown(event) {
+      const file = event.target.files[0];
+      if (!file) return;
 
-  <!-- React Code -->
-  <script type="text/babel">
-    const { useState } = window.React;
-
-    function App() {
-      const [markdownText, setMarkdownText] = useState('');
-      const [message, setMessage] = useState('');
-
-      // معالجة اللصق
-      const handlePaste = (e) => {
-        setMarkdownText(e.target.value);
-      };
-
-      // معالجة رفع الملف
-      const handleFileUpload = (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
-
-        const reader = new FileReader();
-        reader.onload = (event) => {
-          setMarkdownText(event.target.result);
-        };
-        reader.readAsText(file);
-      };
-
-      // استخراج البرومبتات من Markdown
-      const parsePromptsFromMarkdown = (content) => {
-        const lines = content.split('\n');
-        const newPrompts = [];
-
-        let currentMainCategory = '';
+      const reader = new FileReader();
+      reader.onload = async function (e) {
+        const text = e.target.result;
+        const lines = text.split(/\r?\n/).filter(Boolean);
+        let currentCategory = '';
         let currentSubCategory = '';
+        const prompts = [];
 
         lines.forEach(line => {
           line = line.trim();
+          if (line.startsWith('# قسم رئيسي:')) {
+            currentCategory = line.replace('# قسم رئيسي:', '').trim();
+          } else if (line.startsWith('## قسم فرعي:')) {
+            currentSubCategory = line.replace('## قسم فرعي:', '').trim();
+          } else if (line.startsWith('- **برومبت:**')) {
+            const promptText = line.replace('- **برومпт:**', '').trim();
+            const descriptionLine = lines[lines.indexOf(line) + 1]?.replace('- **الوصف:**', '').trim() || '';
+            const tokensLine = lines[lines.indexOf(line) + 2]?.replace('- **الكلمات:**', '').trim() || '0';
 
-          // التقاط القسم الرئيسي
-          const mainCatMatch = line.match(/^#\s*(.+)$/);
-          if (mainCatMatch) {
-            currentMainCategory = mainCatMatch[1].trim();
-            currentSubCategory = '';
-            return;
-          }
-
-          // التقاط القسم الفرعي
-          const subCatMatch = line.match(/^##\s*(.+)$/);
-          if (subCatMatch) {
-            currentSubCategory = subCatMatch[1].trim();
-            return;
-          }
-
-          // التقاط البرومبت
-          const promptMatch = line.match(/^\-\s*(.+)$/);
-          if (promptMatch) {
-            const text = promptMatch[1].trim();
-            const id = Date.now() + Math.floor(Math.random() * 1000);
-            const tokens = Math.ceil(text.split(/\s+/).length * 1.25);
-
-            newPrompts.push({
-              id,
-              text,
-              category: currentMainCategory,
-              subCategory: currentSubCategory || '',
-              tokens
-            });
+            if (currentCategory && currentSubCategory && promptText) {
+              prompts.push({
+                id: Date.now() + Math.random(),
+                text: promptText,
+                category: currentCategory,
+                subCategory: currentSubCategory,
+                description: descriptionLine,
+                tokens: parseInt(tokensLine) || 0
+              });
+            }
           }
         });
 
-        return newPrompts;
-      };
+        // حفظ البيانات
+        const existingPrompts = JSON.parse(localStorage.getItem('prompts')) || [];
+        localStorage.setItem('prompts', JSON.stringify([...existingPrompts, ...prompts]));
 
-      // عند الضغط على زر الاستيراد
-      const handleImport = () => {
-        if (!markdownText.trim()) {
-          alert("الرجاء إدخال بيانات صحيحة.");
-          return;
+        const existingCategories = JSON.parse(localStorage.getItem('categories')) || [];
+        if (!existingCategories.includes(currentCategory)) {
+          localStorage.setItem('categories', JSON.stringify([...existingCategories, currentCategory]));
         }
 
-        const existingPrompts = JSON.parse(localStorage.getItem('prompts')) || [];
-        const existingCategories = JSON.parse(localStorage.getItem('categories')) || [];
         const existingSubCategories = JSON.parse(localStorage.getItem('subCategories')) || {};
-
-        const newPrompts = parsePromptsFromMarkdown(markdownText);
-
-        // تحديث الأقسام
-        newPrompts.forEach(prompt => {
-          const { category, subCategory } = prompt;
-
-          if (!existingCategories.includes(category)) {
-            existingCategories.push(category);
-          }
-
-          if (!existingSubCategories[category]) {
-            existingSubCategories[category] = [];
-          }
-
-          if (subCategory && !existingSubCategories[category].includes(subCategory)) {
-            existingSubCategories[category].push(subCategory);
-          }
-        });
-
-        // دمج البيانات
-        const updatedPrompts = [...existingPrompts, ...newPrompts];
-
-        localStorage.setItem('prompts', JSON.stringify(updatedPrompts));
-        localStorage.setItem('categories', JSON.stringify(existingCategories));
+        if (!existingSubCategories[currentCategory]) {
+          existingSubCategories[currentCategory] = [];
+        }
+        if (!existingSubCategories[currentCategory].includes(currentSubCategory)) {
+          existingSubCategories[currentCategory].push(currentSubCategory);
+        }
         localStorage.setItem('subCategories', JSON.stringify(existingSubCategories));
 
-        setMessage(`✅ تم استيراد ${newPrompts.length} برومبت جديد.`);
-        
-        setTimeout(() => {
-          window.location.href = "index.html"; // إعادة التوجيه
-        }, 2000);
+        displayResults(prompts);
       };
-
-      return (
-        <div className="bg-white p-4 sm:p-6 rounded-xl shadow-md max-w-4xl mx-auto">
-          <h1 className="text-2xl font-bold mb-4">استيراد البيانات</h1>
-          <p className="mb-4 text-gray-700">
-            يمكنك نسخ ولصق ملف Markdown أو TXT يحتوي على برومبتات جديدة أدناه، أو رفع ملف.
-            سيتم إضافة البرومبتات إلى بياناتك الحالية دون حذفها.
-          </p>
-
-          {/* منطقة لصق */}
-          <textarea
-            value={markdownText}
-            onChange={handlePaste}
-            placeholder="ألصق محتوى Markdown هنا..."
-            className="w-full h-64 p-4 border border-gray-300 rounded mb-4"
-          />
-
-          {/* رفع ملف */}
-          <div className="mb-6">
-            <label className="block text-sm font-medium text-gray-700 mb-2">أو ارفع ملف:</label>
-            <input
-              type="file"
-              accept=".md,.txt"
-              onChange={handleFileUpload}
-              className="w-full"
-            />
-          </div>
-
-          {/* زر الاستيراد */}
-          <button
-            onClick={handleImport}
-            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition w-full sm:w-auto"
-          >
-            📥 استيراد البيانات
-          </button>
-
-          {/* رسالة النجاح */}
-          {message && (
-            <div className="mt-4 p-3 bg-green-100 text-green-800 rounded border border-green-300 text-center">
-              {message}
-            </div>
-          )}
-
-          {/* مثال على التنسيق */}
-          <div className="mt-6 text-sm text-gray-600">
-            <h3 className="font-semibold mb-2">مثال على التنسيق:</h3>
-            <pre className="bg-gray-100 p-3 rounded overflow-x-auto whitespace-pre-wrap example-pre">
-{`# الذكاء الاصطناعي التوليدي
-## نماذج اللغات الكبيرة
-- أنشئ نموذج توليد نصوص طبية عربية: معالجة المصطلحات الطبية اللاتينية، التحقق من الدقة العلمية، منع الهلوسة المعلوماتية`}
-            </pre>
-          </div>
-        </div>
-      );
+      reader.readAsText(file);
     }
 
-    const root = window.ReactDOM.createRoot(document.getElementById('root'));
-    root.render(<App />);
+    function displayResults(prompts) {
+      const container = document.getElementById('results');
+      container.innerHTML = '';
+
+      if (prompts.length === 0) {
+        container.innerHTML = '<p class="text-red-600">لم يتم العثور على بيانات صالحة.</p>';
+        return;
+      }
+
+      container.innerHTML = `<p class="text-green-600 mb-4">✅ تم استيراد ${prompts.length} برومبت بنجاح!</p>`;
+      const ul = document.createElement('ul');
+      ul.className = 'space-y-2';
+      prompts.forEach(prompt => {
+        const li = document.createElement('li');
+        li.className = 'bg-white p-3 rounded shadow-sm text-sm';
+        li.textContent = `${prompt.text} (${prompt.category} → ${prompt.subCategory})`;
+        ul.appendChild(li);
+      });
+      container.appendChild(ul);
+    }
   </script>
 </body>
 </html>
