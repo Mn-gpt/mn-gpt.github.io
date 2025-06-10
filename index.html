@@ -81,7 +81,7 @@
       const [searchTerm, setSearchTerm] = useState('');
       const isUserAdmin = true;
 
-      // تحميل البيانات عند تشغيل الصفحة
+      // تحميل البيانات عند تشغيل التطبيق
       useEffect(() => {
         const savedPrompts = JSON.parse(localStorage.getItem('prompts')) || [];
         const savedCategories = JSON.parse(localStorage.getItem('categories')) || ['عام'];
@@ -103,7 +103,7 @@
         ? fuse.search(searchTerm).map(result => result.item)
         : [];
 
-      // إدارة الأقسام والبرومبتات
+      // إدارة الأقسام
       const [newMainCategory, setNewMainCategory] = useState('');
       const [newSubCategory, setNewSubCategory] = useState('');
       const [selectedMainCategory, setSelectedMainCategory] = useState('');
@@ -368,15 +368,6 @@
                 </button>
               </div>
             </div>
-
-            {/* زر استيراد البيانات */}
-            {isUserAdmin && (
-              <div className="mt-4">
-                <a href="import-data.html" className="inline-block px-6 py-3 bg-gradient-to-r from-pink-500 to-purple-600 text-white font-semibold rounded-full shadow hover:from-pink-600 hover:to-purple-700 transition transform hover:scale-105">
-                  📥 استيراد بيانات من Markdown
-                </a>
-              </div>
-            )}
           </div>
         );
       };
