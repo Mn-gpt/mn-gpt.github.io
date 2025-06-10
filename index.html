@@ -66,25 +66,6 @@
       alert("تم تسجيل الخروج.");
       window.location.href = "login.html";
     }
-
-    // 🔒 حماية الصفحة - لا يمكن الوصول إليها بدون تسجيل دخول
-    window.addEventListener('DOMContentLoaded', () => {
-      const user = JSON.parse(localStorage.getItem('loggedInUser'));
-      
-      // إذا لم يكن هناك مستخدم مسجل دخول → إعادة التوجيه
-      if (!user || !user.username) {
-        alert("❌ يجب تسجيل الدخول أولاً");
-        window.location.href = "login.html";
-        return;
-      }
-
-      // إذا كان ليس مسؤولًا ولكن يحاول الوصول عبر الرابط مباشرة
-      const isAccessingAdminTab = window.location.hash === '#prompts' && user.role !== 'admin';
-      if (isAccessingAdminTab) {
-        alert("🚫 ليس لديك صلاحية للوصول إلى هذا القسم");
-        window.location.href = "index.html"; // إعادة إلى الصفحة الرئيسية
-      }
-    });
   </script>
 
   <!-- React Code -->
@@ -98,28 +79,13 @@
       const [categories, setCategories] = useState([]);
       const [subCategories, setSubCategories] = useState({});
       const [searchTerm, setSearchTerm] = useState('');
-      const [currentPage, setCurrentPage] = useState(1);
-      const [itemsPerPage] = useState(6); // عدد العناصر لكل صفحة
-      const [user, setUser] = useState(null);
-      const [isUserAdmin, setIsUserAdmin] = useState(false);
+      const isUserAdmin = true;
 
-      // 🔐 التحقق من المستخدم عند تشغيل الصفحة
+      // تحميل البيانات عند تشغيل الصفحة
       useEffect(() => {
-        const userData = JSON.parse(localStorage.getItem('loggedInUser'));
-
-        if (!userData || !userData.username) {
-          window.location.href = "login.html";
-          return;
-        }
-
-        setUser(userData);
-        setIsUserAdmin(userData.role === 'admin');
-
-        // تحميل البيانات
         const savedPrompts = JSON.parse(localStorage.getItem('prompts')) || [];
         const savedCategories = JSON.parse(localStorage.getItem('categories')) || ['عام'];
         const savedSubCategories = JSON.parse(localStorage.getItem('subCategories')) || {};
-        
         setPrompts(savedPrompts);
         setCategories(savedCategories);
         setSubCategories(savedSubCategories);
@@ -137,12 +103,59 @@
         ? fuse.search(searchTerm).map(result => result.item)
         : [];
 
+      // إدارة الأقسام والبرومبتات
+      const [newMainCategory, setNewMainCategory] = useState('');
+      const [newSubCategory, setNewSubCategory] = useState('');
+      const [selectedMainCategory, setSelectedMainCategory] = useState('');
+      const [promptText, setPromptText] = useState('');
+      const [promptTokens, setPromptTokens] = useState(0);
+
+      const handleAddMainCategory = () => {
+        if (!newMainCategory.trim()) return;
+        if (categories.includes(newMainCategory)) {
+          alert("القسم الرئيسي موجود بالفعل!");
+          return;
+        }
+        const updatedCategories = [...categories, newMainCategory];
+        setCategories(updatedCategories);
+        localStorage.setItem('categories', JSON.stringify(updatedCategories));
+        setNewMainCategory('');
+      };
+
+      const handleAddSubCategory = () => {
+        if (!selectedMainCategory || !newSubCategory.trim()) return;
+        const updatedSubCategories = { ...subCategories };
+        if (!updatedSubCategories[selectedMainCategory]) {
+          updatedSubCategories[selectedMainCategory] = [];
+        }
+        if (updatedSubCategories[selectedMainCategory].includes(newSubCategory)) {
+          alert("القسم الفرعي موجود بالفعل!");
+          return;
+        }
+        updatedSubCategories[selectedMainCategory].push(newSubCategory);
+        setSubCategories(updatedSubCategories);
+        localStorage.setItem('subCategories', JSON.stringify(updatedSubCategories));
+        setNewSubCategory('');
+      };
+
+      const handleAddPrompt = () => {
+        if (!promptText.trim() || !selectedMainCategory || !newSubCategory.trim()) return;
+        const newPrompt = {
+          id: Date.now(),
+          text: promptText,
+          category: selectedMainCategory,
+          subCategory: newSubCategory,
+          tokens: parseInt(promptTokens) || 0
+        };
+        const updatedPrompts = [...prompts, newPrompt];
+        setPrompts(updatedPrompts);
+        localStorage.setItem('prompts', JSON.stringify(updatedPrompts));
+        setPromptText('');
+        setPromptTokens(0);
+      };
+
       // عرض لوحة التحكم
       const renderDashboard = () => {
-        const totalPrompts = prompts.length;
-        const totalTokens = prompts.reduce((sum, p) => sum + p.tokens, 0);
-        const averageTokens = totalPrompts > 0 ? Math.round(totalTokens / totalPrompts) : 0;
-
         return (
           <div className="space-y-6">
             <h2 className="text-2xl sm:text-3xl font-bold text-gray-800">لوحة التحكم</h2>
@@ -155,7 +168,6 @@
                 value={searchTerm}
                 onChange={(e) => {
                   setSearchTerm(e.target.value);
-                  setCurrentPage(1);
                 }}
                 className="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
               />
@@ -227,62 +239,14 @@
                 </div>
               )}
             </div>
+
+            {/* زر استيراد البيانات */}
+            
           </div>
         );
       };
 
-      // عرض تاب إدارة البرومبتات
       const renderManagePrompts = () => {
-        const [newMainCategory, setNewMainCategory] = useState('');
-        const [newSubCategory, setNewSubCategory] = useState('');
-        const [selectedMainCategory, setSelectedMainCategory] = useState('');
-        const [promptText, setPromptText] = useState('');
-        const [promptTokens, setPromptTokens] = useState(0);
-
-        const handleAddMainCategory = () => {
-          if (!newMainCategory.trim()) return;
-          if (categories.includes(newMainCategory)) {
-            alert("القسم الرئيسي موجود بالفعل!");
-            return;
-          }
-          const updatedCategories = [...categories, newMainCategory];
-          setCategories(updatedCategories);
-          localStorage.setItem('categories', JSON.stringify(updatedCategories));
-          setNewMainCategory('');
-        };
-
-        const handleAddSubCategory = () => {
-          if (!selectedMainCategory || !newSubCategory.trim()) return;
-          const updatedSubCategories = { ...subCategories };
-          if (!updatedSubCategories[selectedMainCategory]) {
-            updatedSubCategories[selectedMainCategory] = [];
-          }
-          if (updatedSubCategories[selectedMainCategory].includes(newSubCategory)) {
-            alert("القسم الفرعي موجود بالفعل!");
-            return;
-          }
-          updatedSubCategories[selectedMainCategory].push(newSubCategory);
-          setSubCategories(updatedSubCategories);
-          localStorage.setItem('subCategories', JSON.stringify(updatedSubCategories));
-          setNewSubCategory('');
-        };
-
-        const handleAddPrompt = () => {
-          if (!promptText.trim() || !selectedMainCategory || !newSubCategory.trim()) return;
-          const newPrompt = {
-            id: Date.now(),
-            text: promptText,
-            category: selectedMainCategory,
-            subCategory: newSubCategory,
-            tokens: parseInt(promptTokens) || 0
-          };
-          const updatedPrompts = [...prompts, newPrompt];
-          setPrompts(updatedPrompts);
-          localStorage.setItem('prompts', JSON.stringify(updatedPrompts));
-          setPromptText('');
-          setPromptTokens(0);
-        };
-
         return (
           <div className="space-y-6">
             <h2 className="text-2xl sm:text-3xl font-bold text-gray-800">إدارة البرومبتات</h2>
@@ -400,11 +364,13 @@
             </div>
 
             {/* زر استيراد البيانات */}
-            <div className="mt-4">
-              <a href="import-data.html" className="inline-block px-6 py-3 bg-gradient-to-r from-pink-500 to-purple-600 text-white font-semibold rounded-full shadow hover:from-pink-600 hover:to-purple-700 transition transform hover:scale-105">
-                📥 استيراد بيانات من Markdown
-              </a>
-            </div>
+            {isUserAdmin && (
+              <div className="mt-4">
+                <a href="import-data.html" className="inline-block px-6 py-3 bg-gradient-to-r from-pink-500 to-purple-600 text-white font-semibold rounded-full shadow hover:from-pink-600 hover:to-purple-700 transition transform hover:scale-105">
+                  📥 استيراد بيانات من Markdown
+                </a>
+              </div>
+            )}
           </div>
         );
       };
@@ -439,12 +405,7 @@
 
           {/* Tab Content */}
           {activeTab === 'dashboard' && renderDashboard()}
-          {activeTab === 'prompts' && isUserAdmin && renderManagePrompts()}
-          {activeTab === 'prompts' && !isUserAdmin && (
-            <div className="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 rounded shadow-inner">
-              <p>🚫 ليس لديك صلاحية للوصول إلى هذا القسم. يمكنك فقط مشاهدة البيانات.</p>
-            </div>
-          )}
+          {activeTab === 'prompts' && renderManagePrompts()}
         </div>
       );
     }
