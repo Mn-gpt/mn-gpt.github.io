@@ -1,16 +1,16 @@
-<DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8" />
   <title>استيراد البيانات - Promptica</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  
+
   <!-- React + ReactDOM -->
   <script src="https://unpkg.com/react@18/umd/react.development.js"  crossorigin></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"  crossorigin></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script> 
 
-  <!-- Tailwind CSS -->
+  <!-- Tailwind CSS CDN -->
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"  rel="stylesheet">
 
   <!-- Internal Styles -->
@@ -27,13 +27,17 @@
       -webkit-box-orient: vertical;
       overflow: hidden;
     }
+    @media (max-width: 640px) {
+      html { font-size: 16px; }
+      textarea { font-size: 0.875rem; padding: 0.75rem; }
+    }
   </style>
 </head>
 <body class="min-h-screen bg-gray-50 p-4">
 
   <!-- Header -->
   <header class="flex justify-between items-center pb-4 border-b border-gray-200 mb-6">
-    <h1 class="text-2xl sm:text-3xl font-bold text-indigo-700">Promptica</h1>
+    <h1 class="text-2xl sm:text-3xl font-bold text-indigo-700 flex items-center">Promptica</h1>
     <a href="index.html" class="text-indigo-600 hover:text-indigo-800 underline">العودة</a>
   </header>
 
