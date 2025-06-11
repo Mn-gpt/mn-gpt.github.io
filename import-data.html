@@ -14,7 +14,7 @@
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       background-color: #f9fafb;
       color: #1f2937;
-      line-height: 1.8;
+      line-height: 1.6;
     }
     .line-clamp-3 {
       display: -webkit-box;
@@ -24,7 +24,6 @@
     }
     @media (max-width: 640px) {
       html { font-size: 16px; }
-      textarea { font-size: 0.875rem; padding: 0.75rem; }
     }
   </style>
 </head>
@@ -39,9 +38,7 @@
   <!-- Main Content -->
   <main class="container mx-auto max-w-4xl">
     <section class="bg-white rounded shadow-md p-6 mb-6">
-      <div id="category-title" class="mb-6">
-        <h2 class="text-2xl font-bold text-gray-800">استيراد بيانات البرومبتات</h2>
-      </div>
+      <h2 class="text-2xl font-bold text-gray-800 mb-6">📥 استيراد بيانات البرومبتات</h2>
 
       <!-- File Upload Area -->
       <div class="mb-6">
@@ -76,9 +73,9 @@
       <div id="summary" class="hidden bg-green-50 text-green-700 border border-green-200 p-4 rounded mb-6">
         <p>✅ تم استيراد:</p>
         <ul class="list-disc list-inside mt-2 space-y-1">
-          <li><span id="countCategories">0</span> أقسام رئيسية</li>
-          <li><span id="countSubcategories">0</span> أقسام فرعية</li>
-          <li><span id="countPrompts">0</span> برومبتات</li>
+          <li><span id="countCategories">0</span> أقسام رئيسية جديدة</li>
+          <li><span id="countSubcategories">0</span> أقسام فرعية جديدة</li>
+          <li><span id="countPrompts">0</span> برومبتات جديدة</li>
         </ul>
       </div>
 
@@ -142,41 +139,54 @@
         line = line.trim();
         if (!line) continue;
 
-        // تحديد العناوين
-        const headingMatch = line.match(/^(\*\*)\s+(.+)$/); // ** عنوان رئيسي
+        // دعم جميع أنماط العناوين
+        const headingMatch = line.match(/^#{1,3}\s+(.+)$/); // # ## ###
+        const starHeadingMatch = line.match(/^(\*{1,3})\s+(.+)$/); // * ** ***
+
         if (headingMatch) {
-          currentMainCategory = headingMatch[2].trim();
-          currentSubCategory = null;
-          if (!structure[currentMainCategory]) {
-            structure[currentMainCategory] = {};
-          }
-          continue;
-        }
+          const level = headingMatch[1].length;
+          const title = headingMatch[2].trim();
 
-        const subHeadingMatch = line.match(/^\*(\*)?\s+(.+)$/); // * عنوان فرعي
-        if (subHeadingMatch) {
-          currentSubCategory = subHeadingMatch[2].trim();
-          if (!currentMainCategory) {
-            console.error("Error: Subcategory without main category");
-            continue;
+          if (level === 1) {
+            currentMainCategory = title;
+            currentSubCategory = null;
+            if (!structure[currentMainCategory]) {
+              structure[currentMainCategory] = {};
+            }
+          } else if (level === 2 && currentMainCategory) {
+            currentSubCategory = title;
+            if (!structure[currentMainCategory][currentSubCategory]) {
+              structure[currentMainCategory][currentSubCategory] = [];
+            }
+          } else if (level === 3 && currentMainCategory && currentSubCategory) {
+            if (!structure[currentMainCategory][currentSubCategory]) {
+              structure[currentMainCategory][currentSubCategory] = [];
+            }
           }
-          if (!structure[currentMainCategory][currentSubCategory]) {
-            structure[currentMainCategory][currentSubCategory] = [];
-          }
-          continue;
-        }
+        } else if (starHeadingMatch) {
+          const stars = starHeadingMatch[1];
+          const title = starHeadingMatch[2].trim();
 
-        // برومبتات
-        if (line.startsWith('-')) {
+          if (stars.length === 1) {
+            currentMainCategory = title;
+            currentSubCategory = null;
+            if (!structure[currentMainCategory]) {
+              structure[currentMainCategory] = {};
+            }
+          } else if (stars.length === 2 && currentMainCategory) {
+            currentSubCategory = title;
+            if (!structure[currentMainCategory][currentSubCategory]) {
+              structure[currentMainCategory][currentSubCategory] = [];
+            }
+          } else if (stars.length === 3 && currentMainCategory && currentSubCategory) {
+            if (!structure[currentMainCategory][currentSubCategory]) {
+              structure[currentMainCategory][currentSubCategory] = [];
+            }
+          }
+        } else if (line.startsWith('-')) {
           const promptText = line.slice(1).trim();
           if (currentMainCategory && currentSubCategory) {
             structure[currentMainCategory][currentSubCategory].push(promptText);
-          } else if (currentMainCategory) {
-            // إذا كان القسم الفرعي غير موجود، نضيفها مباشرة تحت القسم الرئيسي
-            if (!structure[currentMainCategory][''] || !Array.isArray(structure[currentMainCategory][''])) {
-              structure[currentMainCategory][''] = [];
-            }
-            structure[currentMainCategory][''].push(promptText);
           }
         }
       }
@@ -184,56 +194,7 @@
       return structure;
     }
 
-    // حفظ البيانات في localStorage
-    function saveToLocalStorage(data) {
-      const categories = Object.keys(data);
-      const subCategories = {};
-      const prompts = [];
-
-      categories.forEach(main => {
-        subCategories[main] = Object.keys(data[main]);
-
-        for (const sub in data[main]) {
-          data[main][sub].forEach(text => {
-            prompts.push({
-              id: Date.now(),
-              text,
-              category: main,
-              subCategory: sub || '',
-              tokens: text.split(/\s+/).length
-            });
-          });
-        }
-      });
-
-      // تحديث localStorage
-      localStorage.setItem('categories', JSON.stringify(categories));
-      localStorage.setItem('subCategories', JSON.stringify(subCategories));
-      localStorage.setItem('prompts', JSON.stringify(prompts));
-
-      // تحديث العدادات
-      countCategories.textContent = categories.length;
-      countSubcategories.textContent = Object.values(subCategories).reduce((sum, arr) => sum + arr.length, 0);
-      countPrompts.textContent = prompts.length;
-    }
-
-    // معالجة النص
-    function processText(content) {
-      try {
-        const parsed = parseMarkdown(content);
-        saveToLocalStorage(parsed);
-        renderDataPreview(parsed);
-
-        statusBox.classList.add('hidden');
-        summaryBox.classList.remove('hidden');
-        previewBox.classList.remove('hidden');
-      } catch (err) {
-        statusBox.classList.add('hidden');
-        showError("فشل تحليل النص: " + err.message);
-      }
-    }
-
-    // عرض البرومبتات
+    // عرض معاينة البيانات
     function renderDataPreview(data) {
       dataPreview.innerHTML = '';
       for (const main in data) {
@@ -258,6 +219,78 @@
 
         subContainer.appendChild(ul);
         dataPreview.appendChild(subContainer);
+      }
+    }
+
+    // حفظ البيانات في localStorage بدون فقدان البيانات السابقة
+    function mergeToLocalStorage(data) {
+      const existingCategories = JSON.parse(localStorage.getItem('categories')) || [];
+      const existingSubCategories = JSON.parse(localStorage.getItem('subCategories')) || {};
+      const existingPrompts = JSON.parse(localStorage.getItem('prompts')) || [];
+
+      const newCategories = new Set([...existingCategories]);
+      const newSubCategories = {...existingSubCategories};
+      const newPrompts = [...existingPrompts];
+
+      let categoriesCount = 0;
+      let subCategoriesCount = 0;
+      let promptsCount = 0;
+
+      for (const main in data) {
+        if (!existingCategories.includes(main)) {
+          newCategories.add(main);
+          categoriesCount++;
+        }
+
+        if (!newSubCategories[main]) {
+          newSubCategories[main] = [];
+        }
+
+        for (const sub in data[main]) {
+          if (!newSubCategories[main].includes(sub)) {
+            newSubCategories[main].push(sub);
+            subCategoriesCount++;
+          }
+
+          data[main][sub].forEach(promptText => {
+            const exists = existingPrompts.some(p => p.text === promptText && p.category === main && p.subCategory === sub);
+            if (!exists) {
+              newPrompts.push({
+                id: Date.now(),
+                text: promptText,
+                category: main,
+                subCategory: sub,
+                tokens: promptText.split(/\s+/).length
+              });
+              promptsCount++;
+            }
+          });
+        }
+      }
+
+      localStorage.setItem('categories', JSON.stringify([...newCategories]));
+      localStorage.setItem('subCategories', JSON.stringify(newSubCategories));
+      localStorage.setItem('prompts', JSON.stringify(newPrompts));
+
+      // تحديث العدادات
+      countCategories.textContent = categoriesCount;
+      countSubcategories.textContent = subCategoriesCount;
+      countPrompts.textContent = promptsCount;
+    }
+
+    // معالجة النص
+    function processText(content) {
+      try {
+        const parsed = parseMarkdown(content);
+        mergeToLocalStorage(parsed);
+        renderDataPreview(parsed);
+
+        statusBox.classList.add('hidden');
+        summaryBox.classList.remove('hidden');
+        previewBox.classList.remove('hidden');
+      } catch (err) {
+        statusBox.classList.add('hidden');
+        showError("فشل تحليل النص: " + err.message);
       }
     }
 
@@ -305,7 +338,6 @@
       }, 100);
     });
 
-    // تنفيذ عند التحميل
     window.onload = () => {
       resetUI();
     };
