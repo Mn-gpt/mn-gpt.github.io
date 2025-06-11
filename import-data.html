@@ -1,16 +1,16 @@
-<!DOCTYPE html>
+<DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8" />
   <title>استيراد البيانات - Promptica</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-
+  
   <!-- React + ReactDOM -->
   <script src="https://unpkg.com/react@18/umd/react.development.js"  crossorigin></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"  crossorigin></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script> 
 
-  <!-- Tailwind CSS CDN -->
+  <!-- Tailwind CSS -->
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"  rel="stylesheet">
 
   <!-- Internal Styles -->
@@ -27,10 +27,6 @@
       -webkit-box-orient: vertical;
       overflow: hidden;
     }
-    @media (max-width: 640px) {
-      html { font-size: 16px; }
-      textarea { font-size: 0.875rem; padding: 0.75rem; }
-    }
   </style>
 </head>
 <body class="min-h-screen bg-gray-50 p-4">
@@ -46,7 +42,7 @@
 
   <!-- Footer -->
   <footer class="mt-8 pt-4 border-t border-gray-200 text-center text-sm text-gray-500">
-    &copy; {new Date().getFullYear()} Promptica. جميع الحقوق محفوظة.
+    &copy; {{new Date().getFullYear()}} Promptica. جميع الحقوق محفوظة.
   </footer>
 
   <!-- React Code -->
@@ -56,22 +52,22 @@
     function ImportDataPage() {
       const [inputText, setInputText] = useState('');
       const [parsedPrompts, setParsedPrompts] = useState([]);
-      const [categories, setCategories] = useState(['عام']);
+      const [categories, setCategories] = useState([]);
       const [subCategories, setSubCategories] = useState({});
       const [selectedMainCategory, setSelectedMainCategory] = useState('');
       const [selectedSubCategory, setSelectedSubCategory] = useState('');
       const [showResults, setShowResults] = useState(false);
+      const [isLoading, setIsLoading] = useState(false);
 
-      // تحميل البيانات من localStorage
-      React.useEffect(() => {
-        const savedCategories = JSON.parse(localStorage.getItem('categories'));
-        const savedSubCategories = JSON.parse(localStorage.getItem('subCategories'));
-
-        if (savedCategories) setCategories(savedCategories);
-        if (savedSubCategories) setSubCategories(savedSubCategories);
+      // تحميل البيانات المخزنة
+      useEffect(() => {
+        const savedCategories = JSON.parse(localStorage.getItem('categories')) || ['عام'];
+        const savedSubCategories = JSON.parse(localStorage.getItem('subCategories')) || {};
+        setCategories(savedCategories);
+        setSubCategories(savedSubCategories);
       }, []);
 
-      // دالة تحليل Markdown
+      // دالة تحليل النص (Markdown)
       const parseMarkdown = (text) => {
         const lines = text.split('\n');
         const result = [];
@@ -82,10 +78,13 @@
         lines.forEach(line => {
           line = line.trim();
           if (line.startsWith('# ') && !line.startsWith('##')) {
+            // قسم رئيسي
             currentMainCategory = line.replace('# ', '').trim();
           } else if (line.startsWith('## ')) {
+            // قسم فرعي
             currentSubCategory = line.replace('## ', '').trim();
           } else if (line.startsWith('>')) {
+            // برومبت
             promptBuffer = line.replace(/^>\s*/, '').trim();
             if (currentMainCategory && currentSubCategory && promptBuffer) {
               result.push({
@@ -105,40 +104,23 @@
 
       // عند إدخال النص
       const handleInputChange = (e) => {
-        const value = e.target.value;
-        setInputText(value);
-        const prompts = parseMarkdown(value);
+        setInputText(e.target.value);
+        const prompts = parseMarkdown(e.target.value);
         setParsedPrompts(prompts);
-        setShowResults(!!value);
+        setShowResults(!!e.target.value);
       };
 
-      // رفع ملف Markdown
-      const handleFileUpload = (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
-
-        const reader = new FileReader();
-        reader.onload = (event) => {
-          const content = event.target.result;
-          setInputText(content);
-          const prompts = parseMarkdown(content);
-          setParsedPrompts(prompts);
-          setShowResults(true);
-        };
-        reader.readAsText(file);
-      };
-
-      // حفظ البرومبتات
+      // حفظ البرومبتات في localStorage
       const savePrompts = () => {
-        if (!selectedMainCategory || parsedPrompts.length === 0) {
-          alert("يرجى اختيار القسم الرئيسي.");
+        if (!selectedMainCategory || !selectedSubCategory || parsedPrompts.length === 0) {
+          alert("يرجى اختيار القسم الرئيسي والفرعي.");
           return;
         }
 
         const filteredPrompts = parsedPrompts.map(p => ({
           ...p,
           category: selectedMainCategory,
-          subCategory: selectedSubCategory || p.subCategory || 'غير مصنف'
+          subCategory: selectedSubCategory
         }));
 
         const existingPrompts = JSON.parse(localStorage.getItem('prompts')) || [];
@@ -158,27 +140,16 @@
             <label className="block text-lg font-medium mb-2">أدخل النص المراد استيراده:</label>
             <textarea
               rows="12"
-              placeholder="لصق نص بصيغة Markdown يحتوي على أقسام وبرومبتات..."
+              placeholder="لصق نص بصيغة Markdown تحتوي على أقسام وبرومبتات..."
               value={inputText}
               onChange={handleInputChange}
               className="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
             ></textarea>
           </div>
 
-          {/* رفع ملف Markdown */}
-          <div className="mt-6">
-            <label className="block text-lg font-medium mb-2">أو ارفع ملف Markdown:</label>
-            <input
-              type="file"
-              accept=".md"
-              onChange={handleFileUpload}
-              className="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
-            />
-          </div>
-
           {/* عرض النتائج التلقائية */}
           {showResults && parsedPrompts.length > 0 && (
-            <div className="bg-white p-6 rounded shadow-md mt-6">
+            <div className="bg-white p-6 rounded shadow-md mb-6">
               <h3 className="font-semibold text-lg mb-4">البرومبتات المستخرجة:</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {parsedPrompts.slice(0, 5).map((prompt, idx) => (
@@ -195,7 +166,7 @@
 
           {/* اختيار القسم للحفظ */}
           {showResults && parsedPrompts.length > 0 && (
-            <div className="bg-white p-6 rounded shadow-md mt-6">
+            <div className="bg-white p-6 rounded shadow-md mb-6">
               <h3 className="font-semibold text-lg mb-4">اختر القسم لإضافة البرومبتات:</h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <select
@@ -221,20 +192,20 @@
               </div>
               <button
                 onClick={savePrompts}
-                disabled={!selectedMainCategory}
+                disabled={!selectedMainCategory || !selectedSubCategory}
                 className={`mt-4 px-6 py-3 rounded transition-colors ${
-                  selectedMainCategory
+                  selectedMainCategory && selectedSubCategory
                     ? 'bg-green-600 hover:bg-green-700 text-white'
                     : 'bg-gray-200 cursor-not-allowed text-gray-500'
                 }`}
               >
-                🚀 استيراد {parsedPrompts.length} برومبت
+                ✅ حفظ {parsedPrompts.length} برومبت
               </button>
             </div>
           )}
 
-          {/* تعليمات التنسيق */}
-          <div className="bg-blue-50 p-4 rounded shadow-md mt-6">
+          {/* تعليمات الاستخدام */}
+          <div className="bg-blue-50 p-4 rounded shadow-md mb-6">
             <h3 className="font-semibold text-lg mb-2">كيفية التنسيق؟</h3>
             <pre className="bg-gray-100 p-3 rounded text-sm overflow-x-auto">
 {`
