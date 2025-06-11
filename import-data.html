@@ -2,8 +2,8 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8" />
-  <title>استيراد بيانات - Promptica</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Promptica - استيراد بيانات</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
   <!-- Tailwind CSS CDN -->
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"  rel="stylesheet">
   <!-- Internal Styles -->
@@ -12,196 +12,273 @@
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       background-color: #f9fafb;
       color: #1f2937;
-      line-height: 1.8;
+      line-height: 1.6;
     }
-    .line-clamp-2 {
+    .line-clamp-3 {
       display: -webkit-box;
-      -webkit-line-clamp: 2;
+      -webkit-line-clamp: 3;
       -webkit-box-orient: vertical;
       overflow: hidden;
+    }
+    @media (max-width: 640px) {
+      html { font-size: 16px; }
     }
   </style>
 </head>
 <body class="min-h-screen bg-gray-50 p-4">
+
   <!-- Header -->
   <header class="flex justify-between items-center pb-4 border-b border-gray-200 mb-6">
     <h1 class="text-2xl sm:text-3xl font-bold text-indigo-700 flex items-center">Promptica</h1>
-    <a href="index.html" class="text-indigo-600 hover:text-indigo-800 underline">← العودة إلى لوحة التحكم</a>
+    <a href="index.html" class="text-indigo-600 hover:text-indigo-800 underline">← الرجوع إلى لوحة التحكم</a>
   </header>
 
-  <!-- Import Form -->
-  <div class="container mx-auto max-w-4xl">
-    <div class="bg-white rounded-lg shadow-md p-6">
-      <h2 class="text-2xl font-bold text-gray-800 mb-6">📥 استيراد بيانات من Markdown</h2>
+  <!-- Main Content -->
+  <main class="container mx-auto max-w-4xl">
+    <h2 class="text-2xl sm:text-3xl font-bold text-gray-800 mb-6">📥 استيراد بيانات من ملف Markdown</h2>
 
-      <!-- أقسام رئيسية وفرعية -->
-      <div class="mb-6">
-        <label class="block text-sm font-medium text-gray-700 mb-2">اختر القسم الرئيسي</label>
-        <select id="mainCategorySelect" class="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500">
-          <!-- يتم ملؤه ديناميكيًا من localStorage -->
-        </select>
-      </div>
-
-      <div class="mb-6">
-        <label class="block text-sm font-medium text-gray-700 mb-2">اختر القسم الفرعي (اختياري)</label>
-        <select id="subCategorySelect" class="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500">
-          <option value="">-- لا يوجد --</option>
-          <!-- يتم ملؤه ديناميكيًا عند اختيار القسم الرئيسي -->
-        </select>
-      </div>
-
-      <!-- رفع الملف -->
-      <div class="mb-6">
-        <label class="block text-sm font-medium text-gray-700 mb-2">رفع ملف Markdown (.md)</label>
-        <input type="file" accept=".md" id="markdownFileInput" class="w-full p-2 border border-gray-300 rounded">
-      </div>
-
-      <div class="mb-6">
-        <label class="block text-sm font-medium text-gray-700 mb-2">أو الصق محتوى Markdown هنا</label>
-        <textarea id="markdownText" rows="10" placeholder="ضع محتوى markdown هنا..." class="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"></textarea>
-      </div>
-
-      <!-- زر الاستيراد -->
-      <button id="importButton" class="px-6 py-3 bg-gradient-to-r from-green-500 to-teal-600 text-white font-semibold rounded shadow hover:from-green-600 hover:to-teal-700 transition transform hover:scale-105">
-        🔽 استيراد البيانات
-      </button>
+    <!-- File Upload Area -->
+    <div class="bg-white rounded shadow-md p-6 mb-6">
+      <label class="block text-sm font-medium text-gray-700 mb-2">اختر ملف Markdown (.md أو .txt)</label>
+      <input type="file" id="fileInput" accept=".md,.txt" class="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+      <p id="fileName" class="mt-2 text-sm text-gray-500"></p>
     </div>
 
-    <!-- نتائج الاستيراد -->
-    <div id="results" class="mt-8 space-y-4">
-      <h3 class="text-xl font-semibold text-gray-800">نتائج الاستيراد</h3>
-      <div id="outputArea" class="bg-gray-50 p-4 rounded border border-gray-200 min-h-[200px] whitespace-pre-wrap"></div>
+    <!-- Import Status -->
+    <div id="status" class="hidden bg-blue-50 text-blue-700 border border-blue-200 p-4 rounded mb-6">
+      <p>⏳ جارٍ معالجة الملف...</p>
     </div>
-  </div>
+
+    <!-- Results Summary -->
+    <div id="summary" class="hidden bg-green-50 text-green-700 border border-green-200 p-4 rounded mb-6">
+      <p>✅ تم استيراد:</p>
+      <ul class="list-disc list-inside mt-2 space-y-1">
+        <li><span id="countCategories">0</span> أقسام رئيسية</li>
+        <li><span id="countSubcategories">0</span> أقسام فرعية</li>
+        <li><span id="countPrompts">0</span> برومبتات</li>
+      </ul>
+    </div>
+
+    <!-- Error Display -->
+    <div id="error" class="hidden bg-red-50 text-red-700 border border-red-200 p-4 rounded mb-6">
+      <p>❌ حدث خطأ أثناء المعالجة:</p>
+      <pre id="errorMessage" class="mt-2 text-sm whitespace-pre-wrap text-red-600"></pre>
+    </div>
+
+    <!-- Data Preview -->
+    <div id="preview" class="hidden bg-white rounded shadow-md p-6">
+      <h3 class="text-xl font-semibold text-gray-800 mb-4">عرض محتوى المستورد</h3>
+      <div id="dataPreview" class="space-y-6"></div>
+    </div>
+  </main>
 
   <!-- Footer -->
-  <footer class="mt-12 pt-4 border-t border-gray-200 text-center text-sm text-gray-500">
+  <footer class="container mx-auto max-w-4xl mt-8 pt-4 border-t border-gray-200 text-center text-sm text-gray-500">
     &copy; {{new Date().getFullYear()}} Promptica. جميع الحقوق محفوظة.
   </footer>
 
-  <!-- Script -->
+  <!-- JavaScript Logic -->
   <script>
-    const mainCategorySelect = document.getElementById('mainCategorySelect');
-    const subCategorySelect = document.getElementById('subCategorySelect');
-    const markdownText = document.getElementById('markdownText');
-    const markdownFileInput = document.getElementById('markdownFileInput');
-    const importButton = document.getElementById('importButton');
-    const outputArea = document.getElementById('outputArea');
+    const fileInput = document.getElementById('fileInput');
+    const fileNameDisplay = document.getElementById('fileName');
+    const statusBox = document.getElementById('status');
+    const summaryBox = document.getElementById('summary');
+    const errorBox = document.getElementById('error');
+    const errorMessage = document.getElementById('errorMessage');
+    const previewBox = document.getElementById('preview');
+    const dataPreview = document.getElementById('dataPreview');
+    const countCategories = document.getElementById('countCategories');
+    const countSubcategories = document.getElementById('countSubcategories');
+    const countPrompts = document.getElementById('countPrompts');
 
-    // تحميل الأقسام من localStorage
-    function loadCategories() {
-      const categories = JSON.parse(localStorage.getItem('categories')) || ['عام'];
-      categories.forEach(cat => {
-        const option = document.createElement('option');
-        option.value = cat;
-        option.textContent = cat;
-        mainCategorySelect.appendChild(option);
-      });
+    // تنظيف العرض
+    function resetUI() {
+      statusBox.classList.add('hidden');
+      summaryBox.classList.add('hidden');
+      errorBox.classList.add('hidden');
+      previewBox.classList.add('hidden');
+      dataPreview.innerHTML = '';
     }
 
-    // تحديث الأقسام الفرعية بناءً على القسم الرئيسي
-    mainCategorySelect.addEventListener('change', () => {
-      subCategorySelect.innerHTML = '<option value="">-- لا يوجد --</option>';
-      const selectedMain = mainCategorySelect.value;
-      if (!selectedMain) return;
+    // عرض رسالة خطأ
+    function showError(message) {
+      errorMessage.textContent = message;
+      errorBox.classList.remove('hidden');
+    }
 
-      const subCategories = JSON.parse(localStorage.getItem('subCategories')) || {};
-      if (subCategories[selectedMain]) {
-        subCategories[selectedMain].forEach(sub => {
-          const option = document.createElement('option');
-          option.value = sub;
-          option.textContent = sub;
-          subCategorySelect.appendChild(option);
-        });
+    // تحليل النص وتحويله إلى بنية بيانات
+    function parseMarkdown(text) {
+      const lines = text.split(/\r?\n/);
+      let structure = {};
+      let currentMainCategory = null;
+      let currentSubCategory = null;
+
+      for (let line of lines) {
+        line = line.trim();
+        if (!line) continue;
+
+        // تحديد العناوين
+        const headingMatch = line.match(/^#{1,3}\s+(.+)$/i);
+        if (headingMatch) {
+          const level = headingMatch[1].length;
+          const title = headingMatch[2].trim();
+
+          if (level === 1) {
+            currentMainCategory = title;
+            currentSubCategory = null;
+            if (!structure[currentMainCategory]) {
+              structure[currentMainCategory] = {};
+            }
+          } else if (level === 2 && currentMainCategory) {
+            currentSubCategory = title;
+            if (!structure[currentMainCategory][currentSubCategory]) {
+              structure[currentMainCategory][currentSubCategory] = [];
+            }
+          } else if (level === 3 && currentMainCategory && currentSubCategory) {
+            if (!structure[currentMainCategory][currentSubCategory]) {
+              structure[currentMainCategory][currentSubCategory] = [];
+            }
+          }
+        } else {
+          const starHeadingMatch = line.match(/^(\*{1,3})\s+(.+)$/);
+          if (starHeadingMatch) {
+            const stars = starHeadingMatch[1];
+            const title = starHeadingMatch[2].trim();
+
+            if (stars.length === 1) {
+              currentMainCategory = title;
+              currentSubCategory = null;
+              if (!structure[currentMainCategory]) {
+                structure[currentMainCategory] = {};
+              }
+            } else if (stars.length === 2 && currentMainCategory) {
+              currentSubCategory = title;
+              if (!structure[currentMainCategory][currentSubCategory]) {
+                structure[currentMainCategory][currentSubCategory] = [];
+              }
+            } else if (stars.length === 3 && currentMainCategory && currentSubCategory) {
+              if (!structure[currentMainCategory][currentSubCategory]) {
+                structure[currentMainCategory][currentSubCategory] = [];
+              }
+            }
+          } else {
+            // هذا سطر برومبت
+            if (currentMainCategory && currentSubCategory) {
+              structure[currentMainCategory][currentSubCategory].push(line);
+            }
+          }
+        }
       }
-    });
 
-    // قراءة ملف Markdown
-    markdownFileInput.addEventListener('change', (e) => {
-      const file = e.target.files[0];
-      if (!file) return;
+      return structure;
+    }
+
+    // عرض معاينة البيانات
+    function renderDataPreview(data) {
+      dataPreview.innerHTML = '';
+      for (const main in data) {
+        const subContainer = document.createElement('div');
+        subContainer.className = 'mb-6';
+        subContainer.innerHTML = `<h4 class="font-bold text-lg text-indigo-700">${main}</h4>`;
+        
+        const ul = document.createElement('ul');
+        ul.className = 'mt-3 space-y-4';
+
+        for (const sub in data[main]) {
+          const li = document.createElement('li');
+          li.className = 'bg-gray-50 p-3 rounded border-l-4 border-purple-500';
+          li.innerHTML = `
+            <strong class="text-purple-600">${sub}</strong>
+            <ul class="mt-2 list-disc list-inside pr-4 space-y-1">
+              ${data[main][sub].map(prompt => `<li class="text-sm text-gray-700">${prompt}</li>`).join('')}
+            </ul>
+          `;
+          ul.appendChild(li);
+        }
+
+        subContainer.appendChild(ul);
+        dataPreview.appendChild(subContainer);
+      }
+    }
+
+    // حفظ البيانات في localStorage
+    function saveToLocalStorage(data) {
+      const categories = Object.keys(data);
+      const subCategories = {};
+      const prompts = [];
+
+      categories.forEach(main => {
+        subCategories[main] = Object.keys(data[main]);
+
+        for (const sub in data[main]) {
+          data[main][sub].forEach(text => {
+            prompts.push({
+              id: Date.now(),
+              text,
+              category: main,
+              subCategory: sub,
+              tokens: text.split(/\s+/).length
+            });
+          });
+        }
+      });
+
+      // تحديث localStorage
+      localStorage.setItem('categories', JSON.stringify(categories));
+      localStorage.setItem('subCategories', JSON.stringify(subCategories));
+      localStorage.setItem('prompts', JSON.stringify(prompts));
+
+      // تحديث العدادات
+      countCategories.textContent = categories.length;
+      countSubcategories.textContent = Object.values(subCategories).reduce((sum, arr) => sum + arr.length, 0);
+      countPrompts.textContent = prompts.length;
+    }
+
+    // معالجة الملف بعد تحميله
+    function processFile(content) {
+      try {
+        const parsed = parseMarkdown(content);
+
+        // إظهار ملخص البيانات
+        saveToLocalStorage(parsed);
+        renderDataPreview(parsed);
+
+        // تحديث العرض
+        statusBox.classList.add('hidden');
+        summaryBox.classList.remove('hidden');
+        previewBox.classList.remove('hidden');
+      } catch (err) {
+        statusBox.classList.add('hidden');
+        showError(err.message || "فشل تحليل الملف.");
+      }
+    }
+
+    // عند اختيار ملف
+    fileInput.addEventListener('change', () => {
+      resetUI();
+
+      const file = fileInput.files[0];
+      if (!file) {
+        alert("⚠️ لم يتم اختيار ملف!");
+        return;
+      }
+
+      fileNameDisplay.textContent = "تم اختيار الملف: " + file.name;
+
       const reader = new FileReader();
-      reader.onload = (event) => {
-        markdownText.value = event.target.result;
+      reader.onload = function (e) {
+        statusBox.classList.remove('hidden');
+        try {
+          processFile(e.target.result);
+        } catch (err) {
+          showError("حدث خطأ أثناء قراءة الملف: " + err.message);
+        }
+      };
+      reader.onerror = function () {
+        showError("فشل قراءة الملف.");
       };
       reader.readAsText(file);
     });
-
-    // معالجة النصوص
-    function parseMarkdown(md) {
-      const lines = md.split('\n');
-      const prompts = [];
-      let currentPrompt = { title: '', description: '', category: '', subCategory: '' };
-
-      lines.forEach(line => {
-        if (line.startsWith('###')) {
-          if (currentPrompt.title && currentPrompt.description) {
-            prompts.push(currentPrompt);
-            currentPrompt = { title: '', description: '', category: '', subCategory: '' };
-          }
-          currentPrompt.title = line.replace(/^###\s*/, '').trim();
-        } else if (line.trim()) {
-          currentPrompt.description += line + '\n';
-        }
-      });
-
-      if (currentPrompt.title && currentPrompt.description) {
-        prompts.push(currentPrompt);
-      }
-
-      return prompts.map(p => ({
-        ...p,
-        category: mainCategorySelect.value,
-        subCategory: subCategorySelect.value,
-        tokens: p.description.split(/\s+/).length
-      }));
-    }
-
-    // زر الاستيراد
-    importButton.addEventListener('click', () => {
-      const selectedMain = mainCategorySelect.value;
-      const selectedSub = subCategorySelect.value;
-      const content = markdownText.value.trim();
-
-      if (!selectedMain) {
-        alert("⚠️ يرجى اختيار القسم الرئيسي");
-        return;
-      }
-
-      if (!content) {
-        alert("⚠️ لا يوجد محتوى للاستيراد!");
-        return;
-      }
-
-      try {
-        const prompts = parseMarkdown(content);
-
-        if (!prompts.length) {
-          outputArea.textContent = "🚫 لم يتم العثور على أي برومبتات صالحة في النص.";
-          return;
-        }
-
-        // حفظ البرومبتات في localStorage
-        const existingPrompts = JSON.parse(localStorage.getItem('prompts')) || [];
-        const updatedPrompts = [...existingPrompts, ...prompts];
-
-        localStorage.setItem('prompts', JSON.stringify(updatedPrompts));
-
-        // عرض النتيجة
-        outputArea.innerHTML = `
-          ✅ تم استيراد ${prompts.length} برومبتات بنجاح!<br><br>
-          <strong>أول 3 برومبتات:</strong><br>
-          ${prompts.slice(0, 3).map((p, i) => `${i+1}. ${p.title}`).join('<br>')}
-          <br><br>
-          يمكنك مراجعة جميع البرومبتات في قسم "لوحة التحكم".
-        `;
-      } catch (error) {
-        outputArea.textContent = `❌ حدث خطأ أثناء المعالجة: ${error.message}`;
-      }
-    });
-
-    // تحميل الأقسام عند التهيئة
-    window.onload = loadCategories;
   </script>
 </body>
 </html>
