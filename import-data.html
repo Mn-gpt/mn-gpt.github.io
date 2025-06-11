@@ -14,7 +14,7 @@
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       background-color: #f9fafb;
       color: #1f2937;
-      line-height: 1.8;
+      line-height: 1.6;
     }
     .line-clamp-3 {
       display: -webkit-box;
@@ -24,7 +24,6 @@
     }
     @media (max-width: 640px) {
       html { font-size: 16px; }
-      textarea { font-size: 0.875rem; padding: 0.75rem; }
     }
   </style>
 </head>
@@ -39,9 +38,7 @@
   <!-- Main Content -->
   <main class="container mx-auto max-w-4xl">
     <section class="bg-white rounded shadow-md p-6 mb-6">
-      <div id="category-title" class="mb-6">
-        <h2 class="text-2xl font-bold text-gray-800">استيراد بيانات البرومبتات</h2>
-      </div>
+      <h2 class="text-2xl font-bold text-gray-800 mb-6">📥 استيراد بيانات</h2>
 
       <!-- File Upload Area -->
       <div class="mb-6">
@@ -63,13 +60,13 @@
           id="pasteImportBtn"
           class="mt-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded transition"
         >
-          📥 استيراد من النص
+          📤 استيراد من النص
         </button>
       </div>
 
       <!-- Import Status -->
       <div id="status" class="hidden bg-blue-50 text-blue-700 border border-blue-200 p-4 rounded mb-6">
-        <p>⏳ جارٍ معالجة البيانات...</p>
+        <p>⏳ جارٍ معالجة الملف...</p>
       </div>
 
       <!-- Results Summary -->
@@ -104,6 +101,7 @@
   <!-- JavaScript Logic -->
   <script>
     const fileInput = document.getElementById('fileInput');
+    const fileNameDisplay = document.getElementById('fileName');
     const textInput = document.getElementById('textInput');
     const pasteImportBtn = document.getElementById('pasteImportBtn');
     const statusBox = document.getElementById('status');
@@ -142,46 +140,89 @@
         line = line.trim();
         if (!line) continue;
 
-        // تحديد العناوين
-        const headingMatch = line.match(/^(\*\*)\s+(.+)$/); // ** عنوان رئيسي
+        // تحديد العناوين بالهاش (#)
+        const headingMatch = line.match(/^#{1,3}\s+(.+)$/i);
         if (headingMatch) {
-          currentMainCategory = headingMatch[2].trim();
-          currentSubCategory = null;
-          if (!structure[currentMainCategory]) {
-            structure[currentMainCategory] = {};
-          }
-          continue;
-        }
+          const level = headingMatch[1].length;
+          const title = headingMatch[2].trim();
 
-        const subHeadingMatch = line.match(/^\*(\*)?\s+(.+)$/); // * عنوان فرعي
-        if (subHeadingMatch) {
-          currentSubCategory = subHeadingMatch[2].trim();
-          if (!currentMainCategory) {
-            console.error("Error: Subcategory without main category");
-            continue;
-          }
-          if (!structure[currentMainCategory][currentSubCategory]) {
-            structure[currentMainCategory][currentSubCategory] = [];
-          }
-          continue;
-        }
-
-        // برومبتات
-        if (line.startsWith('-')) {
-          const promptText = line.slice(1).trim();
-          if (currentMainCategory && currentSubCategory) {
-            structure[currentMainCategory][currentSubCategory].push(promptText);
-          } else if (currentMainCategory) {
-            // إذا كان القسم الفرعي غير موجود، نضيفها مباشرة تحت القسم الرئيسي
-            if (!structure[currentMainCategory][''] || !Array.isArray(structure[currentMainCategory][''])) {
-              structure[currentMainCategory][''] = [];
+          if (level === 1) {
+            currentMainCategory = title;
+            currentSubCategory = null;
+            if (!structure[currentMainCategory]) {
+              structure[currentMainCategory] = {};
             }
-            structure[currentMainCategory][''].push(promptText);
+          } else if (level === 2 && currentMainCategory) {
+            currentSubCategory = title;
+            if (!structure[currentMainCategory][currentSubCategory]) {
+              structure[currentMainCategory][currentSubCategory] = [];
+            }
+          } else if (level === 3 && currentMainCategory && currentSubCategory) {
+            if (!structure[currentMainCategory][currentSubCategory]) {
+              structure[currentMainCategory][currentSubCategory] = [];
+            }
+          }
+        } else {
+          // تحديد العناوين بنجمة (*)
+          const starHeadingMatch = line.match(/^(\*{1,3})\s+(.+)$/);
+          if (starHeadingMatch) {
+            const stars = starHeadingMatch[1];
+            const title = starHeadingMatch[2].trim();
+
+            if (stars.length === 1) {
+              currentMainCategory = title;
+              currentSubCategory = null;
+              if (!structure[currentMainCategory]) {
+                structure[currentMainCategory] = {};
+              }
+            } else if (stars.length === 2 && currentMainCategory) {
+              currentSubCategory = title;
+              if (!structure[currentMainCategory][currentSubCategory]) {
+                structure[currentMainCategory][currentSubCategory] = [];
+              }
+            } else if (stars.length === 3 && currentMainCategory && currentSubCategory) {
+              if (!structure[currentMainCategory][currentSubCategory]) {
+                structure[currentMainCategory][currentSubCategory] = [];
+              }
+            }
+          } else {
+            // هذا سطر برومبت
+            if (currentMainCategory && currentSubCategory) {
+              structure[currentMainCategory][currentSubCategory].push(line);
+            }
           }
         }
       }
 
       return structure;
+    }
+
+    // عرض معاينة البيانات
+    function renderDataPreview(data) {
+      dataPreview.innerHTML = '';
+      for (const main in data) {
+        const subContainer = document.createElement('div');
+        subContainer.className = 'mb-6';
+        subContainer.innerHTML = `<h4 class="font-bold text-lg text-indigo-700">${main}</h4>`;
+        
+        const ul = document.createElement('ul');
+        ul.className = 'mt-3 space-y-4';
+
+        for (const sub in data[main]) {
+          const li = document.createElement('li');
+          li.className = 'bg-gray-50 p-3 rounded border-l-4 border-purple-500';
+          li.innerHTML = `
+            <strong class="text-purple-600">${sub}</strong>
+            <ul class="mt-2 list-disc list-inside pr-4 space-y-1">
+              ${data[main][sub].map(prompt => `<li class="text-sm text-gray-700">${prompt}</li>`).join('')}
+            </ul>
+          `;
+          ul.appendChild(li);
+        }
+
+        subContainer.appendChild(ul);
+        dataPreview.appendChild(subContainer);
+      }
     }
 
     // حفظ البيانات في localStorage
@@ -199,7 +240,7 @@
               id: Date.now(),
               text,
               category: main,
-              subCategory: sub || '',
+              subCategory: sub,
               tokens: text.split(/\s+/).length
             });
           });
@@ -233,34 +274,6 @@
       }
     }
 
-    // عرض البرومبتات
-    function renderDataPreview(data) {
-      dataPreview.innerHTML = '';
-      for (const main in data) {
-        const subContainer = document.createElement('div');
-        subContainer.className = 'mb-6';
-        subContainer.innerHTML = `<h4 class="font-bold text-lg text-indigo-700">${main}</h4>`;
-        
-        const ul = document.createElement('ul');
-        ul.className = 'mt-3 space-y-4';
-
-        for (const sub in data[main]) {
-          const li = document.createElement('li');
-          li.className = 'bg-gray-50 p-3 rounded border-l-4 border-purple-500';
-          li.innerHTML = `
-            <strong class="text-purple-600">${sub || 'بدون تصنيف'}</strong>
-            <ul class="mt-2 list-disc list-inside pr-4 space-y-1">
-              ${data[main][sub].map(prompt => `<li class="text-sm text-gray-700">${prompt}</li>`).join('')}
-            </ul>
-          `;
-          ul.appendChild(li);
-        }
-
-        subContainer.appendChild(ul);
-        dataPreview.appendChild(subContainer);
-      }
-    }
-
     // عند اختيار ملف
     fileInput.addEventListener('change', () => {
       resetUI();
@@ -271,7 +284,6 @@
         return;
       }
 
-      const fileNameDisplay = document.getElementById('fileName');
       fileNameDisplay.textContent = "تم اختيار الملف: " + file.name;
 
       const reader = new FileReader();
@@ -305,10 +317,6 @@
       }, 100);
     });
 
-    // تنفيذ عند التحميل
-    window.onload = () => {
-      resetUI();
-    };
   </script>
 </body>
 </html>
