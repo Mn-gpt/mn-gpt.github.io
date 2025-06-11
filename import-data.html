@@ -112,17 +112,33 @@
         setShowResults(!!value);
       };
 
+      // رفع ملف Markdown
+      const handleFileUpload = (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          const content = event.target.result;
+          setInputText(content);
+          const prompts = parseMarkdown(content);
+          setParsedPrompts(prompts);
+          setShowResults(true);
+        };
+        reader.readAsText(file);
+      };
+
       // حفظ البرومبتات
       const savePrompts = () => {
-        if (!selectedMainCategory || !selectedSubCategory || parsedPrompts.length === 0) {
-          alert("يرجى اختيار القسم الرئيسي والفرعي.");
+        if (!selectedMainCategory || parsedPrompts.length === 0) {
+          alert("يرجى اختيار القسم الرئيسي.");
           return;
         }
 
         const filteredPrompts = parsedPrompts.map(p => ({
           ...p,
           category: selectedMainCategory,
-          subCategory: selectedSubCategory
+          subCategory: selectedSubCategory || p.subCategory || 'غير مصنف'
         }));
 
         const existingPrompts = JSON.parse(localStorage.getItem('prompts')) || [];
@@ -149,9 +165,20 @@
             ></textarea>
           </div>
 
+          {/* رفع ملف Markdown */}
+          <div className="mt-6">
+            <label className="block text-lg font-medium mb-2">أو ارفع ملف Markdown:</label>
+            <input
+              type="file"
+              accept=".md"
+              onChange={handleFileUpload}
+              className="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            />
+          </div>
+
           {/* عرض النتائج التلقائية */}
           {showResults && parsedPrompts.length > 0 && (
-            <div className="bg-white p-6 rounded shadow-md mb-6">
+            <div className="bg-white p-6 rounded shadow-md mt-6">
               <h3 className="font-semibold text-lg mb-4">البرومبتات المستخرجة:</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {parsedPrompts.slice(0, 5).map((prompt, idx) => (
@@ -168,7 +195,7 @@
 
           {/* اختيار القسم للحفظ */}
           {showResults && parsedPrompts.length > 0 && (
-            <div className="bg-white p-6 rounded shadow-md mb-6">
+            <div className="bg-white p-6 rounded shadow-md mt-6">
               <h3 className="font-semibold text-lg mb-4">اختر القسم لإضافة البرومبتات:</h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <select
@@ -194,20 +221,20 @@
               </div>
               <button
                 onClick={savePrompts}
-                disabled={!selectedMainCategory || !selectedSubCategory}
+                disabled={!selectedMainCategory}
                 className={`mt-4 px-6 py-3 rounded transition-colors ${
-                  selectedMainCategory && selectedSubCategory
+                  selectedMainCategory
                     ? 'bg-green-600 hover:bg-green-700 text-white'
                     : 'bg-gray-200 cursor-not-allowed text-gray-500'
                 }`}
               >
-                ✅ حفظ {parsedPrompts.length} برومبت
+                🚀 استيراد {parsedPrompts.length} برومبت
               </button>
             </div>
           )}
 
           {/* تعليمات التنسيق */}
-          <div className="bg-blue-50 p-4 rounded shadow-md mb-6">
+          <div className="bg-blue-50 p-4 rounded shadow-md mt-6">
             <h3 className="font-semibold text-lg mb-2">كيفية التنسيق؟</h3>
             <pre className="bg-gray-100 p-3 rounded text-sm overflow-x-auto">
 {`
