@@ -71,8 +71,7 @@
   <!-- React Code -->
   <script type="text/babel">
     const { useState, useEffect } = window.React;
-
-    function App() {
+function App() {
       // البيانات الأساسية
       const [activeTab, setActiveTab] = useState('dashboard');
       const [prompts, setPrompts] = useState([]);
@@ -103,7 +102,7 @@
         ? fuse.search(searchTerm).map(result => result.item)
         : [];
 
-      // إدارة الأقسام والبرومبتات
+      // إدارة الأقسام
       const [newMainCategory, setNewMainCategory] = useState('');
       const [newSubCategory, setNewSubCategory] = useState('');
       const [selectedMainCategory, setSelectedMainCategory] = useState('');
@@ -139,7 +138,7 @@
       };
 
       const handleAddPrompt = () => {
-        if (!promptText.trim() || !selectedMainCategory || !newSubCategory) return;
+        if (!promptText.trim() || !selectedMainCategory || !newSubCategory.trim()) return;
         const newPrompt = {
           id: Date.now(),
           text: promptText,
@@ -153,6 +152,66 @@
         setPromptText('');
         setPromptTokens(0);
       };
+
+      const getCategoryStats = () => {
+        const stats = {};
+        categories.forEach(category => {
+          const mainCatPrompts = prompts.filter(p => p.category === category);
+          const subCatPrompts = prompts.filter(p => p.subCategory === category);
+          const totalPrompts = mainCatPrompts.length + subCatPrompts.length;
+          const totalTokens = [...mainCatPrompts, ...subCatPrompts].reduce((sum, p) => sum + p.tokens, 0);
+          stats[category] = {
+            count: totalPrompts,
+            totalTokens: totalTokens,
+            averageTokens: totalPrompts > 0 ? Math.round(totalTokens / totalPrompts) : 0
+          };
+        });
+        return stats;
+      };
+
+      const copyPromptText = (text) => {
+        navigator.clipboard.writeText(text);
+        alert("✅ تم النسخ!");
+      };
+
+      // 🔒 إدارة الأقسام (مع أيقونات تعديل وحذف)
+      const deleteMainCategory = (cat) => {
+        if (!window.confirm(`هل أنت متأكد من حذف "${cat}" وجميع البرومبتات المرتبطة به؟`)) return;
+        const updatedCategories = categories.filter(c => c !== cat);
+        setCategories(updatedCategories);
+        localStorage.setItem('categories', JSON.stringify(updatedCategories));
+
+        const updatedSubCategories = { ...subCategories };
+        delete updatedSubCategories[cat];
+        setSubCategories(updatedSubCategories);
+        localStorage.setItem('subCategories', JSON.stringify(updatedSubCategories));
+
+        const updatedPrompts = prompts.filter(p => p.category !== cat && p.subCategory !== cat);
+        setPrompts(updatedPrompts);
+        localStorage.setItem('prompts', JSON.stringify(updatedPrompts));
+      };
+
+      // 🗃️ سجل الزيارات
+      const visitLog = [
+        { date: "15-10-2023", time: "02:30 م", copies: 5 },
+        { date: "14-10-2023", time: "11:15 ص", copies: 3 },
+        { date: "12-10-2023", time: "05:45 م", copies: 7 },
+      ];
+
+      const exportToCSV = () => {
+        let csv = "القسم,عدد البرومبتات\n";
+        Object.entries(getCategoryStats()).forEach(([cat, data]) => {
+          csv += `${cat},${data.count}\n`;
+        });
+        const blob = new Blob([csv], { type: 'text/csv' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "stats.csv";
+        a.click();
+        URL.revokeObjectURL(url);
+      };
+    
 
       // عرض لوحة التحكم
       const renderDashboard = () => {
@@ -300,6 +359,37 @@
               </div>
             </div>
 
+
+            {/* جدول الأقسام مع أيقونات تعديل وحذف */}
+            <div className="bg-white p-6 rounded shadow-md mb-6">
+              <h3 className="font-semibold text-lg mb-4">الأقسام الحالية</h3>
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th scope="col" className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">القسم</th>
+                    <th scope="col" className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">الإجراءات</th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {categories.map(cat => (
+                    <tr key={cat} className="hover:bg-gray-50">
+                      <td className="px-4 py-4 whitespace-nowrap">{cat}</td>
+                      <td className="px-4 py-4 whitespace-nowrap space-x-3 rtl:space-x-reverse">
+                        <button
+                          onClick={() => alert("✏️ يمكنك هنا فتح نافذة تعديل")}
+                          className="text-yellow-600 hover:text-yellow-800"
+                        >✏️ تعديل</button>
+                        <button
+                          onClick={() => deleteMainCategory(cat)}
+                          className="text-red-600 hover:text-red-800"
+                        >🗑️ حذف</button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            
             {/* إضافة برومبت */}
             <div className="bg-white p-6 rounded shadow-md mb-6">
               <h3 className="font-semibold text-lg mb-4">إضافة برومبت</h3>
@@ -361,7 +451,43 @@
           </div>
         );
       };
+            {/* سجل الزوار والإحصاءات */}
+            <div className="bg-white p-6 rounded shadow-md mt-6">
+              <h3 className="font-semibold text-lg mb-4">سجل الزوار</h3>
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th scope="col" className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">التاريخ</th>
+                      <th scope="col" className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">الوقت</th>
+                      <th scope="col" className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">عدد النسخ</th>
+                      <th scope="col" className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">التقييم</th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {visitLog.map((log, idx) => (
+                      <tr key={idx}>
+                        <td className="px-4 py-4">{log.date}</td>
+                        <td className="px-4 py-4">{log.time}</td>
+                        <td className="px-4 py-4">{log.copies}</td>
+                        <td className="px-4 py-4">⭐ 4.5</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              <button
+                onClick={exportToCSV}
+                className="mt-4 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded"
+              >
+                📤 تصدير إلى CSV
+              </button>
+            </div>
+          </div>
+        );
+      };
 
+  
       return (
         <div className="container mx-auto max-w-4xl">
           {/* Tabs Navigation */}
