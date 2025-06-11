@@ -61,34 +61,8 @@
   <footer class="mt-8 pt-4 border-t border-gray-200 text-center text-sm text-gray-500">
     &copy; <span id="currentYear"></span> Promptica. جميع الحقوق محفوظة.
   </footer>
-
-  <script>
-    // تحديد سنة حقوق النشر
-    document.getElementById('currentYear').textContent = new Date().getFullYear();
-
-    // دالة مسح جميع البيانات
-    function clearData() {
-      if(confirm('هل أنت متأكد من رغبتك في مسح جميع البيانات؟ لا يمكن التراجع عن هذا الإجراء.')) {
-        localStorage.removeItem('prompts');
-        localStorage.removeItem('categories');
-        localStorage.removeItem('subCategories');
-        showAlert('تم مسح جميع البيانات بنجاح!', 'green');
-      }
-    }
-
-    // دالة عرض التنبيهات
-    function showAlert(message, color = 'blue') {
-      const outputDiv = document.getElementById('output');
-      outputDiv.innerHTML = message;
-      outputDiv.className = `mt-4 p-4 rounded-lg alert bg-${color}-100 text-${color}-800`;
-      outputDiv.classList.remove('hidden');
-      
-      setTimeout(() => {
-        outputDiv.classList.add('hidden');
-      }, 5000);
-    }
-
-    // دالة استيراد البيانات (معدلة للتوافق مع باقي الصفحات)
+<script>
+    // دالة استيراد البيانات المعدلة
     function importData() {
       const input = document.getElementById("markdownInput").value.trim();
       if (!input) {
@@ -100,101 +74,109 @@
       let currentCategory = "";
       let currentSubCategory = "";
       
-      // جلب البيانات الحالية (باستخدام نفس المفاتيح المستخدمة في باقي الصفحات)
+      // جلب البيانات الحالية أو تهيئة جديدة
       const existingPrompts = JSON.parse(localStorage.getItem("prompts")) || [];
       const existingCategories = JSON.parse(localStorage.getItem("categories")) || [];
       const existingSubCategories = JSON.parse(localStorage.getItem("subCategories")) || {};
       
-      // إنشاء مجموعات للبيانات الجديدة
+      // إنشاء نسخ جديدة للبيانات
       const newPrompts = [];
-      const newCategoriesSet = new Set(existingCategories);
-      const newSubCategories = {...existingSubCategories};
+      const updatedCategories = [...existingCategories];
+      const updatedSubCategories = {...existingSubCategories};
 
+      // تحليل كل سطر
       lines.forEach(line => {
         line = line.trim();
 
-        // القسم الرئيسي (يجب أن يبدأ بـ # مع مسافة)
+        // القسم الرئيسي
         if (line.startsWith("# ")) {
           currentCategory = line.substring(2).trim();
-          if (currentCategory) {
-            newCategoriesSet.add(currentCategory);
-            if (!newSubCategories[currentCategory]) {
-              newSubCategories[currentCategory] = new Set();
-            }
+          if (currentCategory && !updatedCategories.includes(currentCategory)) {
+            updatedCategories.push(currentCategory);
           }
           currentSubCategory = "";
 
-        // القسم الفرعي (يجب أن يبدأ بـ ## مع مسافة)
+        // القسم الفرعي
         } else if (line.startsWith("## ")) {
           currentSubCategory = line.substring(3).trim();
           if (currentCategory && currentSubCategory) {
-            if (newSubCategories[currentCategory]) {
-              newSubCategories[currentCategory].add(currentSubCategory);
-            } else {
-              newSubCategories[currentCategory] = new Set([currentSubCategory]);
+            if (!updatedSubCategories[currentCategory]) {
+              updatedSubCategories[currentCategory] = [currentSubCategory];
+            } else if (!updatedSubCategories[currentCategory].includes(currentSubCategory)) {
+              updatedSubCategories[currentCategory].push(currentSubCategory);
             }
           }
 
-        // البرومبت (يجب أن يبدأ بـ - مع مسافة)
+        // البرومبت
         } else if (line.startsWith("- ") && currentCategory) {
           const promptText = line.substring(2).trim();
           if (promptText) {
-            // تجنب التكرار بناءً على النص والقسم
-            const isDuplicate = existingPrompts.some(p => 
-              p.text === promptText && 
-              p.category === currentCategory
-            );
+            // إنشاء ID فريد للبرومبت
+            const promptId = generatePromptId(promptText, currentCategory, currentSubCategory);
+            
+            // التحقق من التكرار باستخدام ID
+            const isDuplicate = existingPrompts.some(p => p.id === promptId);
             
             if (!isDuplicate) {
               newPrompts.push({
-                id: Date.now() + Math.floor(Math.random() * 1000),
+                id: promptId,
                 text: promptText,
                 category: currentCategory,
                 subCategory: currentSubCategory || "عام",
-                tokens: Math.ceil(promptText.split(/\s+/).length * 1.25)
+                tokens: calculateTokens(promptText),
+                createdAt: new Date().toISOString()
               });
             }
           }
         }
       });
 
-      // تحويل المجموعات إلى مصفوفات
+      // دمج البيانات القديمة والجديدة
       const allPrompts = [...existingPrompts, ...newPrompts];
-      const allCategories = Array.from(newCategoriesSet);
-      
-      // تحويل Set إلى Array للأقسام الفرعية
-      const processedSubCategories = {};
-      Object.keys(newSubCategories).forEach(cat => {
-        processedSubCategories[cat] = Array.from(newSubCategories[cat]);
-      });
 
-      // حفظ البيانات المحدثة (باستخدام نفس المفاتيح)
+      // حفظ البيانات المحدثة
       localStorage.setItem("prompts", JSON.stringify(allPrompts));
-      localStorage.setItem("categories", JSON.stringify(allCategories));
-      localStorage.setItem("subCategories", JSON.stringify(processedSubCategories));
+      localStorage.setItem("categories", JSON.stringify(updatedCategories));
+      localStorage.setItem("subCategories", JSON.stringify(updatedSubCategories));
 
-      // إعداد رسالة النجاح
-      const addedCount = newPrompts.length;
-      const duplicateCount = lines.filter(l => l.startsWith("- ")).length - addedCount;
-      
+      // عرض النتائج
+      showImportResults(newPrompts.length, lines.filter(l => l.startsWith("- ")).length - newPrompts.length, allPrompts.length, updatedCategories);
+    }
+
+    // دالة إنشاء ID فريد للبرومبت
+    function generatePromptId(text, category, subCategory) {
+      const str = `${text}-${category}-${subCategory || "عام"}`;
+      let hash = 0;
+      for (let i = 0; i < str.length; i++) {
+        const char = str.charCodeAt(i);
+        hash = ((hash << 5) - hash) + char;
+        hash = hash & hash; // Convert to 32bit integer
+      }
+      return 'prompt_' + Math.abs(hash).toString(16);
+    }
+
+    // دالة حساب التوكنات
+    function calculateTokens(text) {
+      return Math.ceil(text.split(/\s+/).length * 1.25);
+    }
+
+    // دالة عرض النتائج
+    function showImportResults(added, duplicates, total, categories) {
       let message = `✅ تم استيراد البيانات بنجاح!`;
       message += `<ul class="list-disc mt-2 mr-5 space-y-1">`;
-      message += `<li><strong>البرومبتات المضافة:</strong> ${addedCount}</li>`;
+      message += `<li><strong>البرومبتات المضافة:</strong> ${added}</li>`;
       
-      if (duplicateCount > 0) {
-        message += `<li><strong>البرومبتات المكررة (لم تتم إضافتها):</strong> ${duplicateCount}</li>`;
+      if (duplicates > 0) {
+        message += `<li><strong>البرومبتات المكررة (لم تتم إضافتها):</strong> ${duplicates}</li>`;
       }
       
-      message += `<li><strong>إجمالي البرومبتات:</strong> ${allPrompts.length}</li>`;
-      message += `<li><strong>الأقسام الرئيسية:</strong> ${allCategories.join(", ")}</li>`;
+      message += `<li><strong>إجمالي البرومبتات:</strong> ${total}</li>`;
+      message += `<li><strong>الأقسام الرئيسية:</strong> ${categories.join(", ")}</li>`;
       message += `</ul>`;
       
-      // عرض رسالة النجاح
       showAlert(message, 'green');
-
-      // مسح حقل الإدخال بعد الاستيراد
       document.getElementById("markdownInput").value = "";
     }
-  </script>
+</script>
 </body>
 </html>
