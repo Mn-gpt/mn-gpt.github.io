@@ -71,7 +71,8 @@
   <!-- React Code -->
   <script type="text/babel">
     const { useState, useEffect } = window.React;
-function App() {
+
+    function App() {
       // البيانات الأساسية
       const [activeTab, setActiveTab] = useState('dashboard');
       const [prompts, setPrompts] = useState([]);
@@ -211,13 +212,33 @@ function App() {
         a.click();
         URL.revokeObjectURL(url);
       };
-    
 
       // عرض لوحة التحكم
       const renderDashboard = () => {
+        const stats = getCategoryStats();
+        const totalPrompts = prompts.length;
+        const totalTokens = prompts.reduce((sum, p) => sum + p.tokens, 0);
+        const averageTokens = totalPrompts > 0 ? Math.round(totalTokens / totalPrompts) : 0;
+
         return (
           <div className="space-y-6">
             <h2 className="text-2xl sm:text-3xl font-bold text-gray-800">لوحة التحكم</h2>
+
+            {/* Cards */}
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-3 sm:gap-6">
+              <div className="bg-white p-4 sm:p-6 rounded shadow hover:shadow-md transition-colors">
+                <h3 className="text-lg font-semibold text-gray-700 mb-2">عدد البرومبتات</h3>
+                <p className="text-3xl font-bold text-indigo-600">{totalPrompts}</p>
+              </div>
+              <div className="bg-white p-4 sm:p-6 rounded shadow hover:shadow-md transition-colors">
+                <h3 className="text-lg font-semibold text-gray-700 mb-2">عدد الكلمات (tokens)</h3>
+                <p className="text-3xl font-bold text-blue-600">{totalTokens}</p>
+              </div>
+              <div className="bg-white p-4 sm:p-6 rounded shadow hover:shadow-md transition-colors">
+                <h3 className="text-lg font-semibold text-gray-700 mb-2">متوسط tokens</h3>
+                <p className="text-3xl font-bold text-green-600">{averageTokens} token</p>
+              </div>
+            </div>
 
             {/* شريط البحث */}
             <div className="mt-6">
@@ -232,63 +253,24 @@ function App() {
 
             {/* قائمة الأقسام للمستخدم العادي */}
             <div className="mt-6">
-              <h3 className="text-xl font-semibold text-gray-800 mb-4">الأقسام والبرومبتات</h3>
-              {searchTerm.trim() === '' && (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {categories.map(cat => (
-                    <a
-                      key={cat}
-                      href={`category-prompts.html?category=${encodeURIComponent(cat)}`}
-                      className="bg-white p-4 rounded shadow hover:bg-gray-50 transition flex justify-between items-center"
-                    >
-                      <span className="font-medium text-indigo-600 text-xs sm:text-sm">{cat}</span>
-                      <svg className="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
-                      </svg>
-                    </a>
-                  ))}
-                  {categories.length === 0 && (
-                    <p className="text-gray-500 text-center py-4 col-span-full">لا توجد أقسام مضافة بعد.</p>
-                  )}
-                </div>
-              )}
-
-              {/* نتائج البحث الذكية */}
-              {searchTerm.trim() !== '' && (
-                <div className="space-y-4">
-                  {smartSearchResults.length > 0 ? (
-                    smartSearchResults.map((item, idx) => {
-                      if (item.type === 'prompt') {
-                        return (
-                          <div key={idx} className="bg-white p-4 rounded shadow hover:bg-gray-50 cursor-pointer border-l-4 border-blue-500">
-                            <p className="text-sm text-gray-600">برومبت في: {item.category} → {item.subCategory || '-'}</p>
-                            <p className="line-clamp-2 mt-1 text-gray-800">{item.text}</p>
-                          </div>
-                        );
-                      } else {
-                        return (
-                          <a
-                            key={idx}
-                            href={`category-prompts.html?category=${encodeURIComponent(item.category)}&sub=${encodeURIComponent(item.name)}`}
-                            target="_blank"
-                            className="bg-white p-4 rounded shadow hover:bg-gray-50 flex justify-between items-center border-l-4 border-purple-500"
-                          >
-                            <div>
-                              <p className="text-sm text-gray-600">قسم فرعي في: {item.category}</p>
-                              <p className="font-medium text-purple-600">{item.name}</p>
-                            </div>
-                            <svg className="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
-                            </svg>
-                          </a>
-                        );
-                      }
-                    })
-                  ) : (
-                    <p className="text-gray-500 text-center py-4">لم يتم العثور على نتائج.</p>
-                  )}
-                </div>
-              )}
+              <h3 className="text-xl font-semibold text-gray-800 mb-4">الأقسام المتاحة</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {categories.map(cat => (
+                  <a
+                    key={cat}
+                    href={`category-prompts.html?category=${encodeURIComponent(cat)}`}
+                    className="bg-white p-4 rounded shadow hover:bg-gray-50 transition flex justify-between items-center"
+                  >
+                    <span className="font-medium text-indigo-600 text-xs sm:text-sm">{cat}</span>
+                    <svg className="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
+                    </svg>
+                  </a>
+                ))}
+                {categories.length === 0 && (
+                  <p className="text-gray-500 text-center py-4 col-span-full">لا توجد أقسام مضافة بعد.</p>
+                )}
+              </div>
             </div>
           </div>
         );
@@ -359,7 +341,6 @@ function App() {
               </div>
             </div>
 
-
             {/* جدول الأقسام مع أيقونات تعديل وحذف */}
             <div className="bg-white p-6 rounded shadow-md mb-6">
               <h3 className="font-semibold text-lg mb-4">الأقسام الحالية</h3>
@@ -389,58 +370,6 @@ function App() {
                 </tbody>
               </table>
             </div>
-            
-            {/* إضافة برومبت */}
-            <div className="bg-white p-6 rounded shadow-md mb-6">
-              <h3 className="font-semibold text-lg mb-4">إضافة برومبت</h3>
-              <div className="flex flex-col gap-4">
-                <select
-                  value={selectedMainCategory}
-                  onChange={(e) => setSelectedMainCategory(e.target.value)}
-                  className="p-3 border border-gray-300 rounded"
-                >
-                  <option value="">اختر القسم الرئيسي</option>
-                  {categories.map(cat => (
-                    <option key={cat} value={cat}>{cat}</option>
-                  ))}
-                </select>
-                <select
-                  value={newSubCategory}
-                  onChange={(e) => setNewSubCategory(e.target.value)}
-                  className="p-3 border border-gray-300 rounded"
-                >
-                  <option value="">اختر القسم الفرعي</option>
-                  {selectedMainCategory && subCategories[selectedMainCategory]?.map(sub => (
-                    <option key={sub} value={sub}>{sub}</option>
-                  ))}
-                </select>
-                <textarea
-                  rows="4"
-                  placeholder="اكتب البرومبت هنا..."
-                  value={promptText}
-                  onChange={(e) => setPromptText(e.target.value)}
-                  className="p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                ></textarea>
-                <input
-                  type="number"
-                  placeholder="عدد الكلمات (tokens)"
-                  value={promptTokens}
-                  onChange={(e) => setPromptTokens(e.target.value)}
-                  className="p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                />
-                <button
-                  onClick={handleAddPrompt}
-                  disabled={!promptText.trim() || !selectedMainCategory || !newSubCategory}
-                  className={`px-4 py-2 rounded transition-colors ${
-                    promptText.trim() && selectedMainCategory && newSubCategory
-                      ? 'bg-green-600 hover:bg-green-700 text-white'
-                      : 'bg-gray-200 cursor-not-allowed text-gray-500'
-                  }`}
-                >
-                  ➕ إضافة برومبت
-                </button>
-              </div>
-            </div>
 
             {/* زر استيراد البيانات */}
             <div className="mt-4">
@@ -448,9 +377,7 @@ function App() {
                 📥 استيراد بيانات من Markdown
               </a>
             </div>
-          </div>
-        
-      
+
             {/* سجل الزوار والإحصاءات */}
             <div className="bg-white p-6 rounded shadow-md mt-6">
               <h3 className="font-semibold text-lg mb-4">سجل الزوار</h3>
@@ -487,7 +414,6 @@ function App() {
         );
       };
 
-  
       return (
         <div className="container mx-auto max-w-4xl">
           {/* Tabs Navigation */}
