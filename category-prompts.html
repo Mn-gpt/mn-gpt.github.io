@@ -2,10 +2,12 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8" />
-  <title>برومبتات القسم - Promptica</title>
+  <title>برومبتات - {category}</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
   <!-- Tailwind CSS CDN -->
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"  rel="stylesheet">
+
   <!-- Internal Styles -->
   <style>
     body {
@@ -26,40 +28,50 @@
   </style>
 </head>
 <body class="min-h-screen bg-gray-50 p-4">
+
   <!-- Header -->
   <header class="flex justify-between items-center pb-4 border-b border-gray-200 mb-6">
     <h1 class="text-2xl sm:text-3xl font-bold text-indigo-700 flex items-center">Promptica</h1>
-    <a href="index.html" class="text-indigo-600 hover:text-indigo-800 underline">← العودة إلى لوحة التحكم</a>
+    <a href="index.html" class="text-indigo-600 hover:text-indigo-800 underline">← الرجوع إلى لوحة التحكم</a>
   </header>
 
-  <!-- Title -->
-  <div class="container mx-auto max-w-4xl">
-    <div class="bg-white rounded-lg shadow-md p-6 mb-6">
-      <h2 id="category-title" class="text-2xl font-bold text-gray-800">جارٍ التحميل...</h2>
-    </div>
+  <!-- Main Content -->
+  <main class="container mx-auto max-w-4xl">
+    <section class="bg-white rounded shadow-md p-6 mb-6">
+      <div id="category-title" class="mb-6">
+        <h2 class="text-2xl font-bold text-gray-800">برومبتات القسم:</h2>
+        <p id="category-subtitle" class="text-lg text-gray-600 mt-1"></p>
+      </div>
 
-    <!-- شريط البحث -->
-    <div class="mb-6">
-      <input
-        type="text"
-        id="searchInput"
-        placeholder="🔍 ابحث في البرومبتات..."
-        class="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
-      />
-    </div>
+      <!-- شريط البحث الداخلي -->
+      <div class="mt-4">
+        <input
+          type="text"
+          placeholder="🔍 ابحث في البرومبتات..."
+          id="searchInput"
+          class="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
+        />
+      </div>
 
-    <!-- Cards Grid -->
-    <div id="promptGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
-  </div>
+      <!-- قائمة البرومبتات -->
+      <div id="promptsList" class="mt-6 grid grid-cols-1 gap-4">
+        <!-- سيتم تعبئة البرومبتات هنا عبر JavaScript -->
+      </div>
+    </section>
+  </main>
 
   <!-- Footer -->
-  <footer class="mt-12 pt-4 border-t border-gray-200 text-center text-sm text-gray-500">
+  <footer class="container mx-auto max-w-4xl mt-8 pt-4 border-t border-gray-200 text-center text-sm text-gray-500">
     &copy; {{new Date().getFullYear()}} Promptica. جميع الحقوق محفوظة.
   </footer>
 
-  <!-- Script -->
+  <!-- JavaScript Logic -->
   <script>
-    // 🔍 الحصول على المعلمات من الرابط
+    const categoryDisplay = document.getElementById('category-subtitle');
+    const promptsList = document.getElementById('promptsList');
+    const searchInput = document.getElementById('searchInput');
+
+    // قراءة المعاملات من الرابط
     function getURLParams() {
       const params = new URLSearchParams(window.location.search);
       return {
@@ -68,95 +80,79 @@
       };
     }
 
-    // 📋 نسخ النص إلى الحافظة
-    function copyToClipboard(text, element) {
-      navigator.clipboard.writeText(text).then(() => {
-        const originalText = element.textContent;
-        element.innerHTML = '✅ تم النسخ!';
-        element.classList.add("bg-green-100", "text-green-600");
-        setTimeout(() => {
-          element.textContent = originalText;
-          element.classList.remove("bg-green-100", "text-green-600");
-        }, 1500);
-      });
-    }
-
-    // 🔎 عرض البرومبتات
-    function renderPrompts(prompts, category, subCategory = '') {
-      const titleElement = document.getElementById('category-title');
-      const grid = document.getElementById('promptGrid');
-      grid.innerHTML = '';
-
-      if (subCategory) {
-        titleElement.innerHTML = `برومبتات القسم: <span class="text-indigo-600">${category} → ${subCategory}</span>`;
-      } else {
-        titleElement.innerHTML = `برومبتات القسم: <span class="text-indigo-600">${category}</span>`;
-      }
-
-      if (!prompts.length) {
-        const emptyCard = document.createElement('div');
-        emptyCard.className = "col-span-full text-center py-10";
-        emptyCard.innerHTML = `<p class="text-gray-500">لا توجد برومبتات لهذا القسم.</p>`;
-        grid.appendChild(emptyCard);
-        return;
-      }
-
-      prompts.forEach(prompt => {
-        const card = document.createElement('div');
-        card.className = "bg-white p-5 rounded shadow hover:shadow-md transition relative";
-
-        const subCategoryDisplay = prompt.subCategory ? ` (${prompt.subCategory})` : '';
-        card.innerHTML = `
-          <h3 class="font-semibold text-indigo-700 mb-2">${prompt.text.split('\n')[0].substring(0, 50)}${prompt.text.length > 50 ? '...' : ''}</h3>
-          <p class="text-sm text-gray-600 mb-4">${prompt.text.substring(0, 120)}${prompt.text.length > 120 ? '...' : ''}</p>
-          <button class="absolute bottom-4 right-4 px-3 py-1 text-xs text-white bg-indigo-600 rounded hover:bg-indigo-700 transition" onclick="copyPrompt('${prompt.text}', this)">📋 نسخ</button>
-        `;
-        grid.appendChild(card);
-      });
-    }
-
-    // 🔍 البحث داخل الصفحة
-    function setupSearch() {
-      const searchInput = document.getElementById('searchInput');
-      const allCards = document.querySelectorAll('#promptGrid div');
-
-      searchInput.addEventListener('input', () => {
-        const term = searchInput.value.toLowerCase();
-        allCards.forEach(card => {
-          const text = card.querySelector('p').textContent.toLowerCase();
-          card.style.display = text.includes(term) ? 'block' : 'none';
-        });
-      });
-    }
-
-    // 🚀 تحميل البيانات
-    window.onload = () => {
+    // تحميل البرومبتات من localStorage
+    function loadPrompts() {
       const { category, sub } = getURLParams();
-      const allPrompts = JSON.parse(localStorage.getItem('prompts')) || [];
+      let allPrompts = JSON.parse(localStorage.getItem('prompts')) || [];
 
       let results = [];
       if (sub) {
         results = allPrompts.filter(p => p.category === category && p.subCategory === sub);
+        categoryDisplay.textContent = `${category} → ${sub}`;
       } else {
         results = allPrompts.filter(p => p.category === category);
+        categoryDisplay.textContent = category;
       }
 
-      renderPrompts(results, category, sub);
-      setupSearch();
+      if (results.length === 0) {
+        promptsList.innerHTML = '<p class="text-gray-500 text-center py-4">لا توجد برومبتات لهذا القسم.</p>';
+        return;
+      }
+
+      renderPrompts(results);
+    }
+
+    // عرض البرومبتات
+    function renderPrompts(prompts) {
+      promptsList.innerHTML = '';
+      prompts.forEach(prompt => {
+        const card = document.createElement('div');
+        card.className = 'bg-gray-50 p-4 rounded shadow hover:bg-gray-100 transition';
+        card.innerHTML = `
+          <p class="text-sm text-gray-600">القسم: ${prompt.category}${prompt.subCategory ? ' → ' + prompt.subCategory : ''}</p>
+          <p class="mt-1 text-gray-800">${prompt.text}</p>
+          <button onclick='copyPrompt("${encodeURIComponent(prompt.text)}")' class="mt-2 px-3 py-1 bg-blue-100 text-blue-700 rounded hover:bg-blue-200 transition">
+            ✅ نسخ البرومبت
+          </button>
+        `;
+        promptsList.appendChild(card);
+      });
+    }
+
+    // نسخ البرومبت
+    window.copyPrompt = function(text) {
+      navigator.clipboard.writeText(decodeURIComponent(text));
+      alert("✅ تم النسخ!");
     };
 
-    // 📋 الدالة المسؤولة عن النسخ
-    window.copyPrompt = (text, btn) => {
-      navigator.clipboard.writeText(text).then(() => {
-        const originalText = btn.textContent;
-        btn.textContent = "✅ نُسخت!";
-        btn.classList.replace("bg-indigo-600", "bg-green-600");
+    // البحث في البرومبتات
+    function setupSearch() {
+      searchInput.addEventListener('input', () => {
+        const { category, sub } = getURLParams();
+        let allPrompts = JSON.parse(localStorage.getItem('prompts')) || [];
 
-        setTimeout(() => {
-          btn.textContent = originalText;
-          btn.classList.replace("bg-green-600", "bg-indigo-600");
-        }, 1500);
+        let results = [];
+        if (sub) {
+          results = allPrompts.filter(p => p.category === category && p.subCategory === sub);
+        } else {
+          results = allPrompts.filter(p => p.category === category);
+        }
+
+        const term = searchInput.value.trim().toLowerCase();
+        if (term) {
+          results = results.filter(p =>
+            p.text.toLowerCase().includes(term)
+          );
+        }
+
+        renderPrompts(results);
       });
+    }
+
+    // تنفيذ عند التحميل
+    window.onload = () => {
+      loadPrompts();
+      setupSearch();
     };
   </script>
 </body>
