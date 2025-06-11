@@ -78,7 +78,8 @@
       const [subCategories, setSubCategories] = useState({});
       const [searchTerm, setSearchTerm] = useState('');
       const isUserAdmin = true;
-
+const [showPromptTable, setShowPromptTable] = useState(false);
+const [selectedCategoryTab, setSelectedCategoryTab] = useState('all');
       // بيانات إضافة البرومبت
       const [newMainCategory, setNewMainCategory] = useState('');
       const [newSubCategory, setNewSubCategory] = useState('');
@@ -420,58 +421,117 @@
               </div>
             </div>
 
-            {/* عرض البرومبتات الحالية */}
-            <div className="bg-white p-6 rounded shadow-md mb-6">
-              <h3 className="font-semibold text-lg mb-4">البرومبتات الحالية</h3>
-              <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th scope="col" className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">النص</th>
-                      <th scope="col" className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">القسم</th>
-                      <th scope="col" className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">القسم الفرعي</th>
-                      <th scope="col" className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">tokens</th>
-                      <th scope="col" className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">الإجراءات</th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {prompts.map(prompt => (
-                      <tr key={prompt.id} className="hover:bg-gray-50">
-                        <td className="px-4 py-4 line-clamp-3">{prompt.text}</td>
-                        <td className="px-4 py-4">{prompt.category}</td>
-                        <td className="px-4 py-4">{prompt.subCategory}</td>
-                        <td className="px-4 py-4">{prompt.tokens}</td>
-                        <td className="px-4 py-4 whitespace-nowrap space-x-3 rtl:space-x-reverse">
-                          <button
-                            onClick={() => alert("✏️ يمكنك هنا فتح نافذة تعديل")}
-                            className="text-yellow-600 hover:text-yellow-800"
-                          >✏️ تعديل</button>
-                          <button
-                            onClick={() => {
-                              if (window.confirm("هل أنت متأكد من حذف هذا البرومبت؟")) {
-                                const updatedPrompts = prompts.filter(p => p.id !== prompt.id);
-                                setPrompts(updatedPrompts);
-                                localStorage.setItem('prompts', JSON.stringify(updatedPrompts));
-                              }
-                            }}
-                            className="text-red-600 hover:text-red-800"
-                          >🗑️ حذف</button>
-                          <button
-                            onClick={() => copyPromptText(prompt.text)}
-                            className="text-blue-600 hover:text-blue-800"
-                          >📋 نسخ</button>
-                        </td>
-                      </tr>
-                    ))}
-                    {prompts.length === 0 && (
-                      <tr>
-                        <td colSpan="5" className="px-4 py-4 text-center text-gray-500">لا توجد برومبتات مضافة.</td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            </div>
+{/* عرض البرومبتات الحالية */}
+<div className="bg-white p-6 rounded shadow-md mb-6">
+  <div className="flex justify-between items-center mb-4">
+    <h3 className="font-semibold text-lg">البرومبتات الحالية</h3>
+    <button
+  onClick={() => setShowPromptTable(!showPromptTable)}
+  className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors duration-300 shadow-md hover:shadow-lg ${
+    showPromptTable ? 'bg-red-600 hover:bg-red-700 text-white' : 'bg-green-600 hover:bg-green-700 text-white'
+  }`}
+>
+  {showPromptTable ? (
+    <>
+      <span>👁️ إخفاء الجدول</span>
+    </>
+  ) : (
+    <>
+      <span>👁️‍🗨️ إظهار الجدول</span>
+    </>
+  )}
+</button>
+  </div>
+
+  {/* Tabs for Categories */}
+  {showPromptTable && (
+    <>
+      <div className="mb-4 border-b border-gray-200">
+        <nav className="flex space-x-4 rtl:space-x-reverse overflow-x-auto pb-1">
+          <button
+            onClick={() => setSelectedCategoryTab('all')}
+            className={`py-2 px-4 font-medium border-b-2 ${
+              selectedCategoryTab === 'all'
+                ? 'border-indigo-500 text-indigo-600'
+                : 'border-transparent text-gray-500 hover:text-gray-700'
+            }`}
+          >
+            الكل
+          </button>
+          {categories.map(cat => (
+            <button
+              key={cat}
+              onClick={() => setSelectedCategoryTab(cat)}
+              className={`py-2 px-4 font-medium border-b-2 whitespace-nowrap ${
+                selectedCategoryTab === cat
+                  ? 'border-indigo-500 text-indigo-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              {cat}
+            </button>
+          ))}
+        </nav>
+      </div>
+
+      {/* Filter prompts based on selected tab */}
+      <div className="overflow-x-auto">
+        <table className="min-w-full divide-y divide-gray-200">
+          <thead className="bg-gray-50">
+            <tr>
+              <th scope="col" className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">النص</th>
+              <th scope="col" className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">القسم</th>
+              <th scope="col" className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">القسم الفرعي</th>
+              <th scope="col" className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">tokens</th>
+              <th scope="col" className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">الإجراءات</th>
+            </tr>
+          </thead>
+          <tbody className="bg-white divide-y divide-gray-200">
+            {prompts
+              .filter(prompt =>
+                selectedCategoryTab === 'all' ||
+                prompt.category === selectedCategoryTab ||
+                prompt.subCategory === selectedCategoryTab
+              )
+              .map(prompt => (
+                <tr key={prompt.id} className="hover:bg-gray-50">
+                  <td className="px-4 py-4 line-clamp-3">{prompt.text}</td>
+                  <td className="px-4 py-4">{prompt.category}</td>
+                  <td className="px-4 py-4">{prompt.subCategory}</td>
+                  <td className="px-4 py-4">{prompt.tokens}</td>
+                  <td className="px-4 py-4 whitespace-nowrap space-x-3 rtl:space-x-reverse">
+                    <button
+                      onClick={() => alert("✏️ يمكنك هنا فتح نافذة تعديل")}
+                      className="text-yellow-600 hover:text-yellow-800"
+                    >✏️ تعديل</button>
+                    <button
+                      onClick={() => {
+                        if (window.confirm("هل أنت متأكد من حذف هذا البرومبت؟")) {
+                          const updatedPrompts = prompts.filter(p => p.id !== prompt.id);
+                          setPrompts(updatedPrompts);
+                          localStorage.setItem('prompts', JSON.stringify(updatedPrompts));
+                        }
+                      }}
+                      className="text-red-600 hover:text-red-800"
+                    >🗑️ حذف</button>
+                    <button
+                      onClick={() => copyPromptText(prompt.text)}
+                      className="text-blue-600 hover:text-blue-800"
+                    >📋 نسخ</button>
+                  </td>
+                </tr>
+              ))}
+            {prompts.length === 0 && (
+              <tr>
+                <td colSpan="5" className="px-4 py-4 text-center text-gray-500">لا توجد برومبتات مضافة.</td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+    </>
+  )}
+</div>
 
             {/* الأقسام الحالية */}
             <div className="bg-white p-6 rounded shadow-md mb-6">
