@@ -10,7 +10,7 @@
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"  crossorigin></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script> 
 
-  <!-- Tailwind CSS CDN -->
+  <!-- Tailwind CSS -->
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"  rel="stylesheet">
 
   <!-- Internal Styles -->
@@ -37,7 +37,7 @@
 
   <!-- Header -->
   <header class="flex justify-between items-center pb-4 border-b border-gray-200 mb-6">
-    <h1 class="text-2xl sm:text-3xl font-bold text-indigo-700 flex items-center">Promptica</h1>
+    <h1 class="text-2xl sm:text-3xl font-bold text-indigo-700">Promptica</h1>
     <a href="index.html" class="text-indigo-600 hover:text-indigo-800 underline">العودة</a>
   </header>
 
@@ -46,7 +46,7 @@
 
   <!-- Footer -->
   <footer class="mt-8 pt-4 border-t border-gray-200 text-center text-sm text-gray-500">
-    &copy; {{new Date().getFullYear()}} Promptica. جميع الحقوق محفوظة.
+    &copy; {new Date().getFullYear()} Promptica. جميع الحقوق محفوظة.
   </footer>
 
   <!-- React Code -->
@@ -56,22 +56,22 @@
     function ImportDataPage() {
       const [inputText, setInputText] = useState('');
       const [parsedPrompts, setParsedPrompts] = useState([]);
-      const [categories, setCategories] = useState([]);
+      const [categories, setCategories] = useState(['عام']);
       const [subCategories, setSubCategories] = useState({});
       const [selectedMainCategory, setSelectedMainCategory] = useState('');
       const [selectedSubCategory, setSelectedSubCategory] = useState('');
       const [showResults, setShowResults] = useState(false);
-      const [isLoading, setIsLoading] = useState(false);
 
-      // تحميل البيانات المخزنة
-      useEffect(() => {
-        const savedCategories = JSON.parse(localStorage.getItem('categories')) || ['عام'];
-        const savedSubCategories = JSON.parse(localStorage.getItem('subCategories')) || {};
-        setCategories(savedCategories);
-        setSubCategories(savedSubCategories);
+      // تحميل البيانات من localStorage
+      React.useEffect(() => {
+        const savedCategories = JSON.parse(localStorage.getItem('categories'));
+        const savedSubCategories = JSON.parse(localStorage.getItem('subCategories'));
+
+        if (savedCategories) setCategories(savedCategories);
+        if (savedSubCategories) setSubCategories(savedSubCategories);
       }, []);
 
-      // دالة تحليل النص (Markdown)
+      // دالة تحليل Markdown
       const parseMarkdown = (text) => {
         const lines = text.split('\n');
         const result = [];
@@ -82,13 +82,10 @@
         lines.forEach(line => {
           line = line.trim();
           if (line.startsWith('# ') && !line.startsWith('##')) {
-            // قسم رئيسي
             currentMainCategory = line.replace('# ', '').trim();
           } else if (line.startsWith('## ')) {
-            // قسم فرعي
             currentSubCategory = line.replace('## ', '').trim();
           } else if (line.startsWith('>')) {
-            // برومبت
             promptBuffer = line.replace(/^>\s*/, '').trim();
             if (currentMainCategory && currentSubCategory && promptBuffer) {
               result.push({
@@ -108,13 +105,14 @@
 
       // عند إدخال النص
       const handleInputChange = (e) => {
-        setInputText(e.target.value);
-        const prompts = parseMarkdown(e.target.value);
+        const value = e.target.value;
+        setInputText(value);
+        const prompts = parseMarkdown(value);
         setParsedPrompts(prompts);
-        setShowResults(!!e.target.value);
+        setShowResults(!!value);
       };
 
-      // حفظ البرومبتات في localStorage
+      // حفظ البرومبتات
       const savePrompts = () => {
         if (!selectedMainCategory || !selectedSubCategory || parsedPrompts.length === 0) {
           alert("يرجى اختيار القسم الرئيسي والفرعي.");
@@ -144,7 +142,7 @@
             <label className="block text-lg font-medium mb-2">أدخل النص المراد استيراده:</label>
             <textarea
               rows="12"
-              placeholder="لصق نص بصيغة Markdown تحتوي على أقسام وبرومبتات..."
+              placeholder="لصق نص بصيغة Markdown يحتوي على أقسام وبرومبتات..."
               value={inputText}
               onChange={handleInputChange}
               className="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
@@ -208,7 +206,7 @@
             </div>
           )}
 
-          {/* تعليمات الاستخدام */}
+          {/* تعليمات التنسيق */}
           <div className="bg-blue-50 p-4 rounded shadow-md mb-6">
             <h3 className="font-semibold text-lg mb-2">كيفية التنسيق؟</h3>
             <pre className="bg-gray-100 p-3 rounded text-sm overflow-x-auto">
