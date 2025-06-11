@@ -9,7 +9,9 @@
   <script src="https://unpkg.com/react@18/umd/react.development.js"  crossorigin></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"  crossorigin></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>   
-
+<!-- Tiktoken - لحساب التوكنات بدقة -->
+<script src="https://cdn.jsdelivr.net/npm/@dqbd/tiktoken/lite.js"></script> 
+<script src="https://cdn.jsdelivr.net/npm/@dqbd/tiktoken/encoders/cl100k_base.js"></script> 
   <!-- Tailwind CSS CDN -->
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"  rel="stylesheet">
 
@@ -139,20 +141,27 @@
       };
 
       const handleAddPrompt = () => {
-        if (!promptText.trim() || !selectedMainCategory || !newSubCategory.trim()) return;
-        const newPrompt = {
-          id: Date.now(),
-          text: promptText,
-          category: selectedMainCategory,
-          subCategory: newSubCategory,
-          tokens: parseInt(promptTokens) || 0
-        };
-        const updatedPrompts = [...prompts, newPrompt];
-        setPrompts(updatedPrompts);
-        localStorage.setItem('prompts', JSON.stringify(updatedPrompts));
-        setPromptText('');
-        setPromptTokens(0);
-      };
+      const handleAddPrompt = () => {
+  if (!promptText.trim() || !selectedMainCategory || !newSubCategory.trim()) return;
+
+  // تحميل رمز التشفير cl100k_base المستخدم في GPT-4 و Whisper
+  const { cl100k_base } = window;
+  const encode = window.tiktoken.encode;
+  const tokens = encode(cl100k_base, promptText);
+
+  const newPrompt = {
+    id: Date.now(),
+    text: promptText,
+    category: selectedMainCategory,
+    subCategory: newSubCategory,
+    tokens: tokens.length, // عدد التوكنات المحسوب بدقة
+  };
+
+  const updatedPrompts = [...prompts, newPrompt];
+  setPrompts(updatedPrompts);
+  localStorage.setItem('prompts', JSON.stringify(updatedPrompts));
+  setPromptText('');
+};
 
       const getCategoryStats = () => {
         const stats = {};
