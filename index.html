@@ -86,6 +86,7 @@ const [selectedCategoryTab, setSelectedCategoryTab] = useState('all');
       const [selectedMainCategory, setSelectedMainCategory] = useState('');
       const [promptText, setPromptText] = useState('');
       const [promptTokens, setPromptTokens] = useState(0);
+      const [editingPrompt, setEditingPrompt] = useState(null);
 
       // تحميل البيانات عند تشغيل التطبيق
       useEffect(() => {
@@ -110,6 +111,40 @@ const [selectedCategoryTab, setSelectedCategoryTab] = useState('all');
 
       // إضافة قسم رئيسي
       const handleAddMainCategory = () => {
+      // دالة لفتح نافذة تعديل البرومبت
+const startEditingPrompt = (prompt) => {
+  setEditingPrompt(prompt);
+  setPromptText(prompt.text);
+  setSelectedMainCategory(prompt.category);
+  setNewSubCategory(prompt.subCategory);
+  setPromptTokens(prompt.tokens);
+};
+
+// دالة لحفظ التعديل
+const saveEditedPrompt = () => {
+  if (!promptText.trim() || !selectedMainCategory || !newSubCategory.trim()) return;
+
+  const updatedPrompts = prompts.map(p =>
+    p.id === editingPrompt.id
+      ? {
+          ...p,
+          text: promptText,
+          category: selectedMainCategory,
+          subCategory: newSubCategory,
+          tokens: parseInt(promptTokens) || 0
+        }
+      : p
+  );
+
+  setPrompts(updatedPrompts);
+  localStorage.setItem('prompts', JSON.stringify(updatedPrompts));
+  setEditingPrompt(null);
+  // إعادة تعيين الحقول
+  setPromptText('');
+  setPromptTokens(0);
+  setSelectedMainCategory('');
+  setNewSubCategory('');
+};
         if (!newMainCategory.trim()) return;
         if (categories.includes(newMainCategory)) {
           alert("القسم الرئيسي موجود بالفعل!");
@@ -302,7 +337,7 @@ const [selectedCategoryTab, setSelectedCategoryTab] = useState('all');
           </div>
         );
       };
-      {/* عرض البرومبتات*/}
+      عرض البرومبيتات
 const renderManagePrompts = () => {
   return (
     <div className="space-y-6">
