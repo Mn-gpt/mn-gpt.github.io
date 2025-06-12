@@ -78,16 +78,15 @@
       const [subCategories, setSubCategories] = useState({});
       const [searchTerm, setSearchTerm] = useState('');
       const isUserAdmin = true;
-const [showPromptTable, setShowPromptTable] = useState(false);
-const [selectedCategoryTab, setSelectedCategoryTab] = useState('all');
+
       // بيانات إضافة البرومبت
       const [newMainCategory, setNewMainCategory] = useState('');
       const [newSubCategory, setNewSubCategory] = useState('');
       const [selectedMainCategory, setSelectedMainCategory] = useState('');
       const [promptText, setPromptText] = useState('');
       const [promptTokens, setPromptTokens] = useState(0);
-      const [editingPrompt, setEditingPrompt] = useState(null);
-
+  const [showPromptTable, setShowPromptTable] = useState(false);
+      const [selectedCategoryTab, setSelectedCategoryTab] = useState('all');
       // تحميل البيانات عند تشغيل التطبيق
       useEffect(() => {
         const savedPrompts = JSON.parse(localStorage.getItem('prompts')) || [];
@@ -111,7 +110,6 @@ const [selectedCategoryTab, setSelectedCategoryTab] = useState('all');
 
       // إضافة قسم رئيسي
       const handleAddMainCategory = () => {
-      
         if (!newMainCategory.trim()) return;
         if (categories.includes(newMainCategory)) {
           alert("القسم الرئيسي موجود بالفعل!");
@@ -304,308 +302,272 @@ const [selectedCategoryTab, setSelectedCategoryTab] = useState('all');
           </div>
         );
       };
-      عرض البرومبيتات
-const renderManagePrompts = () => {
-  return (
-    <div className="space-y-6">
-      <h2 className="text-2xl sm:text-3xl font-bold text-gray-800">إدارة البرومبتات</h2>
 
-      {/* إضافة قسم رئيسي */}
-      <div className="bg-white p-6 rounded shadow-md mb-6">
-        <h3 className="font-semibold text-lg mb-4">إضافة قسم رئيسي</h3>
-        <div className="flex flex-wrap gap-4">
-          <input
-            type="text"
-            placeholder="اسم القسم الرئيسي الجديد"
-            value={newMainCategory}
-            onChange={(e) => setNewMainCategory(e.target.value)}
-            className="flex-1 min-w-[200px] p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
-          />
-          <button
-            onClick={handleAddMainCategory}
-            disabled={!newMainCategory.trim()}
-            className={`px-4 py-2 rounded transition-colors ${
-              newMainCategory.trim()
-                ? 'bg-indigo-600 hover:bg-indigo-700 text-white'
-                : 'bg-gray-200 cursor-not-allowed text-gray-500'
-            }`}
-          >
-            ➕ إضافة قسم رئيسي
-          </button>
-        </div>
-      </div>
+      // عرض إدارة البرومبتات
+      const renderManagePrompts = () => {
+        return (
+          <div className="space-y-6">
+            <h2 className="text-2xl sm:text-3xl font-bold text-gray-800">إدارة البرومبتات</h2>
 
-      {/* إضافة قسم فرعي */}
-      <div className="bg-white p-6 rounded shadow-md mb-6">
-        <h3 className="font-semibold text-lg mb-4">إضافة قسم فرعي</h3>
-        <div className="flex flex-wrap gap-4">
-          <select
-            value={selectedMainCategory}
-            onChange={(e) => setSelectedMainCategory(e.target.value)}
-            className="p-3 border border-gray-300 rounded w-full md:w-auto"
-          >
-            <option value="">اختر القسم الرئيسي</option>
-            {categories.map(cat => (
-              <option key={cat} value={cat}>{cat}</option>
-            ))}
-          </select>
-          <input
-            type="text"
-            placeholder="اسم القسم الفرعي الجديد"
-            value={newSubCategory}
-            onChange={(e) => setNewSubCategory(e.target.value)}
-            className="flex-1 min-w-[200px] p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
-          />
-          <button
-            onClick={handleAddSubCategory}
-            disabled={!selectedMainCategory || !newSubCategory.trim()}
-            className={`px-4 py-2 rounded transition-colors ${
-              selectedMainCategory && newSubCategory.trim()
-                ? 'bg-purple-600 hover:bg-purple-700 text-white'
-                : 'bg-gray-200 cursor-not-allowed text-gray-500'
-            }`}
-          >
-            ➕ إضافة قسم فرعي
-          </button>
-        </div>
-      </div>
-
-      {/* إضافة برومبت جديد */}
-      <div className="bg-white p-6 rounded shadow-md mb-6">
-        <h3 className="font-semibold text-lg mb-4">إضافة برومبت جديد</h3>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <select
-            value={selectedMainCategory}
-            onChange={(e) => setSelectedMainCategory(e.target.value)}
-            className="p-3 border border-gray-300 rounded"
-          >
-            <option value="">اختر القسم الرئيسي</option>
-            {categories.map(cat => (
-              <option key={cat} value={cat}>{cat}</option>
-            ))}
-          </select>
-          <select
-            value={newSubCategory}
-            onChange={(e) => setNewSubCategory(e.target.value)}
-            className="p-3 border border-gray-300 rounded"
-          >
-            <option value="">اختر القسم الفرعي</option>
-            {subCategories[selectedMainCategory]?.map(sub => (
-              <option key={sub} value={sub}>{sub}</option>
-            ))}
-          </select>
-          <textarea
-            rows="3"
-            placeholder="أدخل نص البرومبت هنا..."
-            value={promptText}
-            onChange={(e) => setPromptText(e.target.value)}
-            className="col-span-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
-          />
-          <input
-            type="number"
-            placeholder="عدد الكلمات (tokens)"
-            value={promptTokens}
-            onChange={(e) => setPromptTokens(e.target.value)}
-            className="p-3 border border-gray-300 rounded"
-          />
-          <button
-            onClick={handleAddPrompt}
-            disabled={!promptText.trim() || !selectedMainCategory || !newSubCategory.trim()}
-            className={`px-4 py-2 rounded transition-colors ${
-              promptText.trim() && selectedMainCategory && newSubCategory.trim()
-                ? 'bg-green-600 hover:bg-green-700 text-white'
-                : 'bg-gray-200 cursor-not-allowed text-gray-500'
-            }`}
-          >
-            ➕ إضافة برومبت
-          </button>
-        </div>
-      </div>
-
-      {/* عرض البرومبتات الحالية */}
-      <div className="bg-white p-6 rounded shadow-md mb-6">
-        <div className="flex justify-between items-center mb-4">
-          <h3 className="font-semibold text-lg">البرومبتات الحالية</h3>
-          <button
-            onClick={() => setShowPromptTable(!showPromptTable)}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors duration-300 shadow-md hover:shadow-lg ${
-              showPromptTable ? 'bg-red-600 hover:bg-red-700 text-white' : 'bg-green-600 hover:bg-green-700 text-white'
-            }`}
-          >
-            {showPromptTable ? (
-              <>
-                <span>👁️ إخفاء الجدول</span>
-              </>
-            ) : (
-              <>
-                <span>👁️‍🗨️ إظهار الجدول</span>
-              </>
-            )}
-          </button>
-        </div>
-
-        {/* Tabs for Categories */}
-        {showPromptTable && (
-          <>
-            <div className="mb-4 border-b border-gray-200">
-              <nav className="flex space-x-4 rtl:space-x-reverse overflow-x-auto pb-1">
+            {/* إضافة قسم رئيسي */}
+            <div className="bg-white p-6 rounded shadow-md mb-6">
+              <h3 className="font-semibold text-lg mb-4">إضافة قسم رئيسي</h3>
+              <div className="flex flex-wrap gap-4">
+                <input
+                  type="text"
+                  placeholder="اسم القسم الرئيسي الجديد"
+                  value={newMainCategory}
+                  onChange={(e) => setNewMainCategory(e.target.value)}
+                  className="flex-1 min-w-[200px] p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                />
                 <button
-                  onClick={() => setSelectedCategoryTab('all')}
-                  className={`py-2 px-4 font-medium border-b-2 ${
-                    selectedCategoryTab === 'all'
-                      ? 'border-indigo-500 text-indigo-600'
-                      : 'border-transparent text-gray-500 hover:text-gray-700'
+                  onClick={handleAddMainCategory}
+                  disabled={!newMainCategory.trim()}
+                  className={`px-4 py-2 rounded transition-colors ${
+                    newMainCategory.trim()
+                      ? 'bg-indigo-600 hover:bg-indigo-700 text-white'
+                      : 'bg-gray-200 cursor-not-allowed text-gray-500'
                   }`}
                 >
-                  الكل
+                  ➕ إضافة قسم رئيسي
                 </button>
-                {categories.map(cat => (
-                  <button
-                    key={cat}
-                    onClick={() => setSelectedCategoryTab(cat)}
-                    className={`py-2 px-4 font-medium border-b-2 whitespace-nowrap ${
-                      selectedCategoryTab === cat
-                        ? 'border-indigo-500 text-indigo-600'
-                        : 'border-transparent text-gray-500 hover:text-gray-700'
-                    }`}
-                  >
-                    {cat}
-                  </button>
-                ))}
-              </nav>
+              </div>
             </div>
 
-            {/* Filter prompts based on selected tab */}
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th scope="col" className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">النص</th>
-                    <th scope="col" className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">القسم</th>
-                    <th scope="col" className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">القسم الفرعي</th>
-                    <th scope="col" className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">tokens</th>
-                    <th scope="col" className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">الإجراءات</th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {prompts
-                    .filter(prompt =>
-                      selectedCategoryTab === 'all' ||
-                      prompt.category === selectedCategoryTab ||
-                      prompt.subCategory === selectedCategoryTab
-                    )
-                    .map(prompt => (
-                      <tr key={prompt.id} className="hover:bg-gray-50">
-                        <td className="px-4 py-4 line-clamp-3">{prompt.text}</td>
-                        <td className="px-4 py-4">{prompt.category}</td>
-                        <td className="px-4 py-4">{prompt.subCategory}</td>
-                        <td className="px-4 py-4">{prompt.tokens}</td>
-                        <td className="px-4 py-4 whitespace-nowrap space-x-3 rtl:space-x-reverse">
-                          <button
-                            onClick={() => alert("✏️ يمكنك هنا فتح نافذة تعديل")}
-                            className="text-yellow-600 hover:text-yellow-800"
-                          >✏️ تعديل</button>
-                          <button
-                            onClick={() => {
-                              if (window.confirm("هل أنت متأكد من حذف هذا البرومبت؟")) {
-                                const updatedPrompts = prompts.filter(p => p.id !== prompt.id);
-                                setPrompts(updatedPrompts);
-                                localStorage.setItem('prompts', JSON.stringify(updatedPrompts));
-                              }
-                            }}
-                            className="text-red-600 hover:text-red-800"
-                          >🗑️ حذف</button>
-                          <button
-                            onClick={() => copyPromptText(prompt.text)}
-                            className="text-blue-600 hover:text-blue-800"
-                          >📋 نسخ</button>
-                        </td>
-                      </tr>
-                    ))}
-                  {prompts.length === 0 && (
-                    <tr>
-                      <td colSpan="5" className="px-4 py-4 text-center text-gray-500">لا توجد برومبتات مضافة.</td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
+            {/* إضافة قسم فرعي */}
+            <div className="bg-white p-6 rounded shadow-md mb-6">
+              <h3 className="font-semibold text-lg mb-4">إضافة قسم فرعي</h3>
+              <div className="flex flex-wrap gap-4">
+                <select
+                  value={selectedMainCategory}
+                  onChange={(e) => setSelectedMainCategory(e.target.value)}
+                  className="p-3 border border-gray-300 rounded w-full md:w-auto"
+                >
+                  <option value="">اختر القسم الرئيسي</option>
+                  {categories.map(cat => (
+                    <option key={cat} value={cat}>{cat}</option>
+                  ))}
+                </select>
+                <input
+                  type="text"
+                  placeholder="اسم القسم الفرعي الجديد"
+                  value={newSubCategory}
+                  onChange={(e) => setNewSubCategory(e.target.value)}
+                  className="flex-1 min-w-[200px] p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                />
+                <button
+                  onClick={handleAddSubCategory}
+                  disabled={!selectedMainCategory || !newSubCategory.trim()}
+                  className={`px-4 py-2 rounded transition-colors ${
+                    selectedMainCategory && newSubCategory.trim()
+                      ? 'bg-purple-600 hover:bg-purple-700 text-white'
+                      : 'bg-gray-200 cursor-not-allowed text-gray-500'
+                  }`}
+                >
+                  ➕ إضافة قسم فرعي
+                </button>
+              </div>
             </div>
-          </>
-        )}
+
+            {/* إضافة برومبت جديد */}
+            <div className="bg-white p-6 rounded shadow-md mb-6">
+              <h3 className="font-semibold text-lg mb-4">إضافة برومبت جديد</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <select
+                  value={selectedMainCategory}
+                  onChange={(e) => setSelectedMainCategory(e.target.value)}
+                  className="p-3 border border-gray-300 rounded"
+                >
+                  <option value="">اختر القسم الرئيسي</option>
+                  {categories.map(cat => (
+                    <option key={cat} value={cat}>{cat}</option>
+                  ))}
+                </select>
+                <select
+                  value={newSubCategory}
+                  onChange={(e) => setNewSubCategory(e.target.value)}
+                  className="p-3 border border-gray-300 rounded"
+                >
+                  <option value="">اختر القسم الفرعي</option>
+                  {subCategories[selectedMainCategory]?.map(sub => (
+                    <option key={sub} value={sub}>{sub}</option>
+                  ))}
+                </select>
+                <textarea
+                  rows="3"
+                  placeholder="أدخل نص البرومبت هنا..."
+                  value={promptText}
+                  onChange={handlePromptTextChange}
+                  className="col-span-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                />
+                <input
+                  type="number"
+                  placeholder="عدد الكلمات (tokens)"
+                  value={promptTokens}
+                  readOnly
+                  className="p-3 border border-gray-300 rounded bg-gray-100"
+                />
+                <button
+                  onClick={handleAddPrompt}
+                  disabled={!promptText.trim() || !selectedMainCategory || !newSubCategory.trim()}
+                  className={`px-4 py-2 rounded transition-colors ${
+                    promptText.trim() && selectedMainCategory && newSubCategory.trim()
+                      ? 'bg-green-600 hover:bg-green-700 text-white'
+                      : 'bg-gray-200 cursor-not-allowed text-gray-500'
+                  }`}
+                >
+                  ➕ إضافة برومبت
+                </button>
+              </div>
+            </div>
+
+            {/* عرض البرومبتات الحالية */}
+         {/* عرض البرومبتات الحالية */}
+<div className="bg-white p-6 rounded shadow-md mb-6">
+  <div className="flex justify-between items-center mb-4">
+    <h3 className="font-semibold text-lg">البرومبتات الحالية</h3>
+    <button
+      onClick={() => setShowPromptTable(!showPromptTable)}
+      className={`px-3 py-1 rounded ${
+        showPromptTable ? 'bg-red-500 text-white' : 'bg-green-500 text-white'
+      }`}
+    >
+      {showPromptTable ? 'إخفاء الجدول' : 'إظهار الجدول'}
+    </button>
+  </div>
+
+  {/* Tabs for Categories */}
+  {showPromptTable && (
+    <>
+      <div className="mb-4 border-b border-gray-200">
+        <nav className="flex space-x-4 rtl:space-x-reverse overflow-x-auto pb-1">
+          <button
+            onClick={() => setSelectedCategoryTab('all')}
+            className={`py-2 px-4 font-medium border-b-2 ${
+              selectedCategoryTab === 'all'
+                ? 'border-indigo-500 text-indigo-600'
+                : 'border-transparent text-gray-500 hover:text-gray-700'
+            }`}
+          >
+            الكل
+          </button>
+          {categories.map(cat => (
+            <button
+              key={cat}
+              onClick={() => setSelectedCategoryTab(cat)}
+              className={`py-2 px-4 font-medium border-b-2 whitespace-nowrap ${
+                selectedCategoryTab === cat
+                  ? 'border-indigo-500 text-indigo-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              {cat}
+            </button>
+          ))}
+        </nav>
       </div>
 
-      {/* الأقسام الحالية */}
-      <div className="bg-white p-6 rounded shadow-md mb-6">
-        <h3 className="font-semibold text-lg mb-4">الأقسام الحالية</h3>
+      {/* Filter prompts based on selected tab */}
+      <div className="overflow-x-auto">
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
+              <th scope="col" className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">النص</th>
               <th scope="col" className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">القسم</th>
+              <th scope="col" className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">القسم الفرعي</th>
+              <th scope="col" className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">tokens</th>
               <th scope="col" className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">الإجراءات</th>
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
-            {categories.map(cat => (
-              <tr key={cat} className="hover:bg-gray-50">
-                <td className="px-4 py-4 whitespace-nowrap">{cat}</td>
-                <td className="px-4 py-4 whitespace-nowrap space-x-3 rtl:space-x-reverse">
-                  <button
-                    onClick={() => alert("✏️ يمكنك هنا فتح نافذة تعديل")}
-                    className="text-yellow-600 hover:text-yellow-800"
-                  >✏️ تعديل</button>
-                  <button
-                    onClick={() => deleteMainCategory(cat)}
-                    className="text-red-600 hover:text-red-800"
-                  >🗑️ حذف</button>
-                </td>
+            {prompts
+              .filter(prompt =>
+                selectedCategoryTab === 'all' ||
+                prompt.category === selectedCategoryTab ||
+                prompt.subCategory === selectedCategoryTab
+              )
+              .map(prompt => (
+                <tr key={prompt.id} className="hover:bg-gray-50">
+                  <td className="px-4 py-4 line-clamp-3">{prompt.text}</td>
+                  <td className="px-4 py-4">{prompt.category}</td>
+                  <td className="px-4 py-4">{prompt.subCategory}</td>
+                  <td className="px-4 py-4">{prompt.tokens}</td>
+                  <td className="px-4 py-4 whitespace-nowrap space-x-3 rtl:space-x-reverse">
+                    <button
+                      onClick={() => alert("✏️ يمكنك هنا فتح نافذة تعديل")}
+                      className="text-yellow-600 hover:text-yellow-800"
+                    >✏️ تعديل</button>
+                    <button
+                      onClick={() => {
+                        if (window.confirm("هل أنت متأكد من حذف هذا البرومبت؟")) {
+                          const updatedPrompts = prompts.filter(p => p.id !== prompt.id);
+                          setPrompts(updatedPrompts);
+                          localStorage.setItem('prompts', JSON.stringify(updatedPrompts));
+                        }
+                      }}
+                      className="text-red-600 hover:text-red-800"
+                    >🗑️ حذف</button>
+                    <button
+                      onClick={() => copyPromptText(prompt.text)}
+                      className="text-blue-600 hover:text-blue-800"
+                    >📋 نسخ</button>
+                  </td>
+                </tr>
+              ))}
+            {prompts.length === 0 && (
+              <tr>
+                <td colSpan="5" className="px-4 py-4 text-center text-gray-500">لا توجد برومبتات مضافة.</td>
               </tr>
-            ))}
+            )}
           </tbody>
         </table>
       </div>
+    </>
+  )}
+</div>
 
-      {/* زر استيراد البيانات */}
-      <div className="mt-4">
-        <a href="import-data.html" className="inline-block px-6 py-3 bg-gradient-to-r from-pink-500 to-purple-600 text-white font-semibold rounded-full shadow hover:from-pink-600 hover:to-purple-700 transition transform hover:scale-105">
-          📥 استيراد بيانات من Markdown
-        </a>
-      </div>
+            {/* زر استيراد البيانات */}
+            <div className="mt-4">
+              <a href="import-data.html" className="inline-block px-6 py-3 bg-gradient-to-r from-pink-500 to-purple-600 text-white font-semibold rounded-full shadow hover:from-pink-600 hover:to-purple-700 transition transform hover:scale-105">
+                📥 استيراد بيانات من Markdown
+              </a>
+            </div>
 
-      {/* سجل الزوار والإحصاءات */}
-      <div className="bg-white p-6 rounded shadow-md mt-6">
-        <h3 className="font-semibold text-lg mb-4">سجل الزوار</h3>
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th scope="col" className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">التاريخ</th>
-                <th scope="col" className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">الوقت</th>
-                <th scope="col" className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">عدد النسخ</th>
-                <th scope="col" className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">التقييم</th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {visitLog.map((log, idx) => (
-                <tr key={idx}>
-                  <td className="px-4 py-4">{log.date}</td>
-                  <td className="px-4 py-4">{log.time}</td>
-                  <td className="px-4 py-4">{log.copies}</td>
-                  <td className="px-4 py-4">⭐ 4.5</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-        <button
-          onClick={exportToCSV}
-          className="mt-4 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded"
-        >
-          📤 تصدير إلى CSV
-        </button>
-      </div>
-    </div>
-  );
-};
+            {/* سجل الزوار والإحصاءات */}
+            <div className="bg-white p-6 rounded shadow-md mt-6">
+              <h3 className="font-semibold text-lg mb-4">سجل الزوار</h3>
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th scope="col" className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">التاريخ</th>
+                      <th scope="col" className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">الوقت</th>
+                      <th scope="col" className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">عدد النسخ</th>
+                      <th scope="col" className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">التقييم</th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {visitLog.map((log, idx) => (
+                      <tr key={idx}>
+                        <td className="px-4 py-4">{log.date}</td>
+                        <td className="px-4 py-4">{log.time}</td>
+                        <td className="px-4 py-4">{log.copies}</td>
+                        <td className="px-4 py-4">⭐ 4.5</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              <button
+                onClick={exportToCSV}
+                className="mt-4 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded"
+              >
+                📤 تصدير إلى CSV
+              </button>
+            </div>
+          </div>
+        );
+      };
 
       return (
         <div className="container mx-auto max-w-4xl">
