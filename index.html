@@ -86,7 +86,6 @@ const [selectedCategoryTab, setSelectedCategoryTab] = useState('all');
       const [selectedMainCategory, setSelectedMainCategory] = useState('');
       const [promptText, setPromptText] = useState('');
       const [promptTokens, setPromptTokens] = useState(0);
-      const [editingPrompt, setEditingPrompt] = useState(null);
 
       // تحميل البيانات عند تشغيل التطبيق
       useEffect(() => {
@@ -111,7 +110,6 @@ const [selectedCategoryTab, setSelectedCategoryTab] = useState('all');
 
       // إضافة قسم رئيسي
       const handleAddMainCategory = () => {
-     
         if (!newMainCategory.trim()) return;
         if (categories.includes(newMainCategory)) {
           alert("القسم الرئيسي موجود بالفعل!");
