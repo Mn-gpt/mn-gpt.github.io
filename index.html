@@ -456,23 +456,21 @@
               <h3 className="font-semibold text-lg mb-4">{translations[language].addMainCategory}</h3>
               <div className="flex flex-wrap gap-4">
                 <input
-                  type="text"
-                  placeholder={translations[language].categoryName}
-                  value={newMainCategory}
-                  onChange={(e) => setNewMainCategory(e.target.value)}
-                  className="flex-1 min-w-[200px] p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                />
-                <button
-                  onClick={handleAddMainCategory}
-                  disabled={!newMainCategory.trim()}
-                  className={`px-4 py-2 rounded transition-colors ${
-                    newMainCategory.trim()
-                      ? 'bg-indigo-600 hover:bg-indigo-700 text-white'
-                      : 'bg-gray-200 cursor-not-allowed text-gray-500'
-                  }`}
-                >
-                  ➕ {translations[language].addMainCategory}
-                </button>
+                     type="text"
+                    placeholder={translations[language].categoryName}
+                    value={editingCategory ? editedCategoryName : newMainCategory}
+                    onChange={(e) => setEditedCategoryName(e.target.value)}
+                 className="flex-1 min-w-[200px] p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                 />
+            <button
+  onClick={editingCategory ? saveEditedCategory : handleAddMainCategory}
+  disabled={!editedCategoryName.trim() && !newMainCategory.trim()}
+  className={`...`}
+>
+  {editingCategory
+    ? translations[language].saveChanges
+    : `➕ ${translations[language].addMainCategory}`}
+</button>
               </div>
             </div>
             {/* إضافة قسم فرعي */}
@@ -685,10 +683,11 @@
                       <td className="px-4 py-4 whitespace-nowrap">{cat}</td>
                       <td className="px-4 py-4 whitespace-nowrap space-x-3 rtl:space-x-reverse">
                         <button
-                          onClick={() => alert("✏️ يمكنك هنا فتح نافذة تعديل")}
-                          className="text-yellow-600 hover:text-yellow-800"
-                        >{translations[language].editPrompt}</button>
-                        <button
+                        onClick={() => startEditCategory(cat)}
+                        className="text-yellow-600 hover:text-yellow-800"
+                       >
+                      {translations[language].editPrompt}
+                      </button>
                           onClick={() => deleteMainCategory(cat)}
                           className="text-red-600 hover:text-red-800"
                         >{translations[language].deletePrompt}</button>
