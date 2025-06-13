@@ -750,12 +750,10 @@
 
       // عرض لوحة التحكم
       const renderDashboard = () => {
-      	
         const stats = getCategoryStats();
         const totalPrompts = prompts.length;
         const totalTokens = prompts.reduce((sum, p) => sum + p.tokens, 0);
         const averageTokens = totalPrompts > 0 ? Math.round(totalTokens / totalPrompts) : 0;
-
         return (
           <div className="space-y-6">
             <h2 className="text-2xl sm:text-3xl font-bold text-gray-800">{translations[language].dashboard}</h2>
@@ -785,47 +783,30 @@
               />
             </div>
             {/* قائمة الأقسام */}
-           <div className="mt-6">
-  <h3 className="text-xl font-semibold text-gray-800 mb-4">{translations[language].categoriesAvailable}</h3>
+            <div className="mt-6">
+              <h3 className="text-xl font-semibold text-gray-800 mb-4">{translations[language].categoriesAvailable}</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {categories.map(cat => (
+                  <a
+                    key={cat}
+                    href={`category-prompts.html?category=${encodeURIComponent(cat)}&level=all`}
+                    className="bg-white p-4 rounded shadow hover:bg-gray-50 transition flex justify-between items-center"
+                  >
+                    <span className="font-medium text-indigo-600 text-xs sm:text-sm">{cat}</span>
+                    <svg className="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
+                    </svg>
+                  </a>
+                ))}
+                {categories.length === 0 && (
+                  <p className="text-gray-500 text-center py-4 col-span-full">{translations[language].noCategories}</p>
+                )}
+              </div>
+            </div>
+          </div>
+        );
+      };
 
-  {/* الحاوية القابلة للتوسعة */}
-  <div
-    className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 transition-all duration-300 overflow-hidden ${
-      expanded ? 'max-h-[1000px]' : 'max-h-[800px]'
-    }`}
-    style={{
-      maxHeight: expanded ? '1000px' : 'calc(5 * 4.5rem)', // 4.5rem تقريبًا ارتفاع كل عنصر
-    }}
-  >
-    {categories.map(cat => (
-      <a
-        key={cat}
-        href={`category-prompts.html?category=${encodeURIComponent(cat)}&level=all`}
-        className="bg-white p-4 rounded shadow hover:bg-gray-50 transition flex justify-between items-center"
-      >
-        <span className="font-medium text-indigo-600 text-xs sm:text-sm">{cat}</span>
-        <svg className="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
-        </svg>
-      </a>
-    ))}
-    {categories.length === 0 && (
-      <p className="text-gray-500 text-center py-4 col-span-full">{translations[language].noCategories}</p>
-    )}
-  </div>
-
-  {/* زر عرض المزيد */}
-  {categories.length > 5 && (
-    <div className="mt-4 text-center">
-      <button
-        onClick={() => setExpanded(!expanded)}
-        className="text-sm text-blue-600 hover:underline focus:outline-none"
-      >
-        {expanded ? translations[language].showLess : translations[language].showMore}
-      </button>
-    </div>
-  )}
-</div>
       return (
         <div className="container mx-auto max-w-4xl">
           {/* Tabs Navigation */}
