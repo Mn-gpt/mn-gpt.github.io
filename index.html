@@ -638,10 +638,9 @@
                               </td>
                               <td className="px-4 py-4">{prompt.tokens}</td>
                               <td className="px-4 py-4 whitespace-nowrap space-x-3 rtl:space-x-reverse">
-                                <button
-                                  onClick={() => alert("✏️ يمكنك هنا فتح نافذة تعديل")}
-                                  className="text-yellow-600 hover:text-yellow-800"
-                                >{translations[language].editPrompt}</button>
+<button onClick={() => startEditingPrompt(prompt)} className="text-yellow-600 hover:text-yellow-800">
+  {translations[language].editPrompt}
+</button>
                                 <button
                                   onClick={() => {
                                     if (window.confirm("هل أنت متأكد من حذف هذا البرومبت؟")) {
