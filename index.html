@@ -299,24 +299,7 @@
       };
 
       // إحصائيات الأقسام
-      const getCategoryStats = () => {
-        const stats = {};
-        categories.forEach(category => {
-          const mainCatPrompts = prompts.filter(p => p.category === category);
-          const subCatPrompts = prompts.filter(p => p.subCategory === category);
-          const totalPrompts = mainCatPrompts.length + subCatPrompts.length;
-          const totalTokens = [...mainCatPrompts, ...subCatPrompts].reduce((sum, p) => sum + p.tokens, 0);
-          stats[category] = {
-            count: totalPrompts,
-            totalTokens: totalTokens,
-            averageTokens: totalPrompts > 0 ? Math.round(totalTokens / totalPrompts) : 0
-          };
-        });
-        return stats;
-      };
-
-      // نسخ البرومبت
-      const copyPromptText = (text) => {
+const copyPromptText = (text) => {
         navigator.clipboard.writeText(text);
         alert(translations[language].promptCopied);
       };
@@ -327,35 +310,52 @@
         const updatedCategories = categories.filter(c => c !== cat);
         setCategories(updatedCategories);
         localStorage.setItem('categories', JSON.stringify(updatedCategories));
+
         const updatedSubCategories = { ...subCategories };
         delete updatedSubCategories[cat];
         setSubCategories(updatedSubCategories);
         localStorage.setItem('subCategories', JSON.stringify(updatedSubCategories));
+
         const updatedPrompts = prompts.filter(p => p.category !== cat && p.subCategory !== cat);
         setPrompts(updatedPrompts);
         localStorage.setItem('prompts', JSON.stringify(updatedPrompts));
       };
 
-      // سجل الزوار
-      const visitLog = [
-        { date: "2023-10-15", time: "2:30 PM", copies: 5 },
-        { date: "2023-10-14", time: "11:15 AM", copies: 3 },
-        { date: "2023-10-12", time: "5:45 PM", copies: 7 }
-      ];
+      // بدء تعديل القسم
+      const startEditCategory = (cat) => {
+        setEditingCategory(cat);
+        setEditedCategoryName(cat);
+      };
 
-      // تصدير إلى CSV
-      const exportToCSV = () => {
-        let csv = "Category,Prompts Count\n";
-        Object.entries(getCategoryStats()).forEach(([cat, data]) => {
-          csv += `${cat},${data.count}\n`;
-        });
-        const blob = new Blob([csv], { type: 'text/csv' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = "stats.csv";
-        a.click();
-        URL.revokeObjectURL(url);
+      // حفظ تعديل القسم
+      const saveEditedCategory = () => {
+        if (!editedCategoryName.trim() || !editingCategory) return;
+
+        const updatedCategories = categories.map(c => c === editingCategory ? editedCategoryName : c);
+        const updatedSubCategories = { ...subCategories };
+        const updatedPrompts = prompts.map(p =>
+          p.category === editingCategory
+            ? { ...p, category: editedCategoryName }
+            : p
+        );
+
+        // تحديث الأقسام الفرعية
+        updatedSubCategories[editedCategoryName] = updatedSubCategories[editingCategory];
+        delete updatedSubCategories[editingCategory];
+
+        // تحديث الواجهة
+        setCategories(updatedCategories);
+        setSubCategories(updatedSubCategories);
+        setPrompts(updatedPrompts);
+
+        // حفظ البيانات
+        localStorage.setItem('categories', JSON.stringify(updatedCategories));
+        localStorage.setItem('subCategories', JSON.stringify(updatedSubCategories));
+        localStorage.setItem('prompts', JSON.stringify(updatedPrompts));
+
+        // إعادة تعيين الحقول
+        setEditingCategory(null);
+        setEditedCategoryName('');
       };
 
       // بدء تعديل برومبت
@@ -367,9 +367,10 @@
         setPromptTokens(prompt.tokens);
       };
 
-      // حفظ التعديل
+      // حفظ تعديل برومبت
       const saveEditedPrompt = () => {
         if (!promptText.trim() || !selectedMainCategory || !newSubCategory.trim()) return;
+
         const updatedPrompts = prompts.map(p =>
           p.id === editingPrompt.id
             ? {
@@ -389,6 +390,31 @@
         setSelectedMainCategory('');
         setNewSubCategory('');
       };
+
+      // سجل الزوار والإحصاءات
+      const visitLog = [
+        { date: "15-10-2023", time: "02:30 م", copies: 5 },
+        { date: "14-10-2023", time: "11:15 ص", copies: 3 },
+        { date: "12-10-2023", time: "05:45 م", copies: 7 }
+      ];
+
+      // تصدير إلى CSV
+      const exportToCSV = () => {
+        let csv = "القسم,المستوى,عدد البرومبتات\n";
+        Object.entries(getCategoryStats()).forEach(([cat, data]) => {
+          csv += `${cat},مبتدئ,${data.byLevel.beginner}\n`;
+          csv += `${cat},متوسط,${data.byLevel.intermediate}\n`;
+          csv += `${cat},محترف,${data.byLevel.advanced}\n`;
+        });
+        const blob = new Blob([csv], { type: 'text/csv' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "stats.csv";
+        a.click();
+        URL.revokeObjectURL(url);
+      };
+
 
       // عرض لوحة التحكم
       const renderDashboard = () => {
