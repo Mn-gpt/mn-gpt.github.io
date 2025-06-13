@@ -391,8 +391,7 @@
       };
 
       // عرض لوحة التحكم
-
-const renderDashboard = () => {
+      const renderDashboard = () => {
         const stats = getCategoryStats();
         const totalPrompts = prompts.length;
         const totalTokens = prompts.reduce((sum, p) => sum + p.tokens, 0);
@@ -401,7 +400,6 @@ const renderDashboard = () => {
         return (
           <div className="space-y-6">
             <h2 className="text-2xl sm:text-3xl font-bold text-gray-800">{translations[language].dashboard}</h2>
-
             {/* Cards */}
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-3 sm:gap-6">
               <div className="bg-white p-4 sm:p-6 rounded shadow hover:shadow-md transition-colors">
@@ -417,6 +415,29 @@ const renderDashboard = () => {
                 <p className="text-3xl font-bold text-green-600">{averageTokens} token</p>
               </div>
             </div>
+               <div class="flex flex-col items-start">
+                 <h1 class="text-2xl sm:text-3xl font-bold text-indigo-700 flex items-center">Prompatica</h1>
+            <div class="smooth-text">AR | EN</div>
+                 
+      <div class="flex items-center space-x-4 rtl:space-x-reverse mt-4">
+        <button
+          onClick={() => setLanguage('en')}
+          className={`px-3 py-1 bg-gray-200 hover:bg-gray-300 rounded-full text-sm ${
+            language === 'en' ? 'bg-indigo-600 text-white' : ''
+          }`}
+        >
+          {translations[language].english}
+        </button>
+        <button
+          onClick={() => setLanguage('ar')}
+          className={`px-3 py-1 bg-gray-200 hover:bg-gray-300 rounded-full text-sm ${
+            language === 'ar' ? 'bg-indigo-600 text-white' : ''
+          }`}
+        >
+          {translations[language].arabic}
+        </button>
+        </div>
+    </div>
 
             {/* شريط البحث */}
             <div className="mt-6">
@@ -455,21 +476,10 @@ const renderDashboard = () => {
       };
 
       // عرض إدارة البرومبتات
-   const renderManagePrompts = () => {
+      const renderManagePrompts = () => {
         return (
           <div className="space-y-6">
             <h2 className="text-2xl sm:text-3xl font-bold text-gray-800">{translations[language].managePrompts}</h2>
-
-            {/* اختيار المستوى */}
-            <div className="bg-white p-4 rounded shadow-inner mb-6">
-              <h3 className="font-semibold text-lg mb-3">اختر المستوى:</h3>
-              <div className="flex flex-wrap gap-3">
-                <button onClick={() => setSelectedLevel('all')} className={`px-4 py-2 rounded-full ${selectedLevel === 'all' ? 'bg-indigo-600 text-white' : 'bg-gray-200 text-gray-700'}`}>🌍 الكل</button>
-                <button onClick={() => setSelectedLevel('مبتدئ')} className={`px-4 py-2 rounded-full ${selectedLevel === 'مبتدئ' ? 'bg-yellow-500 text-white' : 'bg-gray-200 text-gray-700'}`}>🎓 مبتدئ</button>
-                <button onClick={() => setSelectedLevel('متوسط')} className={`px-4 py-2 rounded-full ${selectedLevel === 'متوسط' ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-700'}`}>🎯 متوسط</button>
-                <button onClick={() => setSelectedLevel('محترف')} className={`px-4 py-2 rounded-full ${selectedLevel === 'محترف' ? 'bg-purple-500 text-white' : 'bg-gray-200 text-gray-700'}`}>🏆 محترف</button>
-              </div>
-            </div>
 
             {/* إضافة قسم رئيسي */}
             <div className="bg-white p-6 rounded shadow-md mb-6">
