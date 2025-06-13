@@ -37,6 +37,7 @@
   <div class="mb-6">
     <img src="bannerA.png" alt="بانير موقع Promptica" class="w-full h-auto rounded-lg shadow-md object-cover max-h-64">
   </div>
+
   <!-- Header -->
   <header class="flex justify-between items-center pb-4 border-b border-gray-200 mb-6">
     <h1 class="text-2xl sm:text-3xl font-bold text-indigo-700 flex items-center">Promptica</h1>
@@ -456,21 +457,23 @@
               <h3 className="font-semibold text-lg mb-4">{translations[language].addMainCategory}</h3>
               <div className="flex flex-wrap gap-4">
                 <input
-                     type="text"
-                    placeholder={translations[language].categoryName}
-                    value={editingCategory ? editedCategoryName : newMainCategory}
-                    onChange={(e) => setEditedCategoryName(e.target.value)}
-                 className="flex-1 min-w-[200px] p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                 />
-            <button
-  onClick={editingCategory ? saveEditedCategory : handleAddMainCategory}
-  disabled={!editedCategoryName.trim() && !newMainCategory.trim()}
-  className={`...`}
->
-  {editingCategory
-    ? translations[language].saveChanges
-    : `➕ ${translations[language].addMainCategory}`}
-</button>
+                  type="text"
+                  placeholder={translations[language].categoryName}
+                  value={editingCategory ? editedCategoryName : newMainCategory}
+                  onChange={(e) => setEditedCategoryName(e.target.value)}
+                  className="flex-1 min-w-[200px] p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                />
+                <button
+                  onClick={editingCategory ? saveEditedCategory : handleAddMainCategory}
+                  disabled={!editedCategoryName.trim() && !newMainCategory.trim()}
+                  className={`px-4 py-2 rounded transition-colors ${
+                    (editingCategory ? editedCategoryName.trim() : newMainCategory.trim())
+                      ? 'bg-indigo-600 hover:bg-indigo-700 text-white'
+                      : 'bg-gray-200 cursor-not-allowed text-gray-500'
+                  }`}
+                >
+                  {editingCategory ? translations[language].saveChanges : `➕ ${translations[language].addMainCategory}`}
+                </button>
               </div>
             </div>
             {/* إضافة قسم فرعي */}
@@ -482,7 +485,7 @@
                   onChange={(e) => setSelectedMainCategory(e.target.value)}
                   className="p-3 border border-gray-300 rounded w-full md:w-auto"
                 >
-                  <option value="">اختر قسمًا رئيسيًا</option>
+                  <option value="">{translations[language].selectMainCategory}</option>
                   {categories.map(cat => (
                     <option key={cat} value={cat}>{cat}</option>
                   ))}
@@ -511,27 +514,33 @@
             <div className="bg-white p-6 rounded shadow-md mb-6">
               <h3 className="font-semibold text-lg mb-4">{translations[language].addPromptSuccess}</h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-             <select value={editingPrompt ? editingPrompt.category : selectedMainCategory} onChange={(e) => setSelectedMainCategory(e.target.value)}>
-  <option value="">{translations[language].selectMainCategory}</option>
-  {categories.map(cat => (
-    <option key={cat} value={cat}>{cat}</option>
-  ))}
-</select>
-
-<select value={editingPrompt ? editingPrompt.subCategory : newSubCategory} onChange={(e) => setNewSubCategory(e.target.value)}>
-  <option value="">{translations[language].selectSubCategory}</option>
-  {subCategories[selectedMainCategory]?.map(sub => (
-    <option key={sub} value={sub}>{sub}</option>
-  ))}
-</select>
-
-<textarea
-  rows="3"
-  placeholder={translations[language].enterPromptText}
-  value={editingPrompt ? editingPrompt.text : promptText}
-  onChange={handlePromptTextChange}
-  className="col-span-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
-/>
+                <select
+                  value={selectedMainCategory}
+                  onChange={(e) => setSelectedMainCategory(e.target.value)}
+                  className="p-3 border border-gray-300 rounded"
+                >
+                  <option value="">{translations[language].selectMainCategory}</option>
+                  {categories.map(cat => (
+                    <option key={cat} value={cat}>{cat}</option>
+                  ))}
+                </select>
+                <select
+                  value={newSubCategory}
+                  onChange={(e) => setNewSubCategory(e.target.value)}
+                  className="p-3 border border-gray-300 rounded"
+                >
+                  <option value="">{translations[language].selectSubCategory}</option>
+                  {subCategories[selectedMainCategory]?.map(sub => (
+                    <option key={sub} value={sub}>{sub}</option>
+                  ))}
+                </select>
+                <textarea
+                  rows="3"
+                  placeholder={translations[language].enterPromptText}
+                  value={promptText}
+                  onChange={handlePromptTextChange}
+                  className="col-span-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                />
                 <input
                   type="number"
                   placeholder={translations[language].tokenCount}
@@ -540,16 +549,16 @@
                   className="p-3 border border-gray-300 rounded bg-gray-100"
                 />
                 <button
-  onClick={editingPrompt ? saveEditedPrompt : handleAddPrompt}
-  disabled={!promptText.trim() || !selectedMainCategory || !newSubCategory.trim()}
-  className={`px-4 py-2 rounded transition-colors ${
-    promptText.trim() && selectedMainCategory && newSubCategory.trim()
-      ? 'bg-green-600 hover:bg-green-700 text-white'
-      : 'bg-gray-200 cursor-not-allowed text-gray-500'
-  }`}
->
-  {editingPrompt ? translations[language].saveChanges : `➕ ${translations[language].addPrompt}`}
-</button>
+                  onClick={editingPrompt ? saveEditedPrompt : handleAddPrompt}
+                  disabled={!promptText.trim() || !selectedMainCategory || !newSubCategory.trim()}
+                  className={`px-4 py-2 rounded transition-colors ${
+                    promptText.trim() && selectedMainCategory && newSubCategory.trim()
+                      ? 'bg-green-600 hover:bg-green-700 text-white'
+                      : 'bg-gray-200 cursor-not-allowed text-gray-500'
+                  }`}
+                >
+                  {editingPrompt ? translations[language].saveChanges : `➕ ${translations[language].addPrompt}`}
+                </button>
               </div>
             </div>
             {/* عرض البرومبتات الحالية */}
@@ -636,9 +645,10 @@
                               </td>
                               <td className="px-4 py-4">{prompt.tokens}</td>
                               <td className="px-4 py-4 whitespace-nowrap space-x-3 rtl:space-x-reverse">
-<button onClick={() => startEditingPrompt(prompt)} className="text-yellow-600 hover:text-yellow-800">
-  {translations[language].editPrompt}
-</button>
+                                <button
+                                  onClick={() => startEditingPrompt(prompt)}
+                                  className="text-yellow-600 hover:text-yellow-800"
+                                >{translations[language].editPrompt}</button>
                                 <button
                                   onClick={() => {
                                     if (window.confirm("هل أنت متأكد من حذف هذا البرومبت؟")) {
@@ -683,11 +693,10 @@
                       <td className="px-4 py-4 whitespace-nowrap">{cat}</td>
                       <td className="px-4 py-4 whitespace-nowrap space-x-3 rtl:space-x-reverse">
                         <button
-                        onClick={() => startEditCategory(cat)}
-                        className="text-yellow-600 hover:text-yellow-800"
-                       >
-                      {translations[language].editPrompt}
-                      </button>
+                          onClick={() => startEditCategory(cat)}
+                          className="text-yellow-600 hover:text-yellow-800"
+                        >{translations[language].editPrompt}</button>
+                        <button
                           onClick={() => deleteMainCategory(cat)}
                           className="text-red-600 hover:text-red-800"
                         >{translations[language].deletePrompt}</button>
