@@ -67,17 +67,6 @@
       window.location.href = "login.html";
     }
 
-    // تحديد اللغة المحفوظة أو العربية كافتراضية
-    const savedLang = localStorage.getItem('language') || 'ar';
-    document.documentElement.setAttribute('lang', savedLang);
-    document.documentElement.setAttribute('dir', savedLang === 'ar' ? 'rtl' : 'ltr');
-    if (savedLang === 'en') {
-      document.getElementById('langToggle').innerText = 'عربي';
-    } else {
-      document.getElementById('langToggle').innerText = 'English';
-    }
-
-    // تبديل اللغة
     function toggleLanguage() {
       const newLang = document.documentElement.getAttribute('lang') === 'ar' ? 'en' : 'ar';
       document.documentElement.setAttribute('lang', newLang);
@@ -85,8 +74,6 @@
       localStorage.setItem('language', newLang);
       location.reload();
     }
-
-    document.getElementById("langToggle").addEventListener("click", toggleLanguage);
   </script>
 
   <!-- React Code -->
