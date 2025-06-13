@@ -455,14 +455,36 @@
             {/* إضافة قسم رئيسي */}
             <div className="bg-white p-6 rounded shadow-md mb-6">
               <h3 className="font-semibold text-lg mb-4">{translations[language].addMainCategory}</h3>
-              <div className="flex flex-wrap gap-4">
-                <input
-                  type="text"
-                  placeholder={translations[language].categoryName}
-                  value={editingCategory ? editedCategoryName : newMainCategory}
-                  onChange={(e) => setEditedCategoryName(e.target.value)}
-                  className="flex-1 min-w-[200px] p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                />
+   {editingCategory === cat ? (
+  <div className="flex items-center gap-2">
+    <input
+      type="text"
+      value={editedCategoryName}
+      onChange={(e) => setEditedCategoryName(e.target.value)}
+      className="p-1 border border-gray-300 rounded text-sm"
+      autoFocus
+    />
+    <button
+      onClick={saveEditedCategory}
+      className="text-green-600 hover:text-green-800"
+    >
+      💾 حفظ
+    </button>
+    <button
+      onClick={() => setEditingCategory(null)}
+      className="text-red-600 hover:text-red-800"
+    >
+      ❌ إلغاء
+    </button>
+  </div>
+) : (
+  <button
+    onClick={() => startEditCategory(cat)}
+    className="text-yellow-600 hover:text-yellow-800"
+  >
+    ✏️ تعديل
+  </button>
+)}
                 <button
                   onClick={editingCategory ? saveEditedCategory : handleAddMainCategory}
                   disabled={!editedCategoryName.trim() && !newMainCategory.trim()}
