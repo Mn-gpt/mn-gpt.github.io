@@ -513,14 +513,14 @@
             <div className="bg-white p-6 rounded shadow-md mb-6">
               <h3 className="font-semibold text-lg mb-4">{translations[language].addPromptSuccess}</h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-             <select value={selectedMainCategory} onChange={(e) => setSelectedMainCategory(e.target.value)}>
+             <select value={editingPrompt ? editingPrompt.category : selectedMainCategory} onChange={(e) => setSelectedMainCategory(e.target.value)}>
   <option value="">{translations[language].selectMainCategory}</option>
   {categories.map(cat => (
     <option key={cat} value={cat}>{cat}</option>
   ))}
 </select>
 
-<select value={newSubCategory} onChange={(e) => setNewSubCategory(e.target.value)}>
+<select value={editingPrompt ? editingPrompt.subCategory : newSubCategory} onChange={(e) => setNewSubCategory(e.target.value)}>
   <option value="">{translations[language].selectSubCategory}</option>
   {subCategories[selectedMainCategory]?.map(sub => (
     <option key={sub} value={sub}>{sub}</option>
@@ -530,7 +530,7 @@
 <textarea
   rows="3"
   placeholder={translations[language].enterPromptText}
-  value={promptText}
+  value={editingPrompt ? editingPrompt.text : promptText}
   onChange={handlePromptTextChange}
   className="col-span-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
 />
