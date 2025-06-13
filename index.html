@@ -678,34 +678,52 @@
               )}
             </div>
             {/* الأقسام الحالية */}
-            <div className="bg-white p-6 rounded shadow-md mb-6">
-              <h3 className="font-semibold text-lg mb-4">{translations[language].mainCategories}</h3>
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th scope="col" className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">القسم</th>
-                    <th scope="col" className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">الإجراءات</th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {categories.map(cat => (
-                    <tr key={cat} className="hover:bg-gray-50">
-                      <td className="px-4 py-4 whitespace-nowrap">{cat}</td>
-                      <td className="px-4 py-4 whitespace-nowrap space-x-3 rtl:space-x-reverse">
-                        <button
-                          onClick={() => startEditCategory(cat)}
-                          className="text-yellow-600 hover:text-yellow-800"
-                        >{translations[language].editPrompt}</button>
-                        <button
-                          onClick={() => deleteMainCategory(cat)}
-                          className="text-red-600 hover:text-red-800"
-                        >{translations[language].deletePrompt}</button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+<div className="bg-white p-6 rounded shadow-md mb-6">
+  <h3 className="font-semibold text-lg mb-4">{translations[language].mainCategories}</h3>
+  <div className="flex justify-between items-center mb-4">
+    <p>{categories.length} {translations[language].categoriesAvailable}</p>
+    <button
+      onClick={() => setShowCategoryTable(!showCategoryTable)}
+      className={`px-4 py-2 rounded transition-colors duration-300 shadow-md hover:shadow-lg ${
+        showCategoryTable ? 'bg-red-600 hover:bg-red-700 text-white' : 'bg-green-600 hover:bg-green-700 text-white'
+      }`}
+    >
+      {showCategoryTable ? translations[language].hideTable : translations[language].showTable}
+    </button>
+  </div>
+  {showCategoryTable && (
+    <div className="overflow-x-auto">
+      <table className="min-w-full divide-y divide-gray-200">
+        <thead className="bg-gray-50">
+          <tr>
+            <th scope="col" className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">القسم</th>
+            <th scope="col" className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">الإجراءات</th>
+          </tr>
+        </thead>
+        <tbody className="bg-white divide-y divide-gray-200">
+          {categories.map(cat => (
+            <tr key={cat} className="hover:bg-gray-50">
+              <td className="px-4 py-4 whitespace-nowrap">{cat}</td>
+              <td className="px-4 py-4 whitespace-nowrap space-x-3 rtl:space-x-reverse">
+                <button
+                  onClick={() => startEditCategory(cat)}
+                  className="text-yellow-600 hover:text-yellow-800"
+                >{translations[language].editPrompt}</button>
+                <button
+                  onClick={() => deleteMainCategory(cat)}
+                  className="text-red-600 hover:text-red-800"
+                >{translations[language].deletePrompt}</button>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  )}
+  <a href="all-categories.html" className="block mt-4 text-indigo-600 hover:text-indigo-800 underline">
+    📝 عرض المزيد
+  </a>
+</div>
             {/* زر الاستيراد */}
             <div className="mt-4">
               <a href="import-data.html" className="inline-block px-6 py-3 bg-gradient-to-r from-pink-500 to-purple-600 text-white font-semibold rounded-full shadow hover:from-pink-600 hover:to-purple-700 transition transform hover:scale-105">
