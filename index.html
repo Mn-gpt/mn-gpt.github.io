@@ -542,16 +542,16 @@
                   className="p-3 border border-gray-300 rounded bg-gray-100"
                 />
                 <button
-                  onClick={handleAddPrompt}
-                  disabled={!promptText.trim() || !selectedMainCategory || !newSubCategory.trim()}
-                  className={`px-4 py-2 rounded transition-colors ${
-                    promptText.trim() && selectedMainCategory && newSubCategory.trim()
-                      ? 'bg-green-600 hover:bg-green-700 text-white'
-                      : 'bg-gray-200 cursor-not-allowed text-gray-500'
-                  }`}
-                >
-                  ➕ {translations[language].addPrompt}
-                </button>
+  onClick={editingPrompt ? saveEditedPrompt : handleAddPrompt}
+  disabled={!promptText.trim() || !selectedMainCategory || !newSubCategory.trim()}
+  className={`px-4 py-2 rounded transition-colors ${
+    promptText.trim() && selectedMainCategory && newSubCategory.trim()
+      ? 'bg-green-600 hover:bg-green-700 text-white'
+      : 'bg-gray-200 cursor-not-allowed text-gray-500'
+  }`}
+>
+  {editingPrompt ? translations[language].saveChanges : `➕ ${translations[language].addPrompt}`}
+</button>
               </div>
             </div>
             {/* عرض البرومبتات الحالية */}
