@@ -480,9 +480,7 @@
         return (
           <div className="space-y-6">
             <h2 className="text-2xl sm:text-3xl font-bold text-gray-800">{translations[language].managePrompts}</h2>
-
-            {/* اختيار المستوى */}
-            <div className="bg-white p-4 rounded shadow-inner mb-6">
+               <div className="bg-white p-4 rounded shadow-inner mb-6">
               <h3 className="font-semibold text-lg mb-3">اختر المستوى:</h3>
               <div className="flex flex-wrap gap-3">
                 <button onClick={() => setSelectedLevel('all')} className={`px-4 py-2 rounded-full ${selectedLevel === 'all' ? 'bg-indigo-600 text-white' : 'bg-gray-200 text-gray-700'}`}>🌍 الكل</button>
@@ -491,6 +489,7 @@
                 <button onClick={() => setSelectedLevel('محترف')} className={`px-4 py-2 rounded-full ${selectedLevel === 'محترف' ? 'bg-purple-500 text-white' : 'bg-gray-200 text-gray-700'}`}>🏆 محترف</button>
               </div>
             </div>
+
 
             {/* إضافة قسم رئيسي */}
             <div className="bg-white p-6 rounded shadow-md mb-6">
