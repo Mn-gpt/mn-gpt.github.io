@@ -44,7 +44,6 @@
     <div class="flex items-center space-x-4 rtl:space-x-reverse">
       <a href="#" onclick="logout()" class="text-gray-700 hover:text-indigo-600">تسجيل الخروج</a>
       <a href="welcome.html" class="text-indigo-600 hover:text-indigo-800 underline">الترحيب</a>
-      <button id="langToggle" class="text-indigo-600 hover:text-indigo-800">English</button>
     </div>
   </header>
 
@@ -53,8 +52,7 @@
 
   <!-- Footer -->
   <footer class="mt-8 pt-4 border-t border-gray-200 text-center text-sm text-gray-500">
-    &copy; <span id="year"></span> Promptica. جميع الحقوق محفوظة.
-    <script>document.getElementById("year").textContent = new Date().getFullYear();</script>
+    &copy; {{new Date().getFullYear()}} Promptica. جميع الحقوق محفوظة.
   </footer>
 
   <!-- Logout Function -->
@@ -83,13 +81,12 @@
       localStorage.setItem('language', newLang);
       location.reload();
     }
-
     document.getElementById("langToggle").addEventListener("click", toggleLanguage);
   </script>
 
   <!-- React Code -->
   <script type="text/babel">
-    const { useState, useEffect } = React;
+    const { useState, useEffect } = window.React;
 
     function App() {
       // نصوص الترجمة
@@ -136,12 +133,9 @@
           subCategoryName: "اسم القسم الفرعي الجديد",
           enterPromptText: "أدخل نص البرومبت هنا...",
           tokenCount: "عدد الكلمات (tokens)",
-          addPromptSuccess: "+ إضافة برومبت جديد",
+          addPromptSuccess: "➕ إضافة برومبت جديد",
           saveChanges: "💾 حفظ التعديل",
-          cancel: "إلغاء",
-          duplicateCategory: "القسم موجود مسبقًا"
-          showMore: "عرض المزيد",
-          showLess: "إغلاق",
+          cancel: "إلغاء"
         },
         en: {
           dashboard: "Dashboard",
@@ -187,11 +181,9 @@
           tokenCount: "Word count (tokens)",
           addPromptSuccess: "+ Add New Prompt",
           saveChanges: "💾 Save Changes",
-          cancel: "Cancel",
-          duplicateCategory: "Category already exists"
+          cancel: "Cancel"
         }
       };
-
       const language = localStorage.getItem('language') || 'ar';
 
       // البيانات الأساسية
@@ -200,7 +192,6 @@
       const [categories, setCategories] = useState([]);
       const [subCategories, setSubCategories] = useState({});
       const [searchTerm, setSearchTerm] = useState('');
-      const [expandedCategories, setExpandedCategories] = useState(false);
       const isUserAdmin = true;
 
       // بيانات إضافة البرومبت
@@ -462,20 +453,20 @@
                 <input
                   type="text"
                   placeholder={translations[language].categoryName}
-                  value={editingCategory ? editedCategoryName : newMainCategory}
-                  onChange={(e) => setEditedCategoryName(e.target.value)}
+                  value={newMainCategory}
+                  onChange={(e) => setNewMainCategory(e.target.value)}
                   className="flex-1 min-w-[200px] p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 />
                 <button
-                  onClick={editingCategory ? saveEditedCategory : handleAddMainCategory}
-                  disabled={!editedCategoryName.trim() && !newMainCategory.trim()}
+                  onClick={handleAddMainCategory}
+                  disabled={!newMainCategory.trim()}
                   className={`px-4 py-2 rounded transition-colors ${
-                    (editingCategory ? editedCategoryName.trim() : newMainCategory.trim())
+                    newMainCategory.trim()
                       ? 'bg-indigo-600 hover:bg-indigo-700 text-white'
                       : 'bg-gray-200 cursor-not-allowed text-gray-500'
                   }`}
                 >
-                  {editingCategory ? translations[language].saveChanges : `➕ ${translations[language].addMainCategory}`}
+                  ➕ {translations[language].addMainCategory}
                 </button>
               </div>
             </div>
@@ -594,7 +585,7 @@
                         onClick={() => setSelectedCategoryTab('all')}
                         className={`py-2 px-4 font-medium border-b-2 ${
                           selectedCategoryTab === 'all'
-                            ? 'border-indigo-500 text-indigo-600'
+                            ? 'border-indigo-600 text-indigo-600'
                             : 'border-transparent text-gray-500 hover:text-gray-700'
                         }`}
                       >
@@ -606,7 +597,7 @@
                           onClick={() => setSelectedCategoryTab(cat)}
                           className={`py-2 px-4 font-medium border-b-2 whitespace-nowrap ${
                             selectedCategoryTab === cat
-                              ? 'border-indigo-500 text-indigo-600'
+                              ? 'border-indigo-600 text-indigo-600'
                               : 'border-transparent text-gray-500 hover:text-gray-700'
                           }`}
                         >
@@ -758,12 +749,13 @@
         const totalTokens = prompts.reduce((sum, p) => sum + p.tokens, 0);
         const averageTokens = totalPrompts > 0 ? Math.round(totalTokens / totalPrompts) : 0;
         return (
-    {/* ✅ داخل renderDashboard() — استبدل هذا الجزء فقط */}
-<div className="mt-6">
-  <h3 className="text-xl font-semibold text-gray-800 mb-4">{translations[language].categoriesAvailable}</h3>
-
-  <div
-    className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 overflow-hidden transition-all duration-300"
+          <div className="space-y-6">
+            <h2 className="text-2xl sm:text-3xl font-bold text-gray-800">{translations[language].dashboard}</h2>
+            {/* Cards */}
+    
+  
+ 
+  <div className  ="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 overflow-hidden transition-all duration-300"
     style={{ maxHeight: expandedCategories ? '1000px' : 'calc(5 * 4.5rem)' }}
   >
     {categories.slice(0, expandedCategories ? categories.length : 5).map(cat => (
