@@ -750,11 +750,12 @@
 
       // عرض لوحة التحكم
       const renderDashboard = () => {
+      	
         const stats = getCategoryStats();
         const totalPrompts = prompts.length;
         const totalTokens = prompts.reduce((sum, p) => sum + p.tokens, 0);
         const averageTokens = totalPrompts > 0 ? Math.round(totalTokens / totalPrompts) : 0;
-        const [expanded, setExpanded] = useState(false);
+
         return (
           <div className="space-y-6">
             <h2 className="text-2xl sm:text-3xl font-bold text-gray-800">{translations[language].dashboard}</h2>
