@@ -199,6 +199,12 @@
       const [editedCategoryName, setEditedCategoryName] = useState('');
       const [showAllCategories, setShowAllCategories] = useState(false);
       // حالة عرض الجداول
+      const [showAllCategories, setShowAllCategories] = useState(false);
+
+// دالة عرض المزيد/إخفاء
+function toggleShowAllCategories() {
+  setShowAllCategories(!showAllCategories);
+}
       const [showPromptTable, setShowPromptTable] = useState(false);
       const [selectedCategoryTab, setSelectedCategoryTab] = useState('all');
       const [selectedLevel, setSelectedLevel] = useState('all');
