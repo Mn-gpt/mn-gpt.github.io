@@ -7,11 +7,11 @@
   <!-- React + ReactDOM -->
   <script src="https://unpkg.com/react@18/umd/react.development.js"  crossorigin></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"  crossorigin></script>
-  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script> 
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>  
   <!-- Tailwind CSS -->
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"  rel="stylesheet">
   <!-- Fuse.js للبحث الذكي -->
-  <script src="https://cdn.jsdelivr.net/npm/fuse.js@6.4.6"></script> 
+  <script src="https://cdn.jsdelivr.net/npm/fuse.js@6.4.6"></script>  
   <!-- Internal Styles -->
   <style>
     body {
@@ -37,7 +37,6 @@
   <div class="mb-6">
     <img src="bannerA.png" alt="بانير موقع Promptica" class="w-full h-auto rounded-lg shadow-md object-cover max-h-64">
   </div>
-
   <!-- Header -->
   <header class="flex justify-between items-center pb-4 border-b border-gray-200 mb-6">
     <h1 class="text-2xl sm:text-3xl font-bold text-indigo-700 flex items-center">Promptica</h1>
@@ -47,16 +46,13 @@
       <button id="langToggle" class="text-indigo-600 hover:text-indigo-800">English</button>
     </div>
   </header>
-
   <!-- Root Div for React App -->
   <div id="root"></div>
-
   <!-- Footer -->
   <footer class="mt-8 pt-4 border-t border-gray-200 text-center text-sm text-gray-500">
     &copy; <span id="year"></span> Promptica. جميع الحقوق محفوظة.
     <script>document.getElementById("year").textContent = new Date().getFullYear();</script>
   </footer>
-
   <!-- Logout Function -->
   <script>
     function logout() {
@@ -64,7 +60,6 @@
       alert("تم تسجيل الخروج.");
       window.location.href = "login.html";
     }
-
     // تحديد اللغة المحفوظة أو العربية كافتراضية
     const savedLang = localStorage.getItem('language') || 'ar';
     document.documentElement.setAttribute('lang', savedLang);
@@ -74,7 +69,6 @@
     } else {
       document.getElementById('langToggle').innerText = 'English';
     }
-
     // تبديل اللغة
     function toggleLanguage() {
       const newLang = savedLang === 'ar' ? 'en' : 'ar';
@@ -83,14 +77,11 @@
       localStorage.setItem('language', newLang);
       location.reload();
     }
-
     document.getElementById("langToggle").addEventListener("click", toggleLanguage);
   </script>
-
   <!-- React Code -->
   <script type="text/babel">
     const { useState, useEffect } = React;
-
     function App() {
       // نصوص الترجمة
       const translations = {
@@ -172,7 +163,7 @@
           time: "Time",
           copies: "Copies",
           rating: "Rating",
-          exportCSV: "📤 Export to CSV",
+          exportCSV: "Exporter au format CSV",
           allCategories: "All",
           currentPrompts: "Current Prompts",
           mainCategories: "Main Categories",
@@ -189,9 +180,7 @@
           duplicateCategory: "Category already exists"
         }
       };
-
       const language = localStorage.getItem('language') || 'ar';
-
       // البيانات الأساسية
       const [activeTab, setActiveTab] = useState('dashboard');
       const [prompts, setPrompts] = useState([]);
@@ -199,24 +188,22 @@
       const [subCategories, setSubCategories] = useState({});
       const [searchTerm, setSearchTerm] = useState('');
       const isUserAdmin = true;
-
       // بيانات إضافة البرومبت
       const [newMainCategory, setNewMainCategory] = useState('');
       const [newSubCategory, setNewSubCategory] = useState('');
       const [selectedMainCategory, setSelectedMainCategory] = useState('');
       const [promptText, setPromptText] = useState('');
       const [promptTokens, setPromptTokens] = useState(0);
-
       // حالة عرض الجداول
       const [showPromptTable, setShowPromptTable] = useState(false);
       const [selectedCategoryTab, setSelectedCategoryTab] = useState('all');
       const [selectedLevel, setSelectedLevel] = useState('all');
-
       // حالة التعديل
       const [editingPrompt, setEditingPrompt] = useState(null);
       const [editingCategory, setEditingCategory] = useState(null);
       const [editedCategoryName, setEditedCategoryName] = useState('');
-
+      const [editingCategoryId, setEditingCategoryId] = useState(null);
+      const [editingPromptId, setEditingPromptId] = useState(null);
       // تحميل البيانات من localStorage
       useEffect(() => {
         const savedPrompts = JSON.parse(localStorage.getItem('prompts')) || [];
@@ -226,7 +213,6 @@
         setCategories(savedCategories);
         setSubCategories(savedSubCategories);
       }, []);
-
       // استخدام Fuse.js للبحث الذكي
       const fuse = new Fuse(
         [...prompts.map(p => ({ ...p, type: 'prompt' })), ...Object.entries(subCategories).flatMap(([cat, subs]) =>
@@ -234,11 +220,9 @@
         )],
         { keys: ['text', 'name'] }
       );
-
       const smartSearchResults = searchTerm.trim()
         ? fuse.search(searchTerm).map(result => result.item)
         : [];
-
       // إضافة قسم رئيسي
       const handleAddMainCategory = () => {
         if (!newMainCategory.trim()) return;
@@ -251,7 +235,6 @@
         localStorage.setItem('categories', JSON.stringify(updatedCategories));
         setNewMainCategory('');
       };
-
       // إضافة قسم فرعي
       const handleAddSubCategory = () => {
         if (!selectedMainCategory || !newSubCategory.trim()) return;
@@ -268,12 +251,10 @@
         localStorage.setItem('subCategories', JSON.stringify(updatedSubCategories));
         setNewSubCategory('');
       };
-
       // حساب عدد الكلمات (tokens)
       const calculateTokens = (text) => {
         return Math.ceil(text.split(/\s+/).length * 1.25);
       };
-
       // إضافة برومبت جديد
       const handleAddPrompt = () => {
         if (!promptText.trim() || !selectedMainCategory || !newSubCategory.trim()) return;
@@ -292,7 +273,6 @@
         setPromptText('');
         setPromptTokens(tokens);
       };
-
       // تحديث توكنات أثناء الكتابة
       const handlePromptTextChange = (e) => {
         const text = e.target.value;
@@ -304,7 +284,6 @@
           setPromptTokens(0);
         }
       };
-
       // إحصائيات الأقسام حسب المستوى
       const getCategoryStats = () => {
         const stats = {};
@@ -327,13 +306,11 @@
         });
         return stats;
       };
-
       // نسخ البرومبت
       const copyPromptText = (text) => {
         navigator.clipboard.writeText(text);
         alert(translations[language].promptCopied);
       };
-
       // حذف القسم الرئيسي
       const deleteMainCategory = (cat) => {
         if (!window.confirm(`${translations[language].deleteCategoryConfirm} "${cat}"?`)) return;
@@ -348,26 +325,28 @@
         setPrompts(updatedPrompts);
         localStorage.setItem('prompts', JSON.stringify(updatedPrompts));
       };
-
       // بدء تعديل القسم
       const startEditCategory = (cat) => {
-        setEditingCategory(cat);
+        setEditingCategoryId(cat);
         setEditedCategoryName(cat);
       };
-
       // حفظ تعديل القسم
       const saveEditedCategory = () => {
-        if (!editedCategoryName.trim() || !editingCategory) return;
-        const updatedCategories = categories.map(c => c === editingCategory ? editedCategoryName : c);
+        if (!editedCategoryName.trim()) return;
+        if (categories.includes(editedCategoryName) && editedCategoryName !== editingCategoryId) {
+          alert(`${translations[language].duplicateCategory}!`);
+          return;
+        }
+        const updatedCategories = categories.map(c => c === editingCategoryId ? editedCategoryName : c);
         const updatedSubCategories = { ...subCategories };
         const updatedPrompts = prompts.map(p =>
-          p.category === editingCategory
+          p.category === editingCategoryId
             ? { ...p, category: editedCategoryName }
             : p
         );
         // تحديث الأقسام الفرعية
-        updatedSubCategories[editedCategoryName] = updatedSubCategories[editingCategory];
-        delete updatedSubCategories[editingCategory];
+        updatedSubCategories[editedCategoryName] = updatedSubCategories[editingCategoryId];
+        delete updatedSubCategories[editingCategoryId];
         // تحديث الواجهة
         setCategories(updatedCategories);
         setSubCategories(updatedSubCategories);
@@ -377,24 +356,27 @@
         localStorage.setItem('subCategories', JSON.stringify(updatedSubCategories));
         localStorage.setItem('prompts', JSON.stringify(updatedPrompts));
         // إعادة تعيين الحقول
-        setEditingCategory(null);
+        setEditingCategoryId(null);
         setEditedCategoryName('');
       };
-
+      // إلغاء تعديل القسم
+      const cancelEditCategory = () => {
+        setEditingCategoryId(null);
+        setEditedCategoryName('');
+      };
       // بدء تعديل برومبت
       const startEditingPrompt = (prompt) => {
-        setEditingPrompt(prompt);
+        setEditingPromptId(prompt.id);
         setPromptText(prompt.text);
         setSelectedMainCategory(prompt.category);
         setNewSubCategory(prompt.subCategory);
         setPromptTokens(prompt.tokens);
       };
-
       // حفظ تعديل برومبت
       const saveEditedPrompt = () => {
         if (!promptText.trim() || !selectedMainCategory || !newSubCategory.trim()) return;
         const updatedPrompts = prompts.map(p =>
-          p.id === editingPrompt.id
+          p.id === editingPromptId
             ? {
                 ...p,
                 text: promptText,
@@ -406,20 +388,26 @@
         );
         setPrompts(updatedPrompts);
         localStorage.setItem('prompts', JSON.stringify(updatedPrompts));
-        setEditingPrompt(null);
+        setEditingPromptId(null);
         setPromptText('');
         setPromptTokens(0);
         setSelectedMainCategory('');
         setNewSubCategory('');
       };
-
+      // إلغاء تعديل البرومبت
+      const cancelEditPrompt = () => {
+        setEditingPromptId(null);
+        setPromptText('');
+        setSelectedMainCategory('');
+        setNewSubCategory('');
+        setPromptTokens(0);
+      };
       // سجل الزوار والإحصاءات
       const visitLog = [
         { date: "15-10-2023", time: "02:30 م", copies: 5 },
         { date: "14-10-2023", time: "11:15 ص", copies: 3 },
         { date: "12-10-2023", time: "05:45 م", copies: 7 }
       ];
-
       // تصدير إلى CSV
       const exportToCSV = () => {
         let csv = "القسم,المستوى,عدد البرومبتات\n";
@@ -436,7 +424,6 @@
         a.click();
         URL.revokeObjectURL(url);
       };
-
       // عرض إدارة البرومبتات
       const renderManagePrompts = () => {
         return (
@@ -456,24 +443,49 @@
             <div className="bg-white p-6 rounded shadow-md mb-6">
               <h3 className="font-semibold text-lg mb-4">{translations[language].addMainCategory}</h3>
               <div className="flex flex-wrap gap-4">
-                <input
-                  type="text"
-                  placeholder={translations[language].categoryName}
-                  value={editingCategory ? editedCategoryName : newMainCategory}
-                  onChange={(e) => setEditedCategoryName(e.target.value)}
-                  className="flex-1 min-w-[200px] p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                />
-                <button
-                  onClick={editingCategory ? saveEditedCategory : handleAddMainCategory}
-                  disabled={!editedCategoryName.trim() && !newMainCategory.trim()}
-                  className={`px-4 py-2 rounded transition-colors ${
-                    (editingCategory ? editedCategoryName.trim() : newMainCategory.trim())
-                      ? 'bg-indigo-600 hover:bg-indigo-700 text-white'
-                      : 'bg-gray-200 cursor-not-allowed text-gray-500'
-                  }`}
-                >
-                  {editingCategory ? translations[language].saveChanges : `➕ ${translations[language].addMainCategory}`}
-                </button>
+                {editingCategoryId ? (
+                  <>
+                    <input
+                      type="text"
+                      value={editedCategoryName}
+                      onChange={(e) => setEditedCategoryName(e.target.value)}
+                      className="flex-1 min-w-[200px] p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    />
+                    <button
+                      onClick={saveEditedCategory}
+                      className="px-4 py-2 rounded transition-colors bg-green-600 hover:bg-green-700 text-white"
+                    >
+                      {translations[language].saveChanges}
+                    </button>
+                    <button
+                      onClick={cancelEditCategory}
+                      className="px-4 py-2 rounded transition-colors bg-red-600 hover:bg-red-700 text-white"
+                    >
+                      {translations[language].cancel}
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <input
+                      type="text"
+                      placeholder={translations[language].categoryName}
+                      value={newMainCategory}
+                      onChange={(e) => setNewMainCategory(e.target.value)}
+                      className="flex-1 min-w-[200px] p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    />
+                    <button
+                      onClick={handleAddMainCategory}
+                      disabled={!newMainCategory.trim()}
+                      className={`px-4 py-2 rounded transition-colors ${
+                        newMainCategory.trim()
+                          ? 'bg-indigo-600 hover:bg-indigo-700 text-white'
+                          : 'bg-gray-200 cursor-not-allowed text-gray-500'
+                      }`}
+                    >
+                      ➕ {translations[language].addMainCategory}
+                    </button>
+                  </>
+                )}
               </div>
             </div>
             {/* إضافة قسم فرعي */}
@@ -549,7 +561,7 @@
                   className="p-3 border border-gray-300 rounded bg-gray-100"
                 />
                 <button
-                  onClick={editingPrompt ? saveEditedPrompt : handleAddPrompt}
+                  onClick={editingPromptId ? saveEditedPrompt : handleAddPrompt}
                   disabled={!promptText.trim() || !selectedMainCategory || !newSubCategory.trim()}
                   className={`px-4 py-2 rounded transition-colors ${
                     promptText.trim() && selectedMainCategory && newSubCategory.trim()
@@ -557,8 +569,16 @@
                       : 'bg-gray-200 cursor-not-allowed text-gray-500'
                   }`}
                 >
-                  {editingPrompt ? translations[language].saveChanges : `➕ ${translations[language].addPrompt}`}
+                  {editingPromptId ? translations[language].saveChanges : `➕ ${translations[language].addPrompt}`}
                 </button>
+                {editingPromptId && (
+                  <button
+                    onClick={cancelEditPrompt}
+                    className="px-4 py-2 rounded transition-colors bg-red-600 hover:bg-red-700 text-white"
+                  >
+                    {translations[language].cancel}
+                  </button>
+                )}
               </div>
             </div>
             {/* عرض البرومبتات الحالية */}
@@ -747,7 +767,6 @@
           </div>
         );
       };
-
       // عرض لوحة التحكم
       const renderDashboard = () => {
         const stats = getCategoryStats();
@@ -806,7 +825,6 @@
           </div>
         );
       };
-
       return (
         <div className="container mx-auto max-w-4xl">
           {/* Tabs Navigation */}
@@ -840,7 +858,6 @@
         </div>
       );
     }
-
     const root = ReactDOM.createRoot(document.getElementById('root'));
     root.render(<App />);
   </script>
