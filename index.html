@@ -426,83 +426,154 @@
         a.click();
         URL.revokeObjectURL(url);
       };
+        const renderCurrentCategories = () => {
+    return (
+      <div className="bg-white p-6 rounded shadow-md mb-6">
+        <h3 className="font-semibold text-lg mb-4">{translations[language].mainCategories}</h3>
+        <div className="grid grid-cols-1 gap-3">
+          <div className="overflow-hidden" style={{ maxHeight: showAllCategories ? "none" : "120px" }}>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+              {categories.map((cat) => (
+                <div key={cat} className="bg-gray-50 p-3 rounded shadow-sm hover:bg-gray-100 flex justify-between items-center transition-all duration-300">
+                  {/* Inline Editing Logic */}
+                  {editingCategory === cat ? (
+                    <input
+                      type="text"
+                      value={editedCategoryName}
+                      onChange={(e) => setEditedCategoryName(e.target.value)}
+                      className="flex-1 min-w-[200px] p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all duration-300"
+                    />
+                  ) : (
+                    <span className="text-sm font-medium text-indigo-700">{cat}</span>
+                  )}
+                  <div className="space-x-2 rtl:space-x-reverse">
+                    {/* Edit Button */}
+                    {editingCategory === cat ? (
+                      <button
+                        onClick={() => {
+                          if (!editedCategoryName.trim()) {
+                            alert(translations[language].duplicateCategory);
+                            return;
+                          }
+                          const updatedCategories = categories.map((c) => (c === editingCategory ? editedCategoryName : c));
+                          setCategories(updatedCategories);
+                          localStorage.setItem("categories", JSON.stringify(updatedCategories));
+                          setEditingCategory(null);
+                          setEditedCategoryName("");
+                        }}
+                        className="text-yellow-600 hover:text-yellow-800 text-xs transition duration-300"
+                      >
+                        {translations[language].saveChanges}
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => {
+                          setEditingCategory(cat);
+                          setEditedCategoryName(cat);
+                        }}
+                        className="text-yellow-600 hover:text-yellow-800 text-xs transition duration-300"
+                      >
+                        {translations[language].editPrompt}
+                      </button>
+                    )}
+
+                    {/* Cancel Button */}
+                    {editingCategory === cat && (
+                      <button
+                        onClick={() => {
+                          setEditingCategory(null);
+                          setEditedCategoryName("");
+                        }}
+                        className="text-red-600 hover:text-red-800 text-xs transition duration-300"
+                      >
+                        {translations[language].cancel}
+                      </button>
+                    )}
+
+                    {/* Delete Button */}
+                    <button
+                      onClick={() => {
+                        if (!window.confirm(`${translations[language].deleteCategoryConfirm} "${cat}"?`)) return;
+                        const updatedCategories = categories.filter((c) => c !== cat);
+                        setCategories(updatedCategories);
+                        localStorage.setItem("categories", JSON.stringify(updatedCategories));
+                        const updatedSubCategories = { ...subCategories };
+                        delete updatedSubCategories[cat];
+                        setSubCategories(updatedSubCategories);
+                        localStorage.setItem("subCategories", JSON.stringify(updatedSubCategories));
+                        const updatedPrompts = prompts.filter((p) => p.category !== cat && p.subCategory !== cat);
+                        setPrompts(updatedPrompts);
+                        localStorage.setItem("prompts", JSON.stringify(updatedPrompts));
+                      }}
+                      className="text-red-600 hover:text-red-800 text-xs transition duration-300"
+                    >
+                      {translations[language].deletePrompt}
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+          {/* Show More Button */}
+          {categories.length > 5 && (
+            <button
+              onClick={() => setShowAllCategories(!showAllCategories)}
+              className="mt-3 px-4 py-2 bg-indigo-100 text-indigo-700 hover:bg-indigo-200 text-sm rounded-full transition-all duration-300"
+            >
+              {showAllCategories ? "إخفاء" : "عرض المزيد"}
+            </button>
+          )}
+        </div>
+      </div>
+    );
+  };
+
 
       // عرض إدارة البرومبتات
-      const renderManagePrompts = () => {
-        return (
-          <div className="space-y-6">
-            <h2 className="text-2xl sm:text-3xl font-bold text-gray-800">{translations[language].managePrompts}</h2>
+    const renderManagePrompts = () => {
+    return (
+      <div className="space-y-6">
+        <h2 className="text-2xl sm:text-3xl font-bold text-gray-800">{translations[language].managePrompts}</h2>
+        {/* Add Main Category */}
+        <div className="bg-white p-6 rounded shadow-md mb-6">
+          <h3 className="font-semibold text-lg mb-4">{translations[language].addMainCategory}</h3>
+          <div className="flex flex-wrap gap-4">
+            <input
+              type="text"
+              placeholder={translations[language].categoryName}
+              value={newMainCategory}
+              onChange={(e) => setNewMainCategory(e.target.value)}
+              className="flex-1 min-w-[200px] p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all duration-300"
+            />
+            <button
+              onClick={() => {
+                if (!newMainCategory.trim()) return;
+                if (categories.includes(newMainCategory)) {
+                  alert(translations[language].duplicateCategory);
+                  return;
+                }
+                const updatedCategories = [...categories, newMainCategory];
+                setCategories(updatedCategories);
+                localStorage.setItem("categories", JSON.stringify(updatedCategories));
+                setNewMainCategory("");
+              }}
+              disabled={!newMainCategory.trim()}
+              className={`px-4 py-2 rounded-full transition-all duration-300 ${
+                newMainCategory.trim()
+                  ? "bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm hover:shadow-md"
+                  : "bg-gray-200 cursor-not-allowed text-gray-500"
+              }`}
+            >
+              ➕ {translations[language].addMainCategory}
+            </button>
+          </div>
+        </div>
 
-            {/* اختيار المستوى */}
-            <div className="bg-white p-4 rounded shadow-inner mb-6">
-              <h3 className="font-semibold text-lg mb-3">اختر المستوى:</h3>
-              <div className="flex flex-wrap gap-3">
-                <button onClick={() => setSelectedLevel('all')} className={`px-4 py-2 rounded-full ${selectedLevel === 'all' ? 'bg-indigo-600 text-white' : 'bg-gray-200 text-gray-700'} transition-all duration-300`}>🌍 الكل</button>
-                <button onClick={() => setSelectedLevel('مبتدئ')} className={`px-4 py-2 rounded-full ${selectedLevel === 'مبتدئ' ? 'bg-yellow-500 text-white' : 'bg-gray-200 text-gray-700'} transition-all duration-300`}>🎓 مبتدئ</button>
-                <button onClick={() => setSelectedLevel('متوسط')} className={`px-4 py-2 rounded-full ${selectedLevel === 'متوسط' ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-700'} transition-all duration-300`}>🎯 متوسط</button>
-                <button onClick={() => setSelectedLevel('محترف')} className={`px-4 py-2 rounded-full ${selectedLevel === 'محترف' ? 'bg-purple-500 text-white' : 'bg-gray-200 text-gray-700'} transition-all duration-300`}>🏆 محترف</button>
-              </div>
-            </div>
-
-            {/* إضافة قسم رئيسي */}
-            <div className="bg-white p-6 rounded shadow-md mb-6">
-              <h3 className="font-semibold text-lg mb-4">{translations[language].addMainCategory}</h3>
-              <div className="flex flex-wrap gap-4">
-                <input
-                  type="text"
-                  placeholder={translations[language].categoryName}
-                  value={editingCategory ? editedCategoryName : newMainCategory}
-                  onChange={(e) => setEditedCategoryName(e.target.value)}
-                  className="flex-1 min-w-[200px] p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all duration-300"
-                />
-                <button
-                  onClick={editingCategory ? saveEditedCategory : handleAddMainCategory}
-                  disabled={!editedCategoryName.trim() && !newMainCategory.trim()}
-                  className={`px-4 py-2 rounded-full transition-all duration-300 ${
-                    (editingCategory ? editedCategoryName.trim() : newMainCategory.trim())
-                      ? 'bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm hover:shadow-md'
-                      : 'bg-gray-200 cursor-not-allowed text-gray-500'
-                  }`}
-                >
-                  {editingCategory ? translations[language].saveChanges : `➕ ${translations[language].addMainCategory}`}
-                </button>
-              </div>
-            </div>
-
-            {/* إضافة قسم فرعي */}
-            <div className="bg-white p-6 rounded shadow-md mb-6">
-              <h3 className="font-semibold text-lg mb-4">{translations[language].addSubCategory}</h3>
-              <div className="flex flex-wrap gap-4">
-                <select
-                  value={selectedMainCategory}
-                  onChange={(e) => setSelectedMainCategory(e.target.value)}
-                  className="p-3 border border-gray-300 rounded w-full md:w-auto transition-all duration-300"
-                >
-                  <option value="">{translations[language].selectMainCategory}</option>
-                  {categories.map(cat => (
-                    <option key={cat} value={cat}>{cat}</option>
-                  ))}
-                </select>
-                <input
-                  type="text"
-                  placeholder={translations[language].subCategoryName}
-                  value={newSubCategory}
-                  onChange={(e) => setNewSubCategory(e.target.value)}
-                  className="flex-1 min-w-[200px] p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all duration-300"
-                />
-                <button
-                  onClick={handleAddSubCategory}
-                  disabled={!selectedMainCategory || !newSubCategory.trim()}
-                  className={`px-4 py-2 rounded-full transition-all duration-300 ${
-                    selectedMainCategory && newSubCategory.trim()
-                      ? 'bg-purple-600 hover:bg-purple-700 text-white shadow-sm hover:shadow-md'
-                      : 'bg-gray-200 cursor-not-allowed text-gray-500'
-                  }`}
-                >
-                  ➕ {translations[language].addSubCategory}
-                </button>
-              </div>
-            </div>
+        {/* Current Categories Section */}
+        {renderCurrentCategories()}
+      </div>
+    );
+  };
 
             {/* إضافة برومبت جديد */}
             <div className="bg-white p-6 rounded shadow-md mb-6">
