@@ -21,11 +21,11 @@
     }
   </style>
 </head>
+<body class="min-h-screen bg-gray-50 p-4">
+  <!-- Banner -->
   <div class="mb-6">
     <img src="ToolBar1.png" alt="بانير موقع Promptica" class="w-full h-auto rounded-lg shadow-md object-cover max-h-64">
   </div>
-
-<body class="min-h-screen bg-gray-50 p-4">
   <!-- Header with Back and Language Toggle -->
   <header class="mb-6 flex justify-between items-center rtl:space-x-reverse space-x-4">
     <button onclick="goBack()" class="flex items-center gap-2 px-4 py-2 bg-white hover:bg-gray-100 text-gray-700 rounded-full shadow transition">
@@ -41,6 +41,16 @@
 
   <!-- Page Title -->
   <h1 id="page-title" class="text-3xl sm:text-4xl font-bold flex justify-center items-center gap-3 mb-6"></h1>
+
+  <!-- Level Filter Buttons -->
+  <section class="mb-6 max-w-4xl mx-auto text-center">
+    <div class="inline-flex flex-wrap gap-2 justify-center p-2 bg-white rounded-lg shadow-sm border border-gray-200">
+      <button onclick="filterByLevel('all')" class="px-3 py-1 rounded-full text-sm font-medium transition-all duration-300">🌍 الكل</button>
+      <button onclick="filterByLevel('مبتدئ')" class="px-3 py-1 rounded-full text-sm font-medium bg-yellow-100 text-yellow-800 hover:bg-yellow-200 transition-all duration-300">🎓 مبتدئ</button>
+      <button onclick="filterByLevel('متوسط')" class="px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800 hover:bg-blue-200 transition-all duration-300">🎯 متوسط</button>
+      <button onclick="filterByLevel('محترف')" class="px-3 py-1 rounded-full text-sm font-medium bg-purple-100 text-purple-800 hover:bg-purple-200 transition-all duration-300">🏆 محترف</button>
+    </div>
+  </section>
 
   <!-- Search Bar -->
   <section class="mb-6 max-w-4xl mx-auto">
@@ -80,7 +90,7 @@
         pageTitle: "برومبتات",
         searchPlaceholder: "🔍 ابحث هنا (#قسم، @كلمة، :توكن)",
         copyButton: "📋 نسخ",
-        copiedText: "نُسخ!",
+        copiedText: "✅ نُسخ!",
         noPrompts: "لا توجد برومبتات تناسب البحث.",
         categoryLabel: "📁 القسم",
         tokensLabel: "🔢 الكلمات"
@@ -89,7 +99,7 @@
         pageTitle: "Prompts for",
         searchPlaceholder: "🔍 Search here (#category, @word, :token)",
         copyButton: "📋 Copy",
-        copiedText: "Copied!",
+        copiedText: "✅ Copied!",
         noPrompts: "No prompts match your search.",
         categoryLabel: "📁 Category",
         tokensLabel: "🔢 Tokens"
@@ -117,34 +127,56 @@
 
     // استخراج المعطيات من الرابط
     const params = new URLSearchParams(window.location.search);
-    const category = decodeURIComponent(params.get('category') || 'عام');
+    const category = decodeURIComponent(params.get('category') || '');
     const subCategory = decodeURIComponent(params.get('subCategory') || '');
+    const level = decodeURIComponent(params.get('level') || 'all'); // المستويات: all, beginner, intermediate, advanced أو بالعربية
+    const currentTranslation = translations[savedLang];
 
-    // تحديد الثيم المناسب
+    // تحديث الثيم حسب القسم أو القسم الفرعي
     const selectedTheme = themeMap[subCategory] || themeMap[category] || themeMap.default;
     document.body.className = `min-h-screen font-sans ${selectedTheme.bgColor} p-4`;
 
     // تحديث عنوان الصفحة
     function updatePageTitle() {
-      const lang = localStorage.getItem('language') || 'ar';
-      const pageTitle = document.getElementById("page-title");
-      pageTitle.innerHTML = `
+      const titleElement = document.getElementById("page-title");
+      const displayedLevel = level === 'all' ? '' : `– مستوى: ${level}`;
+      titleElement.innerHTML = `
         <span class="text-3xl">${selectedTheme.icon}</span>
-        <span class="${selectedTheme.textColor} text-xl sm:text-2xl">${subCategory || category}</span>
+        <span class="${selectedTheme.textColor} text-xl sm:text-2xl">${subCategory || category} ${displayedLevel}</span>
       `;
     }
 
     // جلب البرومبتات من localStorage
     const prompts = JSON.parse(localStorage.getItem("prompts")) || [];
 
-    // ترشيح البرومبتات حسب القسم
-    const filteredPrompts = prompts.filter(p => p.category === category || p.subCategory === subCategory);
+    // ترشيح البرومبتات حسب القسم أو القسم الفرعي
+    let filteredPrompts = [...prompts];
+    if (category) {
+      filteredPrompts = filteredPrompts.filter(p => p.category === category);
+    } else if (subCategory) {
+      filteredPrompts = filteredPrompts.filter(p => p.subCategory === subCategory);
+    }
+
+    // الحالة الحالية للمستوى
+    let currentLevelFilter = level;
+
+    // دالة ترشيح المستوى
+    function filterByLevel(newLevel) {
+      currentLevelFilter = newLevel;
+      const searchQuery = document.getElementById("searchInput").value.trim();
+      performSearch(searchQuery);
+    }
 
     // دالة البحث الديناميكي المتقدم
-    function searchPrompt(e) {
-      const query = e.target.value.trim().toLowerCase();
+    function performSearch(query) {
       let results = [...filteredPrompts];
 
+      // ترشيح المستوى
+      if (currentLevelFilter !== 'all') {
+        results = results.filter(p => p.level === currentLevelFilter);
+      }
+
+      // ترشيح النص
       if (query) {
         const filters = {
           category: [],
@@ -152,8 +184,7 @@
           tokens: [],
           text: []
         };
-
-        const parts = query.split(/\s+/);
+        const parts = query.toLowerCase().split(/\s+/);
         parts.forEach(part => {
           if (part.startsWith('#')) {
             filters.category.push(part.slice(1));
@@ -167,25 +198,20 @@
           }
         });
 
-        results = filteredPrompts.filter(prompt => {
+        results = results.filter(prompt => {
           let match = true;
-
           if (filters.category.length > 0) {
             match = filters.category.some(cat => prompt.category.toLowerCase().includes(cat));
           }
-
           if (match && filters.subCategory.length > 0) {
             match = filters.subCategory.some(sub => prompt.subCategory.toLowerCase().includes(sub));
           }
-
           if (match && filters.tokens.length > 0) {
             match = filters.tokens.every(tokens => prompt.tokens >= tokens);
           }
-
           if (match && filters.text.length > 0) {
             match = filters.text.every(text => prompt.text.toLowerCase().includes(text));
           }
-
           return match;
         });
       }
@@ -201,7 +227,7 @@
       if (data.length === 0) {
         container.innerHTML = `
           <div class="bg-white p-6 rounded-lg shadow-md text-center text-gray-500">
-            ${translations[savedLang].noPrompts}
+            ${currentTranslation.noPrompts}
           </div>
         `;
         return;
@@ -213,13 +239,18 @@
         card.innerHTML = `
           <p class="mb-4 line-clamp-3 text-gray-700">${prompt.text}</p>
           <div class="flex justify-between items-center text-xs sm:text-sm text-gray-500 mt-4 pt-3 border-t border-gray-100">
-            <span>${prompt.category}${prompt.subCategory ? ` / ${prompt.subCategory}` : ''}</span>
+            <div>
+              <span class="font-semibold">${prompt.category}</span>
+              ${prompt.subCategory ? `<span class="mx-1">/</span><span>${prompt.subCategory}</span>` : ''}
+              <span class="mx-2">•</span>
+              <span class="text-gray-400">${prompt.level}</span>
+            </div>
             <button onclick="copyPrompt('${prompt.text.replace(/'/g, "\\'")}', this)"
-              class="flex items-center gap-1 text-indigo-600 hover:text-indigo-800 cursor-pointer transition">
+                    class="flex items-center gap-1 text-indigo-600 hover:text-indigo-800 cursor-pointer transition">
               <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
               </svg>
-              <span>${translations[savedLang].copyButton}</span>
+              <span>${currentTranslation.copyButton}</span>
             </button>
           </div>
         `;
@@ -228,17 +259,18 @@
     }
 
     // دالة نسخ البرومبت
-    function copyPrompt(text, element) {
+    window.copyPrompt = (text, element) => {
       navigator.clipboard.writeText(text).then(() => {
         const originalHTML = element.innerHTML;
-        element.innerHTML = `<span class="flex items-center gap-1"><svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" /></svg> ${translations[savedLang].copiedText}</span>`;
+        element.innerHTML = `<span class="flex items-center gap-1"><svg class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" /></svg> ${currentTranslation.copiedText}</span>`;
         setTimeout(() => {
           element.innerHTML = originalHTML;
         }, 1500);
       }).catch(err => {
         alert("❌ لم يتم النسخ: " + err.message);
       });
-    }
+    };
 
     // دالة العودة للخلف
     function goBack() {
@@ -249,24 +281,27 @@
     function toggleLanguage() {
       const newLang = savedLang === 'ar' ? 'en' : 'ar';
       localStorage.setItem('language', newLang);
-      location.reload(); // إعادة تحميل الصفحة لتغيير اللغة
+      location.reload();
     }
 
     // تحديث زر اللغة
     document.getElementById("langToggle").addEventListener("click", toggleLanguage);
-
-    // تحديث النصوص بناءً على اللغة
-    document.getElementById("searchInput").placeholder = translations[savedLang].searchPlaceholder;
     document.getElementById("langToggle").innerText = savedLang === 'ar' ? 'English' : 'عربي';
 
-    // تعيين السنة الحالية
+    // تحديث السنة في الفوتر
     document.getElementById("currentYear").textContent = new Date().getFullYear();
+
+    // تعيين عنوان الصفحة أول مرة
+    updatePageTitle();
+
+    // تعيين مكان البحث
+    document.getElementById("searchInput").placeholder = currentTranslation.searchPlaceholder;
 
     // تحميل البيانات أول مرة
     window.onload = () => {
       updatePageTitle();
       renderPrompts(filteredPrompts);
-      document.getElementById("searchInput").addEventListener("input", searchPrompt);
+      document.getElementById("searchInput").addEventListener("input", e => performSearch(e.target.value));
     };
   </script>
 </body>
