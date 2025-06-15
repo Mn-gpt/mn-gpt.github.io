@@ -184,6 +184,7 @@
       // البيانات الأساسية
       const [activeTab, setActiveTab] = useState('dashboard');
       const [prompts, setPrompts] = useState([]);
+      const [promptLevel, setPromptLevel] = useState('متوسط'); // 👈 هنا نبدأ بالمستوى المتوسط كافتراضي
       const [categories, setCategories] = useState([]);
       const [subCategories, setSubCategories] = useState({});
       const [searchTerm, setSearchTerm] = useState('');
@@ -266,22 +267,22 @@
 
       // إضافة برومبت جديد
       const handleAddPrompt = () => {
-        if (!promptText.trim() || !selectedMainCategory || !newSubCategory.trim()) return;
-        const tokens = calculateTokens(promptText);
-        const newPrompt = {
-          id: Date.now(),
-          text: promptText,
-          category: selectedMainCategory,
-          subCategory: newSubCategory,
-          level: 'متوسط',
-          tokens: tokens
-        };
-        const updatedPrompts = [...prompts, newPrompt];
-        setPrompts(updatedPrompts);
-        localStorage.setItem('prompts', JSON.stringify(updatedPrompts));
-        setPromptText('');
-        setPromptTokens(tokens);
-      };
+  if (!promptText.trim() || !selectedMainCategory || !newSubCategory.trim()) return;
+  const tokens = calculateTokens(promptText);
+  const newPrompt = {
+    id: Date.now(),
+    text: promptText,
+    category: selectedMainCategory,
+    subCategory: newSubCategory,
+    level: promptLevel, // ✅ الآن نستخدم المستوى المحدد من القائمة
+    tokens: tokens
+  };
+  const updatedPrompts = [...prompts, newPrompt];
+  setPrompts(updatedPrompts);
+  localStorage.setItem('prompts', JSON.stringify(updatedPrompts));
+  setPromptText('');
+  setPromptTokens(tokens);
+};
 
       // تحديث توكنات أثناء الكتابة
       const handlePromptTextChange = (e) => {
@@ -391,36 +392,38 @@ const saveEditedCategory = () => {
 };
       // بدء تعديل برومبت
       const startEditingPrompt = (prompt) => {
-        setEditingPrompt(prompt);
-        setPromptText(prompt.text);
-        setSelectedMainCategory(prompt.category);
-        setNewSubCategory(prompt.subCategory);
-        setPromptTokens(prompt.tokens);
-      };
+  setEditingPrompt(prompt);
+  setPromptText(prompt.text);
+  setSelectedMainCategory(prompt.category);
+  setNewSubCategory(prompt.subCategory);
+  setPromptLevel(prompt.level); // ✅ استرجاع المستوى المحفوظ
+  setPromptTokens(prompt.tokens);
+};
 
       // حفظ تعديل برومبت
-      const saveEditedPrompt = () => {
-        if (!promptText.trim() || !selectedMainCategory || !newSubCategory.trim()) return;
-        const updatedPrompts = prompts.map(p =>
-          p.id === editingPrompt.id
-            ? {
-                ...p,
-                text: promptText,
-                category: selectedMainCategory,
-                subCategory: newSubCategory,
-                tokens: promptTokens
-              }
-            : p
-        );
-        setPrompts(updatedPrompts);
-        localStorage.setItem('prompts', JSON.stringify(updatedPrompts));
-        setEditingPrompt(null);
-        setPromptText('');
-        setPromptTokens(0);
-        setSelectedMainCategory('');
-        setNewSubCategory('');
-      };
-
+    const saveEditedPrompt = () => {
+  if (!promptText.trim() || !selectedMainCategory || !newSubCategory.trim()) return;
+  const updatedPrompts = prompts.map(p =>
+    p.id === editingPrompt.id
+      ? {
+          ...p,
+          text: promptText,
+          category: selectedMainCategory,
+          subCategory: newSubCategory,
+          level: promptLevel, // ✅ تحديث المستوى بناءً على الاختيار
+          tokens: promptTokens
+        }
+      : p
+  );
+  setPrompts(updatedPrompts);
+  localStorage.setItem('prompts', JSON.stringify(updatedPrompts));
+  setEditingPrompt(null);
+  setPromptText('');
+  setPromptTokens(0);
+  setSelectedMainCategory('');
+  setNewSubCategory('');
+  setPromptLevel('متوسط');
+};
       // سجل الزوار والإحصاءات
       const visitLog = [
         { date: "15-10-2023", time: "02:30 م", copies: 5 },
@@ -460,6 +463,16 @@ const saveEditedCategory = () => {
                 <button onClick={() => setSelectedLevel('متوسط')} className={`px-4 py-2 rounded-full ${selectedLevel === 'متوسط' ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-700'} transition-all duration-300`}>🎯 متوسط</button>
                 <button onClick={() => setSelectedLevel('محترف')} className={`px-4 py-2 rounded-full ${selectedLevel === 'محترف' ? 'bg-purple-500 text-white' : 'bg-gray-200 text-gray-700'} transition-all duration-300`}>🏆 محترف</button>
               </div>
+              {/* مستوى البرومبت */}
+<select
+  value={promptLevel} // متغير الحالة الجديد
+  onChange={(e) => setPromptLevel(e.target.value)}
+  className="p-3 border border-gray-300 rounded"
+>
+  <option value="مبتدئ">🎓 مبتدئ</option>
+  <option value="متوسط">🎯 متوسط</option>
+  <option value="محترف">🏆 محترف</option>
+</select>
             </div>
 
           
