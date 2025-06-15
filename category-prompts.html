@@ -8,8 +8,6 @@
   <style>
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background-color: #f9fafb;
-      color: #1f2937;
       line-height: 1.6;
     }
     .line-clamp-3 {
@@ -36,37 +34,40 @@
       English
     </button>
   </header>
-
   <!-- Page Title -->
   <h1 id="page-title" class="text-3xl sm:text-4xl font-bold flex justify-center items-center gap-3 mb-6"></h1>
-
   <!-- Search Bar -->
   <section class="mb-6 max-w-4xl mx-auto">
     <div class="relative">
+      <!-- صندوق البحث الفارغ -->
       <input
         type="text"
         id="searchInput"
-        placeholder="🔍 ابحث هنا (#قسم، @كلمة، :توكن)"
+        placeholder=""
         class="w-full p-4 pl-12 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
       />
-      <div class="absolute inset-y-0 right-3 flex items-center pointer-events-none text-gray-400 text-sm">
-        #التعليم @AI :100
+      <div class="absolute inset-y-0 left-3 flex items-center pointer-events-none text-gray-400 text-sm">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+        </svg>
+      </div>
+
+      <!-- بطاقة التعليمات -->
+      <div class="mt-2 bg-gray-100 p-2 rounded-md shadow-sm text-sm text-gray-600">
+        ابحث هنا (#قسم، @كلمة، :توكن)
       </div>
     </div>
   </section>
-
   <!-- Cards Container -->
   <main class="max-w-4xl mx-auto space-y-4" id="prompts-container">
     <!-- Dynamic prompts will be inserted here -->
   </main>
-
   <!-- Footer -->
   <footer class="mt-12 text-center text-sm text-gray-500">
     &copy; <span id="currentYear"></span> Promptica. جميع الحقوق محفوظة.
   </footer>
-
   <!-- Script -->
-  <script>
+   <script>
     // تحديد اللغة المحفوظة أو العربية كافتراضية
     const savedLang = localStorage.getItem('language') || 'ar';
     document.documentElement.setAttribute('lang', savedLang);
