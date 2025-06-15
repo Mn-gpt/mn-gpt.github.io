@@ -50,9 +50,9 @@
   <section class="mb-6 max-w-4xl mx-auto text-center">
     <div class="inline-flex flex-wrap gap-2 justify-center p-2 bg-white rounded-lg shadow-sm border border-gray-200">
       <button onclick="filterByLevel('all')" class="px-3 py-1 rounded-full text-sm font-medium bg-white hover:bg-gray-100 transition-all duration-300">🌍 الكل</button>
-      <button onclick="filterByLevel('مبتدئ')" class="px-3 py-1 rounded-full text-sm font-medium bg-yellow-100 text-yellow-800 hover:bg-yellow-200 transition-all duration-300">{currentTranslation.beginner}</button>
-      <button onclick="filterByLevel('متوسط')" class="px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800 hover:bg-blue-200 transition-all duration-300">{currentTranslation.intermediate}</button>
-      <button onclick="filterByLevel('محترف')" class="px-3 py-1 rounded-full text-sm font-medium bg-purple-100 text-purple-800 hover:bg-purple-200 transition-all duration-300">{currentTranslation.advanced}</button>
+      <button onclick="filterByLevel('مبتدئ')" class="px-3 py-1 rounded-full text-sm font-medium bg-yellow-100 text-yellow-800 hover:bg-yellow-200 transition-all duration-300">🎓 مبتدئ</button>
+      <button onclick="filterByLevel('متوسط')" class="px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800 hover:bg-blue-200 transition-all duration-300">🎯 متوسط</button>
+      <button onclick="filterByLevel('محترف')" class="px-3 py-1 rounded-full text-sm font-medium bg-purple-100 text-purple-800 hover:bg-purple-200 transition-all duration-300">🏆 محترف</button>
     </div>
   </section>
 
@@ -94,7 +94,7 @@
         pageTitle: "برومبتات",
         searchPlaceholder: "🔍 ابحث هنا (#قسم، @كلمة، :توكن)",
         copyButton: "📋 نسخ",
-        copiedText: "نُسخ!",
+        copiedText: "✅ تم النسخ!",
         noPrompts: "لا توجد برومبتات تناسب البحث.",
         categoryLabel: "📁 القسم",
         tokensLabel: "🔢 الكلمات",
@@ -115,8 +115,6 @@
         advanced: "Advanced"
       }
     };
-
-    const currentTranslation = translations[savedLang];
 
     // خريطة الأنماط والألوان
     const themeMap = {
@@ -141,8 +139,7 @@
     const params = new URLSearchParams(window.location.search);
     const category = decodeURIComponent(params.get('category') || '');
     const subCategory = decodeURIComponent(params.get('subCategory') || '');
-    const level = decodeURIComponent(params.get('level') || 'all');
-    const currentTranslation = translations[savedLang];
+    const level = decodeURIComponent(params.get('level') || 'all'); // مستوى جديد
 
     // تحديد الثيم المناسب
     const selectedTheme = themeMap[subCategory] || themeMap[category] || themeMap.default;
@@ -152,7 +149,7 @@
     function updatePageTitle() {
       const lang = localStorage.getItem('language') || 'ar';
       const pageTitle = document.getElementById("page-title");
-      const displayedLevel = level === 'all' ? '' : `– Level: ${translations[lang].beginner === "Beginner" ? translations[lang][level] : level}`;
+      const displayedLevel = level === 'all' ? '' : `– مستوى: ${translations[lang][level] || level}`;
       pageTitle.innerHTML = `
         <span class="text-3xl">${selectedTheme.icon}</span>
         <span class="${selectedTheme.textColor} text-xl sm:text-2xl">${subCategory || category} ${displayedLevel}</span>
@@ -256,7 +253,7 @@
               <span class="font-semibold">${prompt.category}</span>
               ${prompt.subCategory ? `<span class="mx-1">/</span><span>${prompt.subCategory}</span>` : ''}
               <span class="mx-2">•</span>
-              <span class="text-gray-400">${translations[savedLang][prompt.level]}</span>
+              <span class="text-gray-400">${translations[savedLang][prompt.level] || prompt.level}</span>
             </div>
             <button onclick="copyPrompt('${prompt.text.replace(/'/g, "\\'")}', this)"
                     class="flex items-center gap-1 text-indigo-600 hover:text-indigo-800 cursor-pointer transition">
@@ -284,9 +281,9 @@
       });
     }
 
-    // دالة العودة للخلف
+    // دالة العودة للصفحة الرئيسية
     function goBack() {
-      window.location.href = "index.html"; // دائمًا العودة للصفحة الرئيسية
+      window.location.href = "index.html";
     }
 
     // دالة تبديل اللغة
