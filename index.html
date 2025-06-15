@@ -266,7 +266,8 @@
       };
 
       // إضافة برومبت جديد
-      const handleAddPrompt = () => {
+      // استخدم promptLevel بدلاً من 'متوسط' الثابت
+const handleAddPrompt = () => {
   if (!promptText.trim() || !selectedMainCategory || !newSubCategory.trim()) return;
   const tokens = calculateTokens(promptText);
   const newPrompt = {
@@ -274,7 +275,7 @@
     text: promptText,
     category: selectedMainCategory,
     subCategory: newSubCategory,
-    level: promptLevel, // ✅ الآن نستخدم المستوى المحدد من القائمة
+    level: promptLevel, // ✅ تم استخدام المتغير الصحيح هنا
     tokens: tokens
   };
   const updatedPrompts = [...prompts, newPrompt];
@@ -590,56 +591,69 @@ const saveEditedCategory = () => {
             </div>
 
             {/* إضافة برومبت جديد */}
-            <div className="bg-white p-6 rounded shadow-md mb-6">
-              <h3 className="font-semibold text-lg mb-4">{translations[language].addPromptSuccess}</h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <select
-                  value={selectedMainCategory}
-                  onChange={(e) => setSelectedMainCategory(e.target.value)}
-                  className="p-3 border border-gray-300 rounded transition-all duration-300"
-                >
-                  <option value="">{translations[language].selectMainCategory}</option>
-                  {categories.map(cat => (
-                    <option key={cat} value={cat}>{cat}</option>
-                  ))}
-                </select>
-                <select
-                  value={newSubCategory}
-                  onChange={(e) => setNewSubCategory(e.target.value)}
-                  className="p-3 border border-gray-300 rounded transition-all duration-300"
-                >
-                  <option value="">{translations[language].selectSubCategory}</option>
-                  {subCategories[selectedMainCategory]?.map(sub => (
-                    <option key={sub} value={sub}>{sub}</option>
-                  ))}
-                </select>
-                <textarea
-                  rows="3"
-                  placeholder={translations[language].enterPromptText}
-                  value={promptText}
-                  onChange={handlePromptTextChange}
-                  className="col-span-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all duration-300"
-                />
-                <input
-                  type="number"
-                  placeholder={translations[language].tokenCount}
-                  value={promptTokens}
-                  readOnly
-                  className="p-3 border border-gray-300 rounded bg-gray-100 transition-all duration-300"
-                />
-                <button
-                  onClick={editingPrompt ? saveEditedPrompt : handleAddPrompt}
-                  disabled={!promptText.trim() || !selectedMainCategory || !newSubCategory.trim()}
-                  className={`px-4 py-2 rounded-full transition-all duration-300 ${
-                    promptText.trim() && selectedMainCategory && newSubCategory.trim()
-                      ? 'bg-green-600 hover:bg-green-700 text-white shadow-sm hover:shadow-md'
-                      : 'bg-gray-200 cursor-not-allowed text-gray-500'
-                  }`}
-                >
-                  {editingPrompt ? translations[language].saveChanges : `➕ ${translations[language].addPrompt}`}
-                </button>
-              </div>
-            </div>
+            {/* إضافة برومبت جديد */}
+<div className="bg-white p-6 rounded shadow-md mb-6">
+  <h3 className="font-semibold text-lg mb-4">{translations[language].addPromptSuccess}</h3>
+  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+    <select
+      value={selectedMainCategory}
+      onChange={(e) => setSelectedMainCategory(e.target.value)}
+      className="p-3 border border-gray-300 rounded"
+    >
+      <option value="">{translations[language].selectMainCategory}</option>
+      {categories.map(cat => (
+        <option key={cat} value={cat}>{cat}</option>
+      ))}
+    </select>
+    <select
+      value={newSubCategory}
+      onChange={(e) => setNewSubCategory(e.target.value)}
+      className="p-3 border border-gray-300 rounded"
+    >
+      <option value="">{translations[language].selectSubCategory}</option>
+      {subCategories[selectedMainCategory]?.map(sub => (
+        <option key={sub} value={sub}>{sub}</option>
+      ))}
+    </select>
+    <textarea
+      rows="3"
+      placeholder={translations[language].enterPromptText}
+      value={promptText}
+      onChange={handlePromptTextChange}
+      className="col-span-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
+    />
+    <input
+      type="number"
+      placeholder={translations[language].tokenCount}
+      value={promptTokens}
+      readOnly
+      className="p-3 border border-gray-300 rounded bg-gray-100"
+    />
+    
+    {/* زر اختيار المستوى */}
+    <select
+      value={promptLevel}
+      onChange={(e) => setPromptLevel(e.target.value)}
+      className="p-3 border border-gray-300 rounded"
+    >
+      <option value="مبتدئ">🎓 مبتدئ</option>
+      <option value="متوسط">🎯 متوسط</option>
+      <option value="محترف">🏆 محترف</option>
+    </select>
+
+    <button
+      onClick={editingPrompt ? saveEditedPrompt : handleAddPrompt}
+      disabled={!promptText.trim() || !selectedMainCategory || !newSubCategory.trim()}
+      className={`px-4 py-2 rounded transition-all duration-300 ${
+        promptText.trim() && selectedMainCategory && newSubCategory.trim()
+          ? 'bg-green-600 hover:bg-green-700 text-white'
+          : 'bg-gray-200 cursor-not-allowed text-gray-500'
+      }`}
+    >
+      {editingPrompt ? translations[language].saveChanges : `➕ ${translations[language].addPrompt}`}
+    </button>
+  </div>
+</div>
 
             {/* عرض البرومبتات الحالية */}
             <div className="bg-white p-6 rounded shadow-md mb-6">
