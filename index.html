@@ -336,41 +336,44 @@
       };
 
       // بدء تعديل القسم
-      const startEditCategory = (cat) => {
-        setEditingCategory(cat);
-        setEditedCategoryName(cat);
-      };
+ // عند البدء في التعديل
+const startEditCategory = (cat) => {
+  setEditingCategory(cat);
+  setEditedCategoryName(cat);
+};
 
-      // حفظ تعديل القسم
-      const saveEditedCategory = () => {
-        if (!editedCategoryName.trim() || !editingCategory) return;
-        const updatedCategories = categories.map(c => c === editingCategory ? editedCategoryName : c);
-        const updatedSubCategories = { ...subCategories };
-        const updatedPrompts = prompts.map(p =>
-          p.category === editingCategory
-            ? { ...p, category: editedCategoryName }
-            : p
-        );
+// عند إلغاء التعديل
+const cancelEditCategory = () => {
+  setEditingCategory(null);
+  setEditedCategoryName('');
+};
 
-        // تحديث الأقسام الفرعية
-        updatedSubCategories[editedCategoryName] = updatedSubCategories[editingCategory];
-        delete updatedSubCategories[editingCategory];
+// عند حفظ التعديل
+const saveEditedCategory = () => {
+  if (!editedCategoryName.trim()) return;
+  const updatedCategories = categories.map(c => c === editingCategory ? editedCategoryName : c);
+  const updatedSubCategories = { ...subCategories };
+  const updatedPrompts = prompts.map(p =>
+    p.category === editingCategory
+      ? { ...p, category: editedCategoryName }
+      : p
+  );
 
-        // تحديث الواجهة
-        setCategories(updatedCategories);
-        setSubCategories(updatedSubCategories);
-        setPrompts(updatedPrompts);
+  // تحديث الأقسام الفرعية
+  updatedSubCategories[editedCategoryName] = updatedSubCategories[editingCategory];
+  delete updatedSubCategories[editingCategory];
 
-        // حفظ البيانات
-        localStorage.setItem('categories', JSON.stringify(updatedCategories));
-        localStorage.setItem('subCategories', JSON.stringify(updatedSubCategories));
-        localStorage.setItem('prompts', JSON.stringify(updatedPrompts));
+  setCategories(updatedCategories);
+  setSubCategories(updatedSubCategories);
+  setPrompts(updatedPrompts);
 
-        // إعادة تعيين الحقول
-        setEditingCategory(null);
-        setEditedCategoryName('');
-      };
+  localStorage.setItem('categories', JSON.stringify(updatedCategories));
+  localStorage.setItem('subCategories', JSON.stringify(updatedSubCategories));
+  localStorage.setItem('prompts', JSON.stringify(updatedPrompts));
 
+  setEditingCategory(null);
+  setEditedCategoryName('');
+};
       // بدء تعديل برومبت
       const startEditingPrompt = (prompt) => {
         setEditingPrompt(prompt);
@@ -445,40 +448,38 @@
             </div>
 
             {/* إضافة قسم رئيسي */}
-            <div className="bg-white p-6 rounded shadow-md mb-6">
-              <h3 className="font-semibold text-lg mb-4">{translations[language].addMainCategory}</h3>
-              <div className="flex flex-wrap gap-4">
-                <input
-                  type="text"
-                  placeholder={translations[language].categoryName}
-                  value={editingCategory ? editedCategoryName : newMainCategory}
-                  onChange={(e) => setEditedCategoryName(e.target.value)}
-                  className="flex-1 min-w-[200px] p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all duration-300"
-                />
-                <button
-                  onClick={editingCategory ? saveEditedCategory : handleAddMainCategory}
-                  disabled={!editedCategoryName.trim() && !newMainCategory.trim()}
-                  className={`px-4 py-2 rounded-full transition-all duration-300 ${
-                    (editingCategory ? editedCategoryName.trim() : newMainCategory.trim())
-                      ? 'bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm hover:shadow-md'
-                      : 'bg-gray-200 cursor-not-allowed text-gray-500'
-                  }`}
-                >
-           {editingCategory ? translations[language].saveChanges : `➕ ${translations[language].addMainCategory}`}
-                </button>
-                {editingCategory && (
-                  <button
-                    onClick={() => {
-                      setEditingCategory(null);
-                      setEditedCategoryName('');
-                    }}
-                    className="px-4 py-2 rounded bg-red-600 hover:bg-red-700 text-white transition-all duration-300"
-                  >
-                    {translations[language].cancel}
-                  </button>
-                )}
-              </div>
-            </div>
+{/* إضافة قسم رئيسي */}
+<div className="bg-white p-6 rounded shadow-md mb-6">
+  <h3 className="font-semibold text-lg mb-4">{translations[language].addMainCategory}</h3>
+  <div className="flex flex-wrap gap-4">
+    <input
+      type="text"
+      placeholder={translations[language].categoryName}
+      value={editedCategoryName}
+      onChange={(e) => setEditedCategoryName(e.target.value)}
+      className="flex-1 min-w-[200px] p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
+    />
+    <button
+      onClick={editingCategory ? saveEditedCategory : handleAddMainCategory}
+      disabled={!editedCategoryName.trim()}
+      className={`px-4 py-2 rounded transition-colors ${
+        editedCategoryName.trim()
+          ? 'bg-indigo-600 hover:bg-indigo-700 text-white'
+          : 'bg-gray-200 cursor-not-allowed text-gray-500'
+      }`}
+    >
+      {editingCategory ? translations[language].saveChanges : `➕ ${translations[language].addMainCategory}`}
+    </button>
+    {editingCategory && (
+      <button
+        onClick={cancelEditCategory}
+        className="px-4 py-2 rounded bg-red-600 hover:bg-red-700 text-white transition-colors"
+      >
+        {translations[language].cancel}
+      </button>
+    )}
+  </div>
+</div>
 
             {/* إضافة قسم فرعي */}
             <div className="bg-white p-6 rounded shadow-md mb-6">
