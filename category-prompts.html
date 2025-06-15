@@ -254,55 +254,48 @@ function renderPrompts(data) {
     // حالة التوسيع
     let expanded = false;
 
-    // تحديث محتوى البطاقة
+    // دالة لتحديث محتوى البطاقة
     function updateCard() {
+      const promptText = prompt.text;
+      const displayText = expanded ? promptText : promptText.substring(0, 120) + (promptText.length > 120 ? "..." : "");
+
       card.innerHTML = `
-        <p class="mb-4 text-gray-700 ${expanded ? '' : 'line-clamp-3'}">
-          ${prompt.text}
-        </p>
+        <p class="mb-4 text-gray-700">${displayText}</p>
         <div class="flex justify-between items-center text-xs sm:text-sm text-gray-500 mt-4 pt-3 border-t border-gray-100">
           <span>${prompt.category}${prompt.subCategory ? ` / ${prompt.subCategory}` : ''}</span>
-          <button 
-            onclick="copyPrompt('${prompt.text.replace(/'/g, "\\'").replace(/\n/g, "\\n")}', this)" 
-            class="flex items-center gap-1 text-indigo-600 hover:text-indigo-800 cursor-pointer transition"
-          >
+          <button onclick="copyPrompt('${prompt.text.replace(/'/g, "\\'")}', this)"
+                  class="flex items-center gap-1 text-indigo-600 hover:text-indigo-800 cursor-pointer transition">
             <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
             </svg>
             <span>${translations[savedLang].copyButton}</span>
           </button>
-               `const calculateTokens = (text) => {
-  return Math.ceil(text.split(/\s+/).length * 1.25);
-};
-      
-          <!-- زر توسيع النص -->
           <button 
             onclick="toggleExpand(this)"
-            class="text-gray-600 hover:text-gray-900 cursor-pointer transition"
+            class="text-xs font-medium text-indigo-600 hover:text-indigo-800 cursor-pointer transition"
           >
             ${expanded ? translations[savedLang].lessText : translations[savedLang].moreText}
           </button>
         </div>
- 
-      // إضافة التفاعل مع النص - النقر يوسعه
-      const textElement = card.querySelector('p');
-      textElement.style.cursor = 'pointer';
-      textElement.addEventListener('click', () => {
-        expanded = !expanded;
-        updateCard();
-      });
+      `;
     }
+
+    // دالة التوسيع
+    window.toggleExpand = (button) => {
+      const card = button.closest('.bg-white');
+      const isExpanded = card.querySelector('button')?.textContent.trim() === translations[savedLang].lessText;
+
+      // تحديث الحالة
+      isExpanded ? (card.querySelector('p').textContent = card.querySelector('p').textContent.replace("...", "").trim()) : (card.querySelector('p').textContent = prompt.text.substring(0, 120) + "...");
+
+      // تحديث زر "أكثر / أقل"
+      button.textContent = isExpanded ? translations[savedLang].moreText : translations[savedLang].lessText;
+    };
 
     // أول استدعاء
     updateCard();
     container.appendChild(card);
   });
-}
-function toggleExpand(button) {
-  const card = button.closest('.bg-white');
-  const textElement = card.querySelector('p');
-  expanded = !expanded;
-  textElement.classList.toggle('line-clamp-3', !expanded);
 }
     // دالة نسخ البرومبت
     function copyPrompt(text, element) {
