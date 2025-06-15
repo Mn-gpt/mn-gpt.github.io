@@ -455,25 +455,44 @@ const saveEditedCategory = () => {
             <h2 className="text-2xl sm:text-3xl font-bold text-gray-800">{translations[language].managePrompts}</h2>
 
             {/* اختيار المستوى */}
-            <div className="bg-white p-4 rounded shadow-inner mb-6">
-              <h3 className="font-semibold text-lg mb-3">اختر المستوى:</h3>
-              <div className="flex flex-wrap gap-3">
-                <button onClick={() => setSelectedLevel('all')} className={`px-4 py-2 rounded-full ${selectedLevel === 'all' ? 'bg-indigo-600 text-white' : 'bg-gray-200 text-gray-700'} transition-all duration-300`}>🌍 الكل</button>
-                <button onClick={() => setSelectedLevel('مبتدئ')} className={`px-4 py-2 rounded-full ${selectedLevel === 'مبتدئ' ? 'bg-yellow-500 text-white' : 'bg-gray-200 text-gray-700'} transition-all duration-300`}>🎓 مبتدئ</button>
-                <button onClick={() => setSelectedLevel('متوسط')} className={`px-4 py-2 rounded-full ${selectedLevel === 'متوسط' ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-700'} transition-all duration-300`}>🎯 متوسط</button>
-                <button onClick={() => setSelectedLevel('محترف')} className={`px-4 py-2 rounded-full ${selectedLevel === 'محترف' ? 'bg-purple-500 text-white' : 'bg-gray-200 text-gray-700'} transition-all duration-300`}>🏆 محترف</button>
-              </div>
-              {/* مستوى البرومبت */}
-<select
-  value={promptLevel} // متغير الحالة الجديد
-  onChange={(e) => setPromptLevel(e.target.value)}
-  className="p-3 border border-gray-300 rounded"
->
-  <option value="مبتدئ">🎓 مبتدئ</option>
-  <option value="متوسط">🎯 متوسط</option>
-  <option value="محترف">🏆 محترف</option>
-</select>
-            </div>
+            {/* اختيار المستوى */}
+<div className="bg-white p-4 rounded shadow-inner mb-6">
+  <h3 className="font-semibold text-lg mb-3">اختر المستوى:</h3>
+  <div className="flex flex-wrap gap-2">
+    <button onClick={() => setSelectedLevel('all')} 
+            className={`px-3 py-1 text-xs rounded-full transition-all duration-300 ${
+              selectedLevel === 'all' 
+                ? 'bg-indigo-600 text-white' 
+                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+            }`}>
+      🌍 الكل
+    </button>
+    <button onClick={() => setSelectedLevel('مبتدئ')} 
+            className={`px-3 py-1 text-xs rounded-full transition-all duration-300 ${
+              selectedLevel === 'مبتدئ' 
+                ? 'bg-yellow-500 text-white' 
+                : 'bg-yellow-100 text-yellow-800 hover:bg-yellow-200'
+            }`}>
+      🎓 مبتدئ
+    </button>
+    <button onClick={() => setSelectedLevel('متوسط')} 
+            className={`px-3 py-1 text-xs rounded-full transition-all duration-300 ${
+              selectedLevel === 'متوسط' 
+                ? 'bg-blue-500 text-white' 
+                : 'bg-blue-100 text-blue-800 hover:bg-blue-200'
+            }`}>
+      🎯 متوسط
+    </button>
+    <button onClick={() => setSelectedLevel('محترف')} 
+            className={`px-3 py-1 text-xs rounded-full transition-all duration-300 ${
+              selectedLevel === 'محترف' 
+                ? 'bg-purple-500 text-white' 
+                : 'bg-purple-100 text-purple-800 hover:bg-purple-200'
+            }`}>
+      🏆 محترف
+    </button>
+  </div>
+</div>
 
           
 {/* إضافة قسم رئيسي */}
