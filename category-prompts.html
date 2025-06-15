@@ -271,6 +271,10 @@ function renderPrompts(data) {
             </svg>
             <span>${translations[savedLang].copyButton}</span>
           </button>
+               `const calculateTokens = (text) => {
+  return Math.ceil(text.split(/\s+/).length * 1.25);
+};
+      
           <!-- زر توسيع النص -->
           <button 
             onclick="toggleExpand(this)"
@@ -279,10 +283,7 @@ function renderPrompts(data) {
             ${expanded ? translations[savedLang].lessText : translations[savedLang].moreText}
           </button>
         </div>
-      `const calculateTokens = (text) => {
-  return Math.ceil(text.split(/\s+/).length * 1.25);
-};
-      
+ 
       // إضافة التفاعل مع النص - النقر يوسعه
       const textElement = card.querySelector('p');
       textElement.style.cursor = 'pointer';
