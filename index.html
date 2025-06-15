@@ -35,28 +35,24 @@
 <body class="min-h-screen bg-gray-50 p-4">
   <!-- Banner -->
   <div class="mb-6">
-    <img src="bannerA.png" alt="بانير موقع Promptica" class="w-full h-auto rounded-lg shadow-md object-cover max-h-64">
+    <img src="Banner2.png" alt="بانير موقع Promptica" class="w-full h-auto rounded-lg shadow-md object-cover max-h-64">
   </div>
-
   <!-- Header -->
   <header class="flex justify-between items-center pb-4 border-b border-gray-200 mb-6">
     <h1 class="text-2xl sm:text-3xl font-bold text-indigo-700 flex items-center">Promptica</h1>
     <div class="flex items-center space-x-4 rtl:space-x-reverse">
-      <a href="#" onclick="logout()" class="text-gray-700 hover:text-indigo-600">تسجيل الخروج</a>
-      <a href="welcome.html" class="text-indigo-600 hover:text-indigo-800 underline">الترحيب</a>
-      <button id="langToggle" class="text-indigo-600 hover:text-indigo-800">English</button>
+      <a href="#" onclick="logout()" class="text-gray-700 hover:text-indigo-600 transition duration-300">تسجيل الخروج</a>
+      <a href="welcome.html" class="text-indigo-600 hover:text-indigo-800 underline transition duration-300">الترحيب</a>
+      <button id="langToggle" class="text-indigo-600 hover:text-indigo-800 transition duration-300">English</button>
     </div>
   </header>
-
   <!-- Root Div for React App -->
   <div id="root"></div>
-
   <!-- Footer -->
   <footer class="mt-8 pt-4 border-t border-gray-200 text-center text-sm text-gray-500">
     &copy; <span id="year"></span> Promptica. جميع الحقوق محفوظة.
     <script>document.getElementById("year").textContent = new Date().getFullYear();</script>
   </footer>
-
   <!-- Logout Function -->
   <script>
     function logout() {
@@ -64,18 +60,15 @@
       alert("تم تسجيل الخروج.");
       window.location.href = "login.html";
     }
-
     // تحديد اللغة المحفوظة أو العربية كافتراضية
     const savedLang = localStorage.getItem('language') || 'ar';
     document.documentElement.setAttribute('lang', savedLang);
     document.documentElement.setAttribute('dir', savedLang === 'ar' ? 'rtl' : 'ltr');
-
     if (savedLang === 'en') {
       document.getElementById('langToggle').innerText = 'عربي';
     } else {
       document.getElementById('langToggle').innerText = 'English';
     }
-
     // تبديل اللغة
     function toggleLanguage() {
       const newLang = savedLang === 'ar' ? 'en' : 'ar';
@@ -84,14 +77,11 @@
       localStorage.setItem('language', newLang);
       location.reload();
     }
-
     document.getElementById("langToggle").addEventListener("click", toggleLanguage);
   </script>
-
   <!-- React Code -->
   <script type="text/babel">
     const { useState, useEffect } = React;
-
     function App() {
       // نصوص الترجمة
       const translations = {
@@ -140,10 +130,7 @@
           addPromptSuccess: "+ إضافة برومبت جديد",
           saveChanges: "💾 حفظ التعديل",
           cancel: "إلغاء",
-          duplicateCategory: "القسم موجود مسبقًا",
-          beginner: "🎓 مبتدئ",
-          intermediate: "🎯 متوسط",
-          advanced: "🏆 محترف"
+          duplicateCategory: "القسم موجود مسبقًا"
         },
         en: {
           dashboard: "Dashboard",
@@ -193,9 +180,7 @@
           duplicateCategory: "Category already exists"
         }
       };
-
       const language = localStorage.getItem('language') || 'ar';
-
       // البيانات الأساسية
       const [activeTab, setActiveTab] = useState('dashboard');
       const [prompts, setPrompts] = useState([]);
@@ -203,24 +188,21 @@
       const [subCategories, setSubCategories] = useState({});
       const [searchTerm, setSearchTerm] = useState('');
       const isUserAdmin = true;
-
       // بيانات إضافة البرومبت
       const [newMainCategory, setNewMainCategory] = useState('');
       const [newSubCategory, setNewSubCategory] = useState('');
       const [selectedMainCategory, setSelectedMainCategory] = useState('');
       const [promptText, setPromptText] = useState('');
       const [promptTokens, setPromptTokens] = useState(0);
-
-      // حالة عرض الجداول
-      const [showPromptTable, setShowPromptTable] = useState(false);
-      const [selectedCategoryTab, setSelectedCategoryTab] = useState('all');
-      const [selectedLevel, setSelectedLevel] = useState('all');
-      const [showAllCategories, setShowAllCategories] = useState(false);
-
-      // حالة التعديل
       const [editingPrompt, setEditingPrompt] = useState(null);
       const [editingCategory, setEditingCategory] = useState(null);
       const [editedCategoryName, setEditedCategoryName] = useState('');
+      const [showAllCategories, setShowAllCategories] = useState(false);
+      // حالة عرض الجداول
+      
+      const [showPromptTable, setShowPromptTable] = useState(false);
+      const [selectedCategoryTab, setSelectedCategoryTab] = useState('all');
+      const [selectedLevel, setSelectedLevel] = useState('all');
 
       // تحميل البيانات من localStorage
       useEffect(() => {
@@ -239,7 +221,6 @@
         )],
         { keys: ['text', 'name'] }
       );
-
       const smartSearchResults = searchTerm.trim()
         ? fuse.search(searchTerm).map(result => result.item)
         : [];
@@ -370,6 +351,7 @@
             ? { ...p, category: editedCategoryName }
             : p
         );
+
         // تحديث الأقسام الفرعية
         updatedSubCategories[editedCategoryName] = updatedSubCategories[editingCategory];
         delete updatedSubCategories[editingCategory];
@@ -455,10 +437,10 @@
             <div className="bg-white p-4 rounded shadow-inner mb-6">
               <h3 className="font-semibold text-lg mb-3">اختر المستوى:</h3>
               <div className="flex flex-wrap gap-3">
-                <button onClick={() => setSelectedLevel('all')} className={`px-4 py-2 rounded-full ${selectedLevel === 'all' ? 'bg-indigo-600 text-white' : 'bg-gray-200 text-gray-700'} transition-all duration-300">🌍 الكل</button>
-                <button onClick={() => setSelectedLevel('مبتدئ')} className={`px-4 py-2 rounded-full ${selectedLevel === 'مبتدئ' ? 'bg-yellow-500 text-white' : 'bg-gray-200 text-gray-700'} transition-all duration-300">🎓 مبتدئ</button>
-                <button onClick={() => setSelectedLevel('متوسط')} className={`px-4 py-2 rounded-full ${selectedLevel === 'متوسط' ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-700'} transition-all duration-300">🎯 متوسط</button>
-                <button onClick={() => setSelectedLevel('محترف')} className={`px-4 py-2 rounded-full ${selectedLevel === 'محترف' ? 'bg-purple-500 text-white' : 'bg-gray-200 text-gray-700'} transition-all duration-300">🏆 محترف</button>
+                <button onClick={() => setSelectedLevel('all')} className={`px-4 py-2 rounded-full ${selectedLevel === 'all' ? 'bg-indigo-600 text-white' : 'bg-gray-200 text-gray-700'} transition-all duration-300`}>🌍 الكل</button>
+                <button onClick={() => setSelectedLevel('مبتدئ')} className={`px-4 py-2 rounded-full ${selectedLevel === 'مبتدئ' ? 'bg-yellow-500 text-white' : 'bg-gray-200 text-gray-700'} transition-all duration-300`}>🎓 مبتدئ</button>
+                <button onClick={() => setSelectedLevel('متوسط')} className={`px-4 py-2 rounded-full ${selectedLevel === 'متوسط' ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-700'} transition-all duration-300`}>🎯 متوسط</button>
+                <button onClick={() => setSelectedLevel('محترف')} className={`px-4 py-2 rounded-full ${selectedLevel === 'محترف' ? 'bg-purple-500 text-white' : 'bg-gray-200 text-gray-700'} transition-all duration-300`}>🏆 محترف</button>
               </div>
             </div>
 
@@ -471,18 +453,18 @@
                   placeholder={translations[language].categoryName}
                   value={editingCategory ? editedCategoryName : newMainCategory}
                   onChange={(e) => setEditedCategoryName(e.target.value)}
-                  className="flex-1 min-w-[200px] p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  className="flex-1 min-w-[200px] p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all duration-300"
                 />
                 <button
                   onClick={editingCategory ? saveEditedCategory : handleAddMainCategory}
-                  disabled={!editedCategoryName.trim()}
-                  className={`px-4 py-2 rounded transition-all duration-300 ${
-                    editedCategoryName.trim()
-                      ? 'bg-indigo-600 hover:bg-indigo-700 text-white'
+                  disabled={!editedCategoryName.trim() && !newMainCategory.trim()}
+                  className={`px-4 py-2 rounded-full transition-all duration-300 ${
+                    (editingCategory ? editedCategoryName.trim() : newMainCategory.trim())
+                      ? 'bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm hover:shadow-md'
                       : 'bg-gray-200 cursor-not-allowed text-gray-500'
                   }`}
                 >
-                  {editingCategory ? translations[language].saveChanges : `➕ ${translations[language].addMainCategory}`}
+           {editingCategory ? translations[language].saveChanges : `➕ ${translations[language].addMainCategory}`}
                 </button>
                 {editingCategory && (
                   <button
@@ -505,7 +487,7 @@
                 <select
                   value={selectedMainCategory}
                   onChange={(e) => setSelectedMainCategory(e.target.value)}
-                  className="p-3 border border-gray-300 rounded w-full md:w-auto"
+                  className="p-3 border border-gray-300 rounded w-full md:w-auto transition-all duration-300"
                 >
                   <option value="">{translations[language].selectMainCategory}</option>
                   {categories.map(cat => (
@@ -517,14 +499,14 @@
                   placeholder={translations[language].subCategoryName}
                   value={newSubCategory}
                   onChange={(e) => setNewSubCategory(e.target.value)}
-                  className="flex-1 min-w-[200px] p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  className="flex-1 min-w-[200px] p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all duration-300"
                 />
                 <button
                   onClick={handleAddSubCategory}
                   disabled={!selectedMainCategory || !newSubCategory.trim()}
-                  className={`px-4 py-2 rounded transition-all duration-300 ${
+                  className={`px-4 py-2 rounded-full transition-all duration-300 ${
                     selectedMainCategory && newSubCategory.trim()
-                      ? 'bg-purple-600 hover:bg-purple-700 text-white'
+                      ? 'bg-purple-600 hover:bg-purple-700 text-white shadow-sm hover:shadow-md'
                       : 'bg-gray-200 cursor-not-allowed text-gray-500'
                   }`}
                 >
@@ -540,7 +522,7 @@
                 <select
                   value={selectedMainCategory}
                   onChange={(e) => setSelectedMainCategory(e.target.value)}
-                  className="p-3 border border-gray-300 rounded"
+                  className="p-3 border border-gray-300 rounded transition-all duration-300"
                 >
                   <option value="">{translations[language].selectMainCategory}</option>
                   {categories.map(cat => (
@@ -550,7 +532,7 @@
                 <select
                   value={newSubCategory}
                   onChange={(e) => setNewSubCategory(e.target.value)}
-                  className="p-3 border border-gray-300 rounded"
+                  className="p-3 border border-gray-300 rounded transition-all duration-300"
                 >
                   <option value="">{translations[language].selectSubCategory}</option>
                   {subCategories[selectedMainCategory]?.map(sub => (
@@ -562,21 +544,21 @@
                   placeholder={translations[language].enterPromptText}
                   value={promptText}
                   onChange={handlePromptTextChange}
-                  className="col-span-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  className="col-span-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all duration-300"
                 />
                 <input
                   type="number"
                   placeholder={translations[language].tokenCount}
                   value={promptTokens}
                   readOnly
-                  className="p-3 border border-gray-300 rounded bg-gray-100"
+                  className="p-3 border border-gray-300 rounded bg-gray-100 transition-all duration-300"
                 />
                 <button
                   onClick={editingPrompt ? saveEditedPrompt : handleAddPrompt}
                   disabled={!promptText.trim() || !selectedMainCategory || !newSubCategory.trim()}
-                  className={`px-4 py-2 rounded transition-all duration-300 ${
+                  className={`px-4 py-2 rounded-full transition-all duration-300 ${
                     promptText.trim() && selectedMainCategory && newSubCategory.trim()
-                      ? 'bg-green-600 hover:bg-green-700 text-white'
+                      ? 'bg-green-600 hover:bg-green-700 text-white shadow-sm hover:shadow-md'
                       : 'bg-gray-200 cursor-not-allowed text-gray-500'
                   }`}
                 >
@@ -591,7 +573,7 @@
                 <h3 className="font-semibold text-lg">{translations[language].currentPrompts}</h3>
                 <button
                   onClick={() => setShowPromptTable(!showPromptTable)}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-300 shadow hover:shadow-lg ${
+                  className={`flex items-center gap-2 px-4 py-2 rounded-full transition-all duration-300 shadow-sm hover:shadow-md ${
                     showPromptTable ? 'bg-red-600 hover:bg-red-700 text-white' : 'bg-green-600 hover:bg-green-700 text-white'
                   }`}
                 >
@@ -606,7 +588,7 @@
                   )}
                 </button>
               </div>
-
+              {/* تبويبات الأقسام */}
               {showPromptTable && (
                 <>
                   <div className="mb-4 border-b border-gray-200">
@@ -617,7 +599,7 @@
                           selectedCategoryTab === 'all'
                             ? 'border-indigo-500 text-indigo-600'
                             : 'border-transparent text-gray-500 hover:text-gray-700'
-                        }`}
+                        } transition-all duration-300`}
                       >
                         {translations[language].allCategories}
                       </button>
@@ -629,13 +611,14 @@
                             selectedCategoryTab === cat
                               ? 'border-indigo-500 text-indigo-600'
                               : 'border-transparent text-gray-500 hover:text-gray-700'
-                          }`}
+                          } transition-all duration-300`}
                         >
                           {cat}
                         </button>
                       ))}
                     </nav>
                   </div>
+                  {/* جدول العرض */}
                   <div className="overflow-x-auto">
                     <table className="min-w-full divide-y divide-gray-200">
                       <thead className="bg-gray-50">
@@ -657,20 +640,20 @@
                             (selectedLevel === 'all' || prompt.level === selectedLevel)
                           )
                           .map(prompt => (
-                            <tr key={prompt.id} className="hover:bg-gray-50">
+                            <tr key={prompt.id} className="hover:bg-gray-50 transition-colors duration-300">
                               <td className="px-4 py-4 line-clamp-3">{prompt.text}</td>
                               <td className="px-4 py-4">{prompt.category}</td>
                               <td className="px-4 py-4">{prompt.subCategory}</td>
                               <td className="px-4 py-4">
-                                {prompt.level === 'مبتدئ' && translations[language].beginner}
-                                {prompt.level === 'متوسط' && translations[language].intermediate}
-                                {prompt.level === 'محترف' && translations[language].advanced}
+                                {prompt.level === 'مبتدئ' && '🎓 مبتدئ'}
+                                {prompt.level === 'متوسط' && '🎯 متوسط'}
+                                {prompt.level === 'محترف' && '🏆 محترف'}
                               </td>
                               <td className="px-4 py-4">{prompt.tokens}</td>
                               <td className="px-4 py-4 whitespace-nowrap space-x-3 rtl:space-x-reverse">
                                 <button
                                   onClick={() => startEditingPrompt(prompt)}
-                                  className="text-yellow-600 hover:text-yellow-800"
+                                  className="text-yellow-600 hover:text-yellow-800 transition duration-300"
                                 >{translations[language].editPrompt}</button>
                                 <button
                                   onClick={() => {
@@ -680,11 +663,11 @@
                                       localStorage.setItem('prompts', JSON.stringify(updatedPrompts));
                                     }
                                   }}
-                                  className="text-red-600 hover:text-red-800"
+                                  className="text-red-600 hover:text-red-800 transition duration-300"
                                 >{translations[language].deletePrompt}</button>
                                 <button
                                   onClick={() => copyPromptText(prompt.text)}
-                                  className="text-blue-600 hover:text-blue-800"
+                                  className="text-blue-600 hover:text-blue-800 transition duration-300"
                                 >{translations[language].copyPrompt}</button>
                               </td>
                             </tr>
@@ -701,7 +684,7 @@
               )}
             </div>
 
-            {/* الأقسام الحالية مع عرض أول 5 عناصر فقط */}
+            {/* الأقسام الحالية */}
             <div className="bg-white p-6 rounded shadow-md mb-6">
               <h3 className="font-semibold text-lg mb-4">{translations[language].mainCategories}</h3>
               <div className="grid grid-cols-1 gap-3">
@@ -713,17 +696,18 @@
                         <div className="space-x-2 rtl:space-x-reverse">
                           <button
                             onClick={() => startEditCategory(cat)}
-                            className="text-yellow-600 hover:text-yellow-800 text-xs"
+                            className="text-yellow-600 hover:text-yellow-800 text-xs transition duration-300"
                           >{translations[language].editPrompt}</button>
                           <button
                             onClick={() => deleteMainCategory(cat)}
-                            className="text-red-600 hover:text-red-800 text-xs"
+                            className="text-red-600 hover:text-red-800 text-xs transition duration-300"
                           >{translations[language].deletePrompt}</button>
                         </div>
                       </div>
                     ))}
                   </div>
                 </div>
+                {/* زر عرض المزيد */}
                 {categories.length > 5 && (
                   <button
                     onClick={() => setShowAllCategories(!showAllCategories)}
@@ -784,11 +768,9 @@
         const totalPrompts = prompts.length;
         const totalTokens = prompts.reduce((sum, p) => sum + p.tokens, 0);
         const averageTokens = totalPrompts > 0 ? Math.round(totalTokens / totalPrompts) : 0;
-
         return (
           <div className="space-y-6">
             <h2 className="text-2xl sm:text-3xl font-bold text-gray-800">{translations[language].dashboard}</h2>
-
             {/* Cards */}
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-3 sm:gap-6">
               <div className="bg-white p-4 sm:p-6 rounded shadow hover:shadow-md transition-all duration-300">
@@ -804,7 +786,6 @@
                 <p className="text-3xl font-bold text-green-600">{averageTokens} token</p>
               </div>
             </div>
-
             {/* شريط البحث */}
             <div className="mt-6">
               <input
@@ -812,10 +793,9 @@
                 placeholder={translations[language].searchPlaceholder}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all duration-300"
               />
             </div>
-
             {/* قائمة الأقسام */}
             <div className="mt-6">
               <h3 className="text-xl font-semibold text-gray-800 mb-4">{translations[language].categoriesAvailable}</h3>
@@ -824,7 +804,7 @@
                   <a
                     key={cat}
                     href={`category-prompts.html?category=${encodeURIComponent(cat)}&level=all`}
-                    className="bg-white p-4 rounded shadow hover:bg-gray-50 transition flex justify-between items-center"
+                    className="bg-white p-4 rounded shadow hover:bg-gray-50 transition-all duration-300 flex justify-between items-center"
                   >
                     <span className="font-medium text-indigo-600 text-xs sm:text-sm">{cat}</span>
                     <svg className="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -851,7 +831,7 @@
                 activeTab === 'dashboard'
                   ? 'border-b-2 border-indigo-600 text-indigo-600'
                   : 'text-gray-600'
-              }`}
+              } transition-all duration-300`}
             >
               {translations[language].dashboard}
             </button>
@@ -862,13 +842,12 @@
                   activeTab === 'prompts'
                     ? 'border-b-2 border-indigo-600 text-indigo-600'
                     : 'text-gray-600'
-                }`}
+                } transition-all duration-300`}
               >
                 {translations[language].managePrompts}
               </button>
             )}
           </div>
-
           {/* Tab Content */}
           {activeTab === 'dashboard' && renderDashboard()}
           {activeTab === 'prompts' && renderManagePrompts()}
