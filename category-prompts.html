@@ -89,27 +89,30 @@
     document.documentElement.setAttribute('dir', savedLang === 'ar' ? 'rtl' : 'ltr');
 
     // نصوص الترجمة
-    const translations = {
-      ar: {
-        pageTitle: "برومبتات",
-        searchPlaceholder: "🔍 ابحث هنا (#قسم، @كلمة، :توكن)",
-        copyButton: "📋 نسخ",
-        copiedText: "✅ نُسخ!",
-        noPrompts: "لا توجد برومبتات تناسب البحث.",
-        categoryLabel: "📁 القسم",
-        tokensLabel: "🔢 الكلمات"
-      },
-      en: {
-        pageTitle: "Prompts for",
-        searchPlaceholder: "🔍 Search here (#category, @word, :token)",
-        copyButton: "📋 Copy",
-        copiedText: "✅ Copied!",
-        noPrompts: "No prompts match your search.",
-        categoryLabel: "📁 Category",
-        tokensLabel: "🔢 Tokens"
-      }
-    };
-
+ const translations = {
+  ar: {
+    moreText: "أكثر",
+    lessText: "أقل",
+    pageTitle: "برومبتات",
+    searchPlaceholder: "🔍 ابحث هنا (#قسم، @كلمة، :توكن)",
+    copyButton: "📋 نسخ",
+    copiedText: "نُسخ!",
+    noPrompts: "لا توجد برومبتات تناسب البحث.",
+    categoryLabel: "📁 القسم",
+    tokensLabel: "🔢 الكلمات"
+  },
+  en: {
+    moreText: "More",
+    lessText: "Less",
+    pageTitle: "Prompts for",
+    searchPlaceholder: "🔍 Search here (#category, @word, :token)",
+    copyButton: "📋 Copy",
+    copiedText: "Copied!",
+    noPrompts: "No prompts match your search.",
+    categoryLabel: "📁 Category",
+    tokensLabel: "🔢 Tokens"
+  }
+};
     // خريطة الأنماط والألوان
     const themeMap = {
       "الذكاء الصناعي التوليدي": {
@@ -260,6 +263,13 @@ function renderPrompts(data) {
             </svg>
             <span>${translations[savedLang].copyButton}</span>
           </button>
+          <!-- زر توسيع النص -->
+          <button 
+            onclick="toggleExpand(this)"
+            class="text-gray-600 hover:text-gray-900 cursor-pointer transition"
+          >
+            ${expanded ? translations[savedLang].lessText : translations[savedLang].moreText}
+          </button>
         </div>
       `;
       
@@ -271,7 +281,12 @@ function renderPrompts(data) {
         updateCard();
       });
     }
-
+function toggleExpand(button) {
+  const card = button.closest('.bg-white');
+  const textElement = card.querySelector('p');
+  expanded = !expanded;
+  textElement.classList.toggle('line-clamp-3', !expanded);
+}
     // أول استدعاء
     updateCard();
     container.appendChild(card);
