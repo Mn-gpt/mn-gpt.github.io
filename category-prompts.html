@@ -94,7 +94,7 @@
         pageTitle: "برومبتات",
         searchPlaceholder: "🔍 ابحث هنا (#قسم، @كلمة، :توكن)",
         copyButton: "📋 نسخ",
-        copiedText: "✅ تم النسخ!",
+        copiedText: "نُسخ!",
         noPrompts: "لا توجد برومبتات تناسب البحث.",
         categoryLabel: "📁 القسم",
         tokensLabel: "🔢 الكلمات",
@@ -275,8 +275,7 @@
     function copyPrompt(text, element) {
       navigator.clipboard.writeText(text).then(() => {
         const originalHTML = element.innerHTML;
-        element.innerHTML = `<span class="flex items-center gap-1"><svg class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" /></svg> ${translations[savedLang].copiedText}</span>`;
+        element.innerHTML = `<span class="flex items-center gap-1"><svg class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" /></svg> ${translations[savedLang].copiedText}</span>`;
         setTimeout(() => {
           element.innerHTML = originalHTML;
         }, 1500);
