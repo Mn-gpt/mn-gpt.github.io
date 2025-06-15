@@ -18,26 +18,8 @@
       -webkit-box-orient: vertical;
       overflow: hidden;
     }
-    .tree li {
-      position: relative;
-      padding-left: 20px;
-    }
-    .tree li::before {
-      content: "";
-      position: absolute;
-      left: 5px;
-      top: 0;
-      bottom: 0;
-      border-left: 1px dashed #ccc;
-    }
-    .tree li::after {
-      content: "";
-      position: absolute;
-      left: 5px;
-      top: 8px;
-      width: 10px;
-      height: 1px;
-      background: #ccc;
+    @media (max-width: 640px) {
+      html { font-size: 16px; }
     }
   </style>
 </head>
@@ -49,21 +31,18 @@
   </div>
 
   <!-- Header with Back and Language Toggle -->
-  
-<header class="mb-6 flex justify-between items-center rtl:space-x-reverse space-x-4">
-  <!-- زر العودة إلى الصفحة الرئيسية -->
-  <button onclick="window.location.href='index.html'" class="flex items-center gap-2 px-4 py-2 bg-white hover:bg-gray-100 text-gray-700 rounded-full shadow transition-all duration-300">
-    <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
-    </svg>
-    العودة
-  </button>
+  <header class="mb-6 flex justify-between items-center rtl:space-x-reverse space-x-4">
+    <button onclick="goBack()" class="flex items-center gap-2 px-4 py-2 bg-white hover:bg-gray-100 text-gray-700 rounded-full shadow transition-all duration-300">
+      <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
+      </svg>
+      العودة
+    </button>
+    <button id="langToggle" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-full shadow-md hover:shadow-lg transition transform hover:scale-105 focus:outline-none">
+      English
+    </button>
+  </header>
 
-  <!-- زر تبديل اللغة -->
-  <button id="langToggle" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-full shadow-md hover:shadow-lg transition transform hover:scale-105 focus:outline-none">
-    English
-  </button>
-</header>
   <!-- Page Title -->
   <h1 id="page-title" class="text-3xl sm:text-4xl font-bold flex justify-center items-center gap-3 mb-6"></h1>
 
@@ -71,9 +50,9 @@
   <section class="mb-6 max-w-4xl mx-auto text-center">
     <div class="inline-flex flex-wrap gap-2 justify-center p-2 bg-white rounded-lg shadow-sm border border-gray-200">
       <button onclick="filterByLevel('all')" class="px-3 py-1 rounded-full text-sm font-medium bg-white hover:bg-gray-100 transition-all duration-300">🌍 الكل</button>
-      <button onclick="filterByLevel('Beginner')" class="px-3 py-1 rounded-full text-sm font-medium bg-yellow-100 text-yellow-800 hover:bg-yellow-200 transition-all duration-300">🎓 مبتدئ</button>
-      <button onclick="filterByLevel('Intermediate')" class="px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800 hover:bg-blue-200 transition-all duration-300">🎯 متوسط</button>
-      <button onclick="filterByLevel('Advanced')" class="px-3 py-1 rounded-full text-sm font-medium bg-purple-100 text-purple-800 hover:bg-purple-200 transition-all duration-300">🏆 محترف</button>
+      <button onclick="filterByLevel('مبتدئ')" class="px-3 py-1 rounded-full text-sm font-medium bg-yellow-100 text-yellow-800 hover:bg-yellow-200 transition-all duration-300">🎓 مبتدئ</button>
+      <button onclick="filterByLevel('متوسط')" class="px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800 hover:bg-blue-200 transition-all duration-300">🎯 متوسط</button>
+      <button onclick="filterByLevel('محترف')" class="px-3 py-1 rounded-full text-sm font-medium bg-purple-100 text-purple-800 hover:bg-purple-200 transition-all duration-300">🏆 محترف</button>
     </div>
   </section>
 
@@ -90,14 +69,6 @@
         #التعليم @AI :100
       </div>
     </div>
-  </section>
-
-  <!-- Subcategories Tree -->
-  <section class="mb-6 max-w-4xl mx-auto">
-    <h2 class="text-xl font-semibold mb-3">الأقسام الفرعية:</h2>
-    <ul id="subCategoryTree" class="bg-white p-4 rounded-lg shadow space-y-2 tree">
-      <!-- الأقسام الفرعية سيتم إنشاؤها ديناميكيًا هنا -->
-    </ul>
   </section>
 
   <!-- Cards Container -->
@@ -126,7 +97,10 @@
         copiedText: "✅ تم النسخ!",
         noPrompts: "لا توجد برومبتات تناسب البحث.",
         categoryLabel: "📁 القسم",
-        tokensLabel: "🔢 الكلمات"
+        tokensLabel: "🔢 الكلمات",
+        beginner: "🎓 مبتدئ",
+        intermediate: "🎯 متوسط",
+        advanced: "🏆 محترف"
       },
       en: {
         pageTitle: "Prompts for",
@@ -135,7 +109,10 @@
         copiedText: "Copied!",
         noPrompts: "No prompts match your search.",
         categoryLabel: "📁 Category",
-        tokensLabel: "🔢 Tokens"
+        tokensLabel: "🔢 Tokens",
+        beginner: "Beginner",
+        intermediate: "Intermediate",
+        advanced: "Advanced"
       }
     };
 
@@ -163,6 +140,7 @@
     const category = decodeURIComponent(params.get('category') || '');
     const subCategory = decodeURIComponent(params.get('subCategory') || '');
     const level = decodeURIComponent(params.get('level') || 'all');
+    const currentTranslation = translations[savedLang];
 
     // تحديد الثيم المناسب
     const selectedTheme = themeMap[subCategory] || themeMap[category] || themeMap.default;
@@ -172,7 +150,7 @@
     function updatePageTitle() {
       const lang = localStorage.getItem('language') || 'ar';
       const pageTitle = document.getElementById("page-title");
-      const displayedLevel = level === 'all' ? '' : `– مستوى: ${level}`;
+      const displayedLevel = level === 'all' ? '' : `– Level: ${translations[lang].beginner === "Beginner" ? translations[lang][level] : level}`;
       pageTitle.innerHTML = `
         <span class="text-3xl">${selectedTheme.icon}</span>
         <span class="${selectedTheme.textColor} text-xl sm:text-2xl">${subCategory || category} ${displayedLevel}</span>
@@ -201,8 +179,7 @@
     }
 
     // دالة البحث الديناميكي المتقدم
-    function searchPrompt(e) {
-      const query = e.target.value.trim().toLowerCase();
+    function performSearch(query) {
       let results = [...filteredPrompts];
 
       // ترشيح المستوى
@@ -218,7 +195,7 @@
           tokens: [],
           text: []
         };
-        const parts = query.split(/\s+/);
+        const parts = query.toLowerCase().split(/\s+/);
         parts.forEach(part => {
           if (part.startsWith('#')) {
             filters.category.push(part.slice(1));
@@ -277,7 +254,7 @@
               <span class="font-semibold">${prompt.category}</span>
               ${prompt.subCategory ? `<span class="mx-1">/</span><span>${prompt.subCategory}</span>` : ''}
               <span class="mx-2">•</span>
-              <span class="text-gray-400">${prompt.level}</span>
+              <span class="text-gray-400">${translations[savedLang][prompt.level]}</span>
             </div>
             <button onclick="copyPrompt('${prompt.text.replace(/'/g, "\\'")}', this)"
                     class="flex items-center gap-1 text-indigo-600 hover:text-indigo-800 cursor-pointer transition">
@@ -296,7 +273,7 @@
     function copyPrompt(text, element) {
       navigator.clipboard.writeText(text).then(() => {
         const originalHTML = element.innerHTML;
-        element.innerHTML = `<span class="flex items-center gap-1"><svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        element.innerHTML = `<span class="flex items-center gap-1"><svg class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" /></svg> ${translations[savedLang].copiedText}</span>`;
         setTimeout(() => {
           element.innerHTML = originalHTML;
@@ -308,7 +285,7 @@
 
     // دالة العودة للخلف
     function goBack() {
-      window.history.back();
+      window.location.href = "index.html"; // دائمًا العودة للصفحة الرئيسية
     }
 
     // دالة تبديل اللغة
@@ -325,30 +302,11 @@
     // تعيين السنة الحالية
     document.getElementById("currentYear").textContent = new Date().getFullYear();
 
-    // عرض الأقسام الفرعية في شجرة
-    function renderSubCategories() {
-      const subContainer = document.getElementById("subCategoryTree");
-      const allSubCats = JSON.parse(localStorage.getItem("subCategories")) || {};
-      const mainCat = category || Object.keys(allSubCats).find(c => allSubCats[c].length > 0);
-
-      if (mainCat && allSubCats[mainCat]) {
-        subContainer.innerHTML = allSubCats[mainCat].map(sub => `
-          <li class="py-1">
-            <a href="category-prompts.html?subCategory=${encodeURIComponent(sub)}&level=all"
-               class="text-indigo-600 hover:text-indigo-800 hover:underline">${sub}</a>
-          </li>
-        `).join("");
-      } else {
-        subContainer.innerHTML = "<p class='text-gray-500 text-sm'>لا توجد أقسام فرعية.</p>";
-      }
-    }
-
     // تحميل البيانات أول مرة
     window.onload = () => {
       updatePageTitle();
-      renderSubCategories();
       renderPrompts(filteredPrompts);
-      document.getElementById("searchInput").addEventListener("input", searchPrompt);
+      document.getElementById("searchInput").addEventListener("input", e => performSearch(e.target.value.trim()));
     };
   </script>
 </body>
