@@ -335,24 +335,26 @@
     }
 
     // دالة نسخ البرومبت
-    // ✅ دالة نسخ البرومبت (متوفرة عبر window)
-    window.copyPrompt = (text, element) => {
-      navigator.clipboard.writeText(text).then(() => {
-        const originalHTML = element.innerHTML;
-        element.innerHTML = `<span class="flex items-center gap-1"><svg class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
-        </svg> ${translations[savedLang].copiedText}</span>`;
-        setTimeout(() => {
-          element.innerHTML = originalHTML;
-        }, 1500);
-      }).catch(err => {
-        alert("❌ لم يتم النسخ: " + err.message);
-      });
-    };
-    // دالة العودة للخلف
-    function goBack() {
-      window.history.back();
-    }
+    function copyPrompt(text, element) {
+  navigator.clipboard.writeText(text)
+    .then(() => {
+      const originalHTML = element.innerHTML;
+      element.innerHTML = `
+        <span class="flex items-center gap-1">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+          </svg>
+          <span>${translations[savedLang].copiedText}</span>
+        </span>
+      `;
+      setTimeout(() => {
+        element.innerHTML = originalHTML;
+      }, 1500);
+    })
+    .catch(err => {
+      alert("❌ لم يتم النسخ: " + err.message);
+    });
+}
 
     // دالة تبديل اللغة
     function toggleLanguage() {
