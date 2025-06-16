@@ -99,6 +99,15 @@
       </div>
     </div>
   </section>
+        <!-- زر العودة -->
+      <button
+        id="backToOriginal"
+        style="display:none"
+        onclick="resetToOriginal()"
+        class="absolute top-2 right-2 px-3 py-1 text-xs rounded-full bg-blue-100 text-blue-800 hover:bg-blue-200 transition-all duration-300"
+      >
+        ↶ العودة
+      </button>
 
   <!-- Subcategories Tree -->
   <section class="mb-6 max-w-4xl mx-auto">
@@ -394,6 +403,18 @@
       renderSubCategories();
       renderPrompts(filteredPrompts);
       document.getElementById("searchInput").addEventListener("input", searchPrompt);
+            // تفعيل زر العودة عند التصفح
+      document.getElementById("searchInput").addEventListener("input", () => {
+        document.getElementById("backToOriginal").style.display = "inline-block";
+      });
+    };
+
+    // دالة العودة إلى الحالة الأصلية
+    function resetToOriginal() {
+      document.getElementById("searchInput").value = ""; // فراغ حقل البحث
+      renderPrompts(filteredPrompts); // إعادة عرض البرومبتات الأصلية
+      document.getElementById("backToOriginal").style.display = "none"; // إخفاء الزر
+    }
     };
   </script>
 </body>
