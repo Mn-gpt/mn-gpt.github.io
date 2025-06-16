@@ -241,7 +241,7 @@
 
     // عرض الإحصائيات
     function showLevelStatistics(data) {
-      const beginnerCount = data.filter(p => p.level ==== 'مبتدئ').length;
+      const beginnerCount = data.filter(p => p.level === 'مبتدئ').length;
       const intermediateCount = data.filter(p => p.level === 'متوسط').length;
       const advancedCount = data.filter(p => p.level === 'محترف').length;
       const totalCount = data.length;
