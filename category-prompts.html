@@ -24,6 +24,11 @@
   </style>
 </head>
 <body class="min-h-screen bg-gray-50 p-4">
+  <!-- Banner -->
+  <div class="mb-6">
+    <img src="ToolBar1.png" alt="بانير موقع Promptica" class="w-full h-auto rounded-lg shadow-md object-cover max-h-64">
+  </div>
+<body class="min-h-screen bg-gray-50 p-4">
 
   <!-- Header with Back and Language Toggle -->
   <header class="mb-6 flex justify-between items-center rtl:space-x-reverse space-x-4">
@@ -40,7 +45,15 @@
 
   <!-- Page Title -->
   <h1 id="page-title" class="text-3xl sm:text-4xl font-bold flex justify-center items-center gap-3 mb-6"></h1>
-
+ <!-- Level Filter Buttons -->
+  <section class="mb-6 max-w-4xl mx-auto text-center">
+    <div class="inline-flex flex-wrap gap-2 justify-center p-2 bg-white rounded-lg shadow-sm border border-gray-200">
+      <button onclick="filterByLevel('all')" class="px-3 py-1 rounded-full text-sm font-medium transition-all duration-300">🌍 الكل</button>
+      <button onclick="filterByLevel('مبتدئ')" class="px-3 py-1 rounded-full text-sm font-medium bg-yellow-100 text-yellow-800 hover:bg-yellow-200 transition-all duration-300">🎓 مبتدئ</button>
+      <button onclick="filterByLevel('متوسط')" class="px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800 hover:bg-blue-200 transition-all duration-300">🎯 متوسط</button>
+      <button onclick="filterByLevel('محترف')" class="px-3 py-1 rounded-full text-sm font-medium bg-purple-100 text-purple-800 hover:bg-purple-200 transition-all duration-300">🏆 محترف</button>
+    </div>
+  </section>
   <!-- Search Bar -->
   <section class="mb-6 max-w-4xl mx-auto">
     <div class="relative">
@@ -133,15 +146,16 @@
         bgColor: "bg-gray-50", textColor: "text-gray-800", icon: "📄"
       }
     };
-
     // استخراج المعطيات من الرابط
     const params = new URLSearchParams(window.location.search);
     const category = decodeURIComponent(params.get('category') || '');
     const subCategory = decodeURIComponent(params.get('subCategory') || '');
+    const level = decodeURIComponent(params.get('level') || 'all'); // المستويات: all, beginner, intermediate, advanced أو بالعربية
+    const currentTranslation = translations[savedLang];
 
-    // تحديد الثيم المناسب
+    // تحديث الثيم حسب القسم أو القسم الفرعي
     const selectedTheme = themeMap[subCategory] || themeMap[category] || themeMap.default;
-    document.body.className = `min-h-screen ${selectedTheme.bgColor} p-4`;
+    document.body.className = `min-h-screen font-sans ${selectedTheme.bgColor} p-4`;
 
     // تحديث عنوان الصفحة
     function updatePageTitle() {
@@ -162,6 +176,16 @@
       filteredPrompts = filteredPrompts.filter(p => p.category === category);
     } else if (subCategory) {
       filteredPrompts = filteredPrompts.filter(p => p.subCategory === subCategory);
+    }
+    
+        // الحالة الحالية للمستوى
+    let currentLevelFilter = level;
+
+    // دالة ترشيح المستوى
+    function filterByLevel(newLevel) {
+      currentLevelFilter = newLevel;
+      const searchQuery = document.getElementById("searchInput").value.trim();
+      performSearch(searchQuery);
     }
 
     // دالة البحث الديناميكي المتقدم
