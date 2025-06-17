@@ -40,7 +40,15 @@
 
   <!-- Page Title -->
   <h1 id="page-title" class="text-3xl sm:text-4xl font-bold flex justify-center items-center gap-3 mb-6"></h1>
-
+ <!-- Level Filter Buttons -->
+<section class="mb-6 max-w-4xl mx-auto">
+  <div class="inline-flex flex-wrap gap-2 justify-center p-2 bg-white rounded-lg shadow-sm border border-gray-200">
+    <button onclick="filterByLevel('all')" class="px-3 py-1 text-xs rounded-full font-medium bg-gray-200 text-gray-700 hover:bg-gray-300 transition">🌍 الكل</button>
+    <button onclick="filterByLevel('مبتدئ')" class="px-3 py-1 text-xs rounded-full font-medium bg-yellow-100 text-yellow-800 hover:bg-yellow-200 transition">🎓 مبتدئ</button>
+    <button onclick="filterByLevel('متوسط')" class="px-3 py-1 text-xs rounded-full font-medium bg-blue-100 text-blue-800 hover:bg-blue-200 transition">🎯 متوسط</button>
+    <button onclick="filterByLevel('محترف')" class="px-3 py-1 text-xs rounded-full font-medium bg-purple-100 text-purple-800 hover:bg-purple-200 transition">🏆 محترف</button>
+  </div>
+</section>
   <!-- Search Bar -->
   <section class="mb-6 max-w-4xl mx-auto">
     <div class="relative">
@@ -63,15 +71,7 @@
     </div>
   </section>
 
- <!-- Level Filter Buttons -->
-<section class="mb-6 max-w-4xl mx-auto">
-  <div class="inline-flex flex-wrap gap-2 justify-center p-2 bg-white rounded-lg shadow-sm border border-gray-200">
-    <button onclick="filterByLevel('all')" class="px-3 py-1 text-xs rounded-full font-medium bg-gray-200 text-gray-700 hover:bg-gray-300 transition">🌍 الكل</button>
-    <button onclick="filterByLevel('مبتدئ')" class="px-3 py-1 text-xs rounded-full font-medium bg-yellow-100 text-yellow-800 hover:bg-yellow-200 transition">🎓 مبتدئ</button>
-    <button onclick="filterByLevel('متوسط')" class="px-3 py-1 text-xs rounded-full font-medium bg-blue-100 text-blue-800 hover:bg-blue-200 transition">🎯 متوسط</button>
-    <button onclick="filterByLevel('محترف')" class="px-3 py-1 text-xs rounded-full font-medium bg-purple-100 text-purple-800 hover:bg-purple-200 transition">🏆 محترف</button>
-  </div>
-</section>
+
 
   
   <!-- Level Statistics -->
