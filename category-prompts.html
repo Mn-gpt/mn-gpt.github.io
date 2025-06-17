@@ -92,6 +92,14 @@
       </div>
     </div>
   </section>
+  <!-- Level Statistics -->
+<section class="mb-6 max-w-4xl mx-auto">
+  <div class="bg-white p-4 rounded-lg shadow-sm flex flex-wrap gap-4 justify-center">
+    <div id="levelStats" class="flex items-center space-x-2 rtl:space-x-reverse">
+      <!-- Levels will be dynamically added here -->
+    </div>
+  </div>
+</section>
 
   <!-- Cards Container -->
   <main class="max-w-4xl mx-auto space-y-4" id="prompts-container">
@@ -278,16 +286,42 @@
     }
 
     // عرض الإحصائيات
-    function showLevelStatistics(data) {
-      const beginnerCount = data.filter(p => p.level === 'مبتدئ').length;
-      const intermediateCount = data.filter(p => p.level === 'متوسط').length;
-      const advancedCount = data.filter(p => p.level === 'محترف').length;
 
-      document.getElementById("beginnerCount").textContent = beginnerCount;
-      document.getElementById("intermediateCount").textContent = intermediateCount;
-      document.getElementById("advancedCount").textContent = advancedCount;
-    }
+function showLevelStatistics(data) {
+  const beginnerCount = data.filter(p => p.level === 'مبتدئ').length;
+  const intermediateCount = data.filter(p => p.level === 'متوسط').length;
+  const advancedCount = data.filter(p => p.level === 'محترف').length;
 
+  const levelStatsDiv = document.getElementById("levelStats");
+  levelStatsDiv.innerHTML = `
+    <!-- Card for Beginner -->
+    <div class="bg-yellow-50 p-3 rounded-lg shadow-md flex items-center space-x-2 rtl:space-x-reverse">
+      <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
+      </svg>
+      <span class="text-yellow-600 font-medium">مبتدئ</span>
+      <span class="text-yellow-600 font-bold">${beginnerCount}</span>
+    </div>
+
+    <!-- Card for Intermediate -->
+    <div class="bg-blue-50 p-3 rounded-lg shadow-md flex items-center space-x-2 rtl:space-x-reverse">
+      <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
+      </svg>
+      <span class="text-blue-600 font-medium">متوسط</span>
+      <span class="text-blue-600 font-bold">${intermediateCount}</span>
+    </div>
+
+    <!-- Card for Advanced -->
+    <div class="bg-purple-50 p-3 rounded-lg shadow-md flex items-center space-x-2 rtl:space-x-reverse">
+      <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
+      </svg>
+      <span class="text-purple-600 font-medium">محترف</span>
+      <span class="text-purple-600 font-bold">${advancedCount}</span>
+    </div>
+  `;
+}
     // إنشاء بطاقات البرومبتات
     const container = document.getElementById("prompts-container");
 
