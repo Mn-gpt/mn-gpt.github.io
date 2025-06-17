@@ -25,7 +25,7 @@
 </head>
 <body class="min-h-screen bg-gray-50 p-4">
 
-  <!-- Header with Back and Language Toggle -->
+  <!-- Header -->
   <header class="mb-6 flex justify-between items-center rtl:space-x-reverse space-x-4">
     <button onclick="goBack()" class="flex items-center gap-2 px-4 py-2 bg-white hover:bg-gray-100 text-gray-700 rounded-full shadow transition-all duration-300">
       <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -79,7 +79,7 @@
         <!-- إحصائيات المستويات ستُضاف هنا ديناميكيًا -->
       </div>
       <div id="totalPromptCount" class="text-indigo-700 font-semibold">
-        <!-- مجموع البرومبتات سيُعرض هنا -->
+        <!-- عدد البرومبتات سيُعرض هنا -->
       </div>
     </div>
   </section>
@@ -90,61 +90,12 @@
   </main>
 
   <!-- Feedback Button -->
-  <section class="mt-8 max-w-4xl mx-auto">
-    <div class="text-center">
-      <button 
-        onclick="document.getElementById('feedbackModal').classList.remove('hidden')"
-        class="px-4 py-2 bg-green-100 text-green-700 hover:bg-green-200 rounded-full transition"
-      >
-        💬 إرسال تعليق أو اقتراح
-      </button>
-    </div>
+  <section class="mt-8 max-w-4xl mx-auto text-center">
+    <a href="https://docs.google.com/forms/d/e/YOUR_FORM_ID/viewform?embedded=true" target="_blank"
+       class="px-4 py-2 bg-green-600 text-white rounded-full hover:bg-green-700 transition">
+      💬 إرسال تعليق
+    </a>
   </section>
-
-  <!-- Feedback Modal -->
-  <div id="feedbackModal" class="fixed inset-0 z-50 flex items-center justify-center hidden bg-black bg-opacity-50">
-    <div class="bg-white w-full max-w-md p-6 rounded-lg shadow-lg relative">
-      <h3 class="text-xl font-bold mb-4">إرسال تعليق</h3>
-      <button 
-        onclick="document.getElementById('feedbackModal').classList.add('hidden')"
-        class="absolute top-3 right-3 text-gray-500 hover:text-gray-800 text-2xl">&times;</button>
-
-      <!-- Feedback Form -->
-      <form id="feedbackForm" class="space-y-4 mt-4">
-        <div>
-          <label class="block text-sm font-medium text-gray-700">اسمك (اختياري)</label>
-          <input type="text" name="name" placeholder="أدخل اسمك..." class="w-full border border-gray-300 p-2 rounded" />
-        </div>
-        <div>
-          <label class="block text-sm font-medium text-gray-700">بريدك الإلكتروني (اختياري)</label>
-          <input type="email" name="email" placeholder="example@email.com" class="w-full border border-gray-300 p-2 rounded" />
-        </div>
-        <div>
-          <label class="block text-sm font-medium text-gray-700">نوع التعليق</label>
-          <select name="type" class="w-full border border-gray-300 p-2 rounded">
-            <option value="suggestion">اقتراح تحسين</option>
-            <option value="bug">ابلاغ عن خطأ</option>
-            <option value="design">ملاحظات على التصميم</option>
-            <option value="translation">ملاحظات على الترجمة</option>
-            <option value="other">أخرى</option>
-          </select>
-        </div>
-        <div>
-          <label class="block text-sm font-medium text-gray-700">محتوى التعليق</label>
-          <textarea name="message" rows="4" placeholder="اكتب ملاحظاتك هنا..." class="w-full border border-gray-300 p-2 rounded"></textarea>
-        </div>
-        <div class="flex justify-end space-x-2">
-          <button 
-            type="button" 
-            onclick="document.getElementById('feedbackModal').classList.add('hidden')"
-            class="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded">إلغاء</button>
-          <button 
-            type="submit"
-            class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded">إرسال</button>
-        </div>
-      </form>
-    </div>
-  </div>
 
   <!-- Footer -->
   <footer class="mt-12 text-center text-sm text-gray-500">
@@ -152,35 +103,7 @@
   </footer>
 
   <!-- Script -->
-  <script src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script> 
   <script>
-    // تهيئة EmailJS ← استبدل هذه القيم بمعلومات حسابك
-    emailjs.init("qTN652aGlDuG_GHW8"); // ← ضع هنا User ID من حسابك في EmailJS
-
-    // دالة إرسال التعليقات عبر EmailJS
-    document.getElementById("feedbackForm").addEventListener("submit", function(e) {
-      e.preventDefault();
-      const form = e.target;
-
-      // جمع البيانات من النموذج
-      const data = new FormData(form);
-      const templateParams = {
-        from_name: data.get("name"),
-        from_email: data.get("email"),
-        comment_type: data.get("type"),
-        message: data.get("message")
-      };
-
-      // إرسال البريد
-      emailjs.send("service_1zryckl", "template_su31gvu", templateParams).then(() => {
-        alert("✅ تم إرسال التعليق بنجاح!");
-        form.reset();
-        document.getElementById("feedbackModal").classList.add("hidden");
-      }, (err) => {
-        alert("❌ حدث خطأ أثناء الإرسال: " + err.text);
-      });
-    });
-
     // تحديد اللغة المحفوظة أو العربية كافتراضية
     const savedLang = localStorage.getItem('language') || 'ar';
     document.documentElement.setAttribute('lang', savedLang);
@@ -190,7 +113,7 @@
     const translations = {
       ar: {
         pageTitle: "برومبتات",
-        searchPlaceholder: "🔍 ابحث هنا (#قسم، @كلمة، :توكن)",
+        searchPlaceholder: "🔍 ابحث هنا (#قسم، @كلمة، :توكن)", 
         copyButton: "📋 نسخ",
         copiedText: "✅ تم النسخ!",
         noPrompts: "لا توجد برومبتات تناسب البحث.",
@@ -233,6 +156,7 @@
     const category = decodeURIComponent(params.get('category') || '');
     const subCategory = decodeURIComponent(params.get('subCategory') || '');
     const level = decodeURIComponent(params.get('level') || 'all');
+    const SHEETY_API_URL = 'https://api.sheety.co/01a4342e6874eaa48b2ead14a7fe37e6/signupForm/emails/YOUR_SHEET_NAME/data'; 
 
     // تحديد الثيم المناسب
     const selectedTheme = themeMap[subCategory] || themeMap[category] || themeMap.default;
@@ -248,81 +172,16 @@
       `;
     }
 
-    // جلب البرومبتات من localStorage
-    let prompts = JSON.parse(localStorage.getItem("prompts")) || [];
-
-    // ترشيح البرومبتات حسب القسم أو القسم الفرعي
-    let filteredPrompts = [...prompts];
-    if (category) {
-      filteredPrompts = filteredPrompts.filter(p => p.category === category);
-    } else if (subCategory) {
-      filteredPrompts = filteredPrompts.filter(p => p.subCategory === subCategory);
-    }
-
-    // الحالة الحالية للمستوى
-    let currentLevelFilter = level;
-
-   // دالة ترشيح المستوى
-    function filterByLevel(newLevel) {
-      currentLevelFilter = newLevel;
-      const query = document.getElementById("searchInput").value.trim();
-      performSearch(query);
-    }
-
-    // دالة البحث الديناميكي المتقدم
-    function performSearch(query) {
-      let results = [...filteredPrompts];
-
-      if (query) {
-        const filters = {
-          category: [],
-          subCategory: [],
-          tokens: [],
-          text: []
-        };
-        const parts = query.toLowerCase().split(/\s+/);
-        parts.forEach(part => {
-          if (part.startsWith('#')) {
-            filters.category.push(part.slice(1));
-          } else if (part.startsWith('@')) {
-            filters.subCategory.push(part.slice(1));
-          } else if (part.startsWith(':')) {
-            const tokenCount = parseInt(part.slice(1));
-            if (!isNaN(tokenCount)) filters.tokens.push(tokenCount);
-          } else {
-            filters.text.push(part);
-          }
-        });
-
-        results = results.filter(prompt => {
-          let match = true;
-
-          if (filters.category.length > 0) {
-            match = filters.category.some(cat => prompt.category.toLowerCase().includes(cat));
-          }
-
-          if (match && filters.subCategory.length > 0) {
-            match = filters.subCategory.some(sub => prompt.subCategory?.toLowerCase().includes(sub));
-          }
-
-          if (match && filters.tokens.length > 0) {
-            match = filters.tokens.every(tokens => prompt.tokens >= tokens);
-          }
-
-          if (match && filters.text.length > 0) {
-            match = filters.text.every(text => prompt.text.toLowerCase().includes(text));
-          }
-
-          return match;
-        });
+    // جلب البيانات من Sheety (Google Sheet)
+    async function fetchPromptsFromSheety() {
+      try {
+        const res = await fetch(SHEETY_API_URL);
+        const data = await res.json();
+        return data.data;
+      } catch (err) {
+        console.error("❌ خطأ في جلب البيانات:", err);
+        return [];
       }
-
-      // فلترة المستوى إن كان غير "all"
-      if (currentLevelFilter !== 'all') {
-        results = results.filter(p => p.level === currentLevelFilter);
-      }
-
-      renderPrompts(results);
     }
 
     // عرض الإحصائيات
@@ -352,7 +211,86 @@
       }
     }
 
-    // إنشاء بطاقات البرومبتات
+    // فلترة مستوى البرومقتات
+    let currentLevelFilter = level;
+
+    function filterByLevel(newLevel) {
+      currentLevelFilter = newLevel;
+      const query = document.getElementById("searchInput").value.trim();
+      performSearch(query);
+    }
+
+    // دالة البحث الديناميكي المتقدم
+    function performSearch(query) {
+      const container = document.getElementById("prompts-container");
+      fetchPromptsFromSheety().then(data => {
+        if (!data || data.length === 0) {
+          container.innerHTML = `<p class="text-center text-gray-500">جاري التحميل...</p>`;
+          return;
+        }
+
+        let results = [...data];
+
+        if (category) {
+          results = results.filter(p => p.category === category);
+        } else if (subCategory) {
+          results = results.filter(p => p.subCategory === subCategory);
+        }
+
+        if (query) {
+          const filters = {
+            category: [],
+            subCategory: [],
+            tokens: [],
+            text: []
+          };
+          const parts = query.toLowerCase().split(/\s+/);
+          parts.forEach(part => {
+            if (part.startsWith('#')) {
+              filters.category.push(part.slice(1));
+            } else if (part.startsWith('@')) {
+              filters.subCategory.push(part.slice(1));
+            } else if (part.startsWith(':')) {
+              const tokenCount = parseInt(part.slice(1));
+              if (!isNaN(tokenCount)) filters.tokens.push(tokenCount);
+            } else {
+              filters.text.push(part);
+            }
+          });
+
+          results = results.filter(prompt => {
+            let match = true;
+
+            if (filters.category.length > 0) {
+              match = filters.category.some(cat => prompt.category?.toLowerCase().includes(cat));
+            }
+
+            if (match && filters.subCategory.length > 0) {
+              match = filters.subCategory.some(sub => prompt.subCategory?.toLowerCase().includes(sub));
+            }
+
+            if (match && filters.tokens.length > 0) {
+              match = filters.tokens.every(tokens => prompt.tokens >= tokens);
+            }
+
+            if (match && filters.text.length > 0) {
+              match = filters.text.every(text => prompt.text?.toLowerCase().includes(text));
+            }
+
+            return match;
+          });
+        }
+
+        if (currentLevelFilter !== 'all') {
+          results = results.filter(p => p.level === currentLevelFilter);
+        }
+
+        renderPrompts(results);
+        showLevelStatistics(results);
+      });
+    }
+
+    // رسم بطاقات البرومبتات
     const container = document.getElementById("prompts-container");
 
     function renderPrompts(data) {
@@ -366,36 +304,20 @@
         return;
       }
 
-      showLevelStatistics(data);
-
       data.forEach(prompt => {
         const card = document.createElement("div");
         card.className = "bg-white p-6 rounded-lg shadow hover:shadow-lg transition-all duration-300";
 
-        // تحديد لون البطاقة حسب المستوى
-        let bgColor = "bg-white";
-        let textColor = "text-gray-700";
-        if (prompt.level === 'مبتدئ') {
-          bgColor = "bg-yellow-50 border-l-4 border-yellow-400";
-          textColor = "text-yellow-800";
-        } else if (prompt.level === 'متوسط') {
-          bgColor = "bg-blue-50 border-l-4 border-blue-400";
-          textColor = "text-blue-800";
-        } else if (prompt.level === 'محترف') {
-          bgColor = "bg-purple-50 border-l-4 border-purple-400";
-          textColor = "text-purple-800";
-        }
-card.className = `p-6 rounded-lg shadow hover:shadow-lg transition-all duration-300 ${bgColor} ${textColor}`;
- 
-         // حالة توسيع النص.       
         let expanded = false;
 
         function updateCardContent() {
           const displayedText = expanded ? prompt.text : prompt.text.substring(0, 120) + (prompt.text.length > 120 ? "..." : "");
+
           card.innerHTML = `
             <p class="mb-4 text-gray-700">${displayedText}</p>
             <div class="flex justify-between items-center text-xs sm:text-sm text-gray-500 mt-4 pt-3 border-t border-gray-100">
               <span>${prompt.category}${prompt.subCategory ? ` / ${prompt.subCategory}` : ''}</span>
+              <span class="text-gray-400">${prompt.tokens} ${translations[savedLang].tokensLabel}</span>
               <button 
                 onclick="copyPrompt('${prompt.text.replace(/'/g, "\\'")}', this)"
                 class="flex items-center gap-1 text-indigo-600 hover:text-indigo-800 cursor-pointer transition"
@@ -408,7 +330,7 @@ card.className = `p-6 rounded-lg shadow hover:shadow-lg transition-all duration-
             </div>
           `;
 
-          // زر أكثر / أقل
+          // زر "أكثر / أقل"
           const toggleBtn = document.createElement("button");
           toggleBtn.className = "mt-2 text-xs text-indigo-600 hover:text-indigo-800 cursor-pointer";
           toggleBtn.textContent = expanded ? translations[savedLang].lessText : translations[savedLang].moreText;
@@ -417,20 +339,19 @@ card.className = `p-6 rounded-lg shadow hover:shadow-lg transition-all duration-
             updateCardContent();
           };
 
-          // إضافة الزر إلى البطاقة
+          // إضافة الزر
           const existingBtn = card.querySelector(".expand-btn");
           if (existingBtn) existingBtn.remove();
 
           card.appendChild(toggleBtn);
         }
 
-        // أول استدعاء
         updateCardContent();
         container.appendChild(card);
       });
     }
 
-    // ✅ دالة نسخ البرومبت
+    // دالة نسخ البرومبت
     window.copyPrompt = (text, element) => {
       navigator.clipboard.writeText(text).then(() => {
         const originalHTML = element.innerHTML;
@@ -469,7 +390,7 @@ card.className = `p-6 rounded-lg shadow hover:shadow-lg transition-all duration-
       updatePageTitle();
       document.getElementById("searchInput").placeholder = translations[savedLang].searchPlaceholder;
       document.getElementById("searchInput").addEventListener("input", e => performSearch(e.target.value));
-      renderPrompts(filteredPrompts);
+      fetchPromptsFromSheety().then(renderPrompts);
     };
   </script>
 </body>
