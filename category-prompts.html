@@ -385,8 +385,9 @@
           bgColor = "bg-purple-50 border-l-4 border-purple-400";
           textColor = "text-purple-800";
         }
-
-        // حالة توسيع النص
+card.className = `p-6 rounded-lg shadow hover:shadow-lg transition-all duration-300 ${bgColor} ${textColor}`;
+ 
+         // حالة توسيع النص.       
         let expanded = false;
 
         function updateCardContent() {
