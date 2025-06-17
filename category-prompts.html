@@ -45,9 +45,9 @@
   <section class="mb-6 max-w-4xl mx-auto text-center">
     <div class="inline-flex flex-wrap gap-2 justify-center p-2 bg-white rounded-lg shadow-sm border border-gray-200">
       <button onclick="filterByLevel('all')" class="px-3 py-1 text-xs rounded-full font-medium bg-gray-200 text-gray-700 hover:bg-gray-300 transition">🌍 الكل</button>
-      <button onclick="filterByLevel('مبتدئ')" class="px-3 py-1 text-xs rounded-full font-medium bg-yellow-100 text-yellow-800 hover:bg-yellow-200 transition">🎓 مبتدئ</button>
-      <button onclick="filterByLevel('متوسط')" class="px-3 py-1 text-xs rounded-full font-medium bg-blue-100 text-blue-800 hover:bg-blue-200 transition">🎯 متوسط</button>
-      <button onclick="filterByLevel('محترف')" class="px-3 py-1 text-xs rounded-full font-medium bg-purple-100 text-purple-800 hover:bg-purple-200 transition">🏆 محترف</button>
+      <button onclick="filterByLevel('مبتدئ')" class="px-3 py-1 text-xs rounded-full font-medium bg-yellow-100 text-yellow-800 hover:bg-yellow-200 transition-all duration-300">🎓 مبتدئ</button>
+      <button onclick="filterByLevel('متوسط')" class="px-3 py-1 text-xs rounded-full font-medium bg-blue-100 text-blue-800 hover:bg-blue-200 transition-all duration-300">🎯 متوسط</button>
+      <button onclick="filterByLevel('محترف')" class="px-3 py-1 text-xs rounded-full font-medium bg-purple-100 text-purple-800 hover:bg-purple-200 transition-all duration-300">🏆 محترف</button>
     </div>
   </section>
 
@@ -69,11 +69,11 @@
     </div>
   </section>
 
-  <!-- Level Statistics Cards -->
+  <!-- Level Statistics -->
   <section class="mb-6 max-w-4xl mx-auto">
     <div class="bg-white p-4 rounded-lg shadow-sm flex flex-wrap justify-between items-center gap-4">
-      <div id="levelStats" class="flex space-x-6 rtl:space-x-reverse text-sm sm:text-base">
-        <!-- إحصائيات المستويات ستُعرض هنا -->
+      <div id="levelStats" class="flex space-x-4 rtl:space-x-reverse text-sm sm:text-base">
+        <!-- إحصائيات المستويات ستُعرض هنا ديناميكيًا -->
       </div>
       <div id="totalPromptCount" class="text-indigo-700 font-semibold text-sm sm:text-base">
         <!-- مجموع البرومبتات سيُعرض هنا -->
@@ -145,7 +145,7 @@
     const category = decodeURIComponent(params.get('category') || '');
     const subCategory = decodeURIComponent(params.get('subCategory') || '');
 
-    // تحديد الثيم المناسب
+    // تحديد الثيم حسب القسم أو القسم الفرعي
     const selectedTheme = themeMap[subCategory] || themeMap[category] || themeMap.default;
     document.body.className = `min-h-screen ${selectedTheme.bgColor} p-4`;
 
@@ -172,6 +172,13 @@
 
     // الحالة الحالية للمستوى
     let currentLevelFilter = params.get('level') || 'all';
+
+    // دالة ترشيح المستوى
+    function filterByLevel(newLevel) {
+      currentLevelFilter = newLevel;
+      const query = document.getElementById("searchInput").value.trim();
+      performSearch(query);
+    }
 
     // دالة البحث الديناميكي المتقدم
     function performSearch(query) {
@@ -223,11 +230,6 @@
 
           return match;
         });
-      }
-
-      // فلترة المستوى إن كان غير "all"
-      if (currentLevelFilter !== 'all') {
-        results = results.filter(p => p.level === currentLevelFilter);
       }
 
       renderPrompts(results);
@@ -286,13 +288,6 @@
       }
     }
 
-    // دالة ترشيح المستوى
-    function filterByLevel(newLevel) {
-      currentLevelFilter = newLevel;
-      const query = document.getElementById("searchInput").value.trim();
-      performSearch(query);
-    }
-
     // إنشاء بطاقات البرومبتات
     const container = document.getElementById("prompts-container");
 
@@ -309,21 +304,11 @@
 
       showLevelStatistics(data);
 
-      data.forEach(prompt => {
+      data.forEach(async (prompt) => {
         const card = document.createElement("div");
+        card.className = "bg-white p-6 rounded-lg shadow hover:shadow-lg transition-all duration-300";
 
-        // ألوان البطاقة بناءً على المستوى
-        let cardStyle = "bg-white";
-        if (prompt.level === 'مبتدئ') {
-          cardStyle = "bg-yellow-50 border-l-4 border-yellow-400 text-yellow-800";
-        } else if (prompt.level === 'متوسط') {
-          cardStyle = "bg-blue-50 border-l-4 border-blue-400 text-blue-800";
-        } else if (prompt.level === 'محترف') {
-          cardStyle = "bg-purple-50 border-l-4 border-purple-400 text-purple-800";
-        }
-
-        card.className = `p-6 rounded-lg shadow hover:shadow-lg transition-all duration-300 ${cardStyle}`;
-
+        // حالة توسيع النص
         let expanded = false;
 
         async function updateCardContent() {
@@ -334,8 +319,9 @@
             <p class="mb-4 text-gray-700">${displayedTextTranslated}</p>
             <div class="flex justify-between items-center text-xs sm:text-sm text-gray-500 mt-4 pt-3 border-t border-gray-100">
               <span>${prompt.category}${prompt.subCategory ? ` / ${prompt.subCategory}` : ''}</span>
+              <span class="text-gray-400">${prompt.tokens} ${translations[savedLang].tokensLabel}</span>
               <button 
-                onclick="copyPrompt('${prompt.text.replace(/'/g, "\\'")}', this)"
+                onclick="copyPrompt('${prompt.text.replace(/'/g, "\\'").replace(/\n/g, "\\n")}', this)"
                 class="flex items-center gap-1 text-indigo-600 hover:text-indigo-800 cursor-pointer transition"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -362,12 +348,13 @@
           card.appendChild(toggleBtn);
         }
 
+        // أول استدعاء
         updateCardContent();
         container.appendChild(card);
       });
     }
 
-    // دالة نسخ البرومبت
+    // ✅ دالة نسخ البرومبت
     window.copyPrompt = (text, element) => {
       navigator.clipboard.writeText(text).then(() => {
         const originalHTML = element.innerHTML;
@@ -391,21 +378,26 @@
     function toggleLanguage() {
       const newLang = savedLang === 'ar' ? 'en' : 'ar';
       localStorage.setItem('language', newLang);
-      location.reload();
+      location.reload(); // إعادة تحميل الصفحة لتحديث اللغة
     }
 
     // تحديث زر اللغة
     document.getElementById("langToggle").addEventListener("click", toggleLanguage);
     document.getElementById("langToggle").innerText = savedLang === 'ar' ? 'English' : 'عربي';
 
-    // تحديث سنة الفوتر
+    // تحديث السنة في الفوتر
     document.getElementById("currentYear").textContent = new Date().getFullYear();
+
+    // تعيين عنوان الصفحة أول مرة
+    updatePageTitle();
+
+    // تعيين مكان البحث
+    document.getElementById("searchInput").placeholder = translations[savedLang].searchPlaceholder;
 
     // تحميل البيانات أول مرة
     window.onload = () => {
       updatePageTitle();
       renderPrompts(filteredPrompts);
-      document.getElementById("searchInput").placeholder = translations[savedLang].searchPlaceholder;
       document.getElementById("searchInput").addEventListener("input", e => performSearch(e.target.value));
     };
   </script>
