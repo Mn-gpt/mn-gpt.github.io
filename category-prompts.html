@@ -87,6 +87,68 @@
   <!-- Cards Container -->
   <main class="max-w-4xl mx-auto space-y-4" id="prompts-container">
     <!-- Dynamic prompts will be inserted here -->
+    <!-- Feedback Button -->
+<section class="mt-8 max-w-4xl mx-auto">
+  <div class="text-center">
+    <button 
+      onclick="document.getElementById('feedbackModal').classList.remove('hidden')"
+      class="px-4 py-2 bg-indigo-100 text-indigo-700 hover:bg-indigo-200 rounded-full transition"
+    >
+      💬 إرسال تعليق أو اقتراح
+    </button>
+  </div>
+</section>
+
+<!-- Feedback Modal -->
+<div id="feedbackModal" class="fixed inset-0 z-50 flex items-center justify-center hidden bg-black bg-opacity-50">
+  <div class="bg-white w-full max-w-md p-6 rounded-lg shadow-lg relative">
+    <h3 class="text-xl font-bold mb-4">إرسال تعليق</h3>
+    <button 
+      onclick="document.getElementById('feedbackModal').classList.add('hidden')"
+      class="absolute top-3 right-3 text-gray-500 hover:text-gray-800">&times;</button>
+
+    <!-- Feedback Form -->
+    <form id="feedbackForm" class="space-y-4">
+      <div>
+        <label class="block text-sm font-medium text-gray-700">اسمك (اختياري)</label>
+        <input type="text" name="name" placeholder="أدخل اسمك..." class="w-full border border-gray-300 rounded p-2" />
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700">بريدك الإلكتروني (اختياري)</label>
+        <input type="email" name="email" placeholder="example@email.com" class="w-full border border-gray-300 rounded p-2" />
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700">نوع التعليق</label>
+        <select name="type" class="w-full border border-gray-300 rounded p-2">
+          <option value="suggestion">اقتراح تحسين</option>
+          <option value="bug">ابلاغ عن خطأ</option>
+          <option value="design">ملاحظات على التصميم</option>
+          <option value="translation">ملاحظات على الترجمة</option>
+          <option value="other">أخرى</option>
+        </select>
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700">نص التعليق</label>
+        <textarea name="message" rows="4" placeholder="اكتب ملاحظاتك هنا..." class="w-full border border-gray-300 rounded p-2"></textarea>
+      </div>
+      <div class="flex justify-end space-x-2">
+        <button 
+          type="button" 
+          onclick="document.getElementById('feedbackModal').classList.add('hidden')"
+          class="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300"
+        >
+          إلغاء
+        </button>
+        <button 
+          type="submit"
+          class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
+        >
+          📩 إرسال التعليق
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
   </main>
 
   <!-- Footer -->
