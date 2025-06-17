@@ -5,7 +5,7 @@
   <title>استيراد البيانات - Promptica</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <!-- Tailwind CSS -->
-  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"  rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"  rel="stylesheet">
   <style>
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -28,30 +28,13 @@
   <header class="flex justify-between items-center pb-4 border-b border-gray-200 mb-6">
     <h1 class="text-2xl sm:text-3xl font-bold text-indigo-700 flex items-center">
       <img src="logo1.png" alt="شعار Promptica" class="w-8 h-8 ml-2" />
-
-    <button onclick="goHome()" class="flex items-center gap-2 px-4 py-2 text-sm bg-white hover:bg-gray-100 text-gray-700 rounded-full shadow transition">
-  <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-  </svg>
-    العودة 
-</button>
-
-<script>
-  function goHome() {
-    window.location.href = 'index.html';
-  }
-</script>
-
-<script>
-  function goHome() {
-    window.location.href = 'index.html';
-  }
-</script>
-<script>
-  function goHome() {
-    window.location.href = 'index.html'; // توجيه مباشر إلى الصفحة الرئيسية
-  }
-</script>
+      <button onclick="goHome()" class="flex items-center gap-2 px-4 py-2 text-sm bg-white hover:bg-gray-100 text-gray-700 rounded-full shadow transition">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
+        </svg>
+        العودة 
+      </button>
+    </h1>
   </header>
 
   <!-- Main Content -->
@@ -59,23 +42,22 @@
     <section class="bg-white p-6 rounded-lg shadow-md space-y-6">
       <h2 class="text-xl font-bold text-gray-800">استيراد البيانات من Markdown</h2>
       <p class="text-sm text-gray-600">ألصق النص الكامل هنا، وسنقوم باستيراد الأقسام الرئيسية والفرعية والمُستويات تلقائيًا مع الاحتفاظ بالبيانات السابقة.</p>
-
       <textarea id="markdownInput" rows="20"
         placeholder="ضع نص Markdown هنا..."
         class="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"></textarea>
-
       <!-- Buttons -->
       <div class="flex flex-col sm:flex-row gap-3">
-        <button onclick="importData()"
-          class="px-5 py-2 bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white font-semibold rounded-full shadow-md hover:shadow-lg transform hover:scale-105 active:scale-95 transition duration-300 ease-in-out focus:outline-none">
-          ➕ استيراد البيانات
+        <!-- زر استيراد بالعربية -->
+        <button onclick="importData('ar')"
+          class="px-5 py-2 bg-gradient-to-r from-yellow-500 to-orange-600 hover:from-yellow-600 hover:to-orange-700 text-white font-semibold rounded-full shadow-md hover:shadow-lg transform hover:scale-105 active:scale-95 transition duration-300 ease-in-out focus:outline-none">
+          📥 AR - استيراد بالعربية
         </button>
-        <button onclick="clearData()"
-          class="px-5 py-2 bg-gradient-to-r from-gray-500 to-gray-700 hover:from-gray-600 hover:to-gray-800 text-white font-semibold rounded-full shadow-md hover:shadow-lg transform hover:scale-105 active:scale-95 transition duration-300 ease-in-out focus:outline-none">
-          🗑️ مسح جميع البيانات
+        <!-- زر استيراد بالإنجليزية -->
+        <button onclick="importData('en')"
+          class="px-5 py-2 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-semibold rounded-full shadow-md hover:shadow-lg transform hover:scale-105 active:scale-95 transition duration-300 ease-in-out focus:outline-none">
+          📥 EN - Import in English
         </button>
       </div>
-
       <!-- Alert Box -->
       <div id="output" class="hidden mt-4 p-4 rounded-lg alert bg-green-100 text-green-700 border border-green-300"></div>
     </section>
@@ -89,16 +71,14 @@
   <!-- Script -->
   <script>
     // دالة استيراد البيانات
-    function importData() {
+    function importData(lang) {
       const input = document.getElementById("markdownInput").value.trim();
       if (!input) {
         showAlert("يرجى إدخال نص", "red");
         return;
       }
-
-      const button = document.querySelector("button[onclick='importData()']");
+      const button = document.querySelector("button[onclick='importData(\"" + lang + "\")']");
       const originalText = button.innerHTML;
-
       // تعديل الزر أثناء المعالجة
       button.innerHTML = `
         <span class="flex items-center justify-center">
@@ -109,24 +89,19 @@
           جاري التحليل...
         </span>`;
       button.disabled = true;
-
       setTimeout(() => {
         const lines = input.split("\n");
         let currentCategory = "";
         let currentSubCategory = "";
         let currentLevel = "";
-
         const existingPrompts = JSON.parse(localStorage.getItem("prompts")) || [];
         const existingCategories = JSON.parse(localStorage.getItem("categories")) || [];
         const existingSubCategories = JSON.parse(localStorage.getItem("subCategories")) || {};
-
         const newPrompts = [];
         const updatedCategories = [...existingCategories];
         const updatedSubCategories = {...existingSubCategories};
-
         lines.forEach(line => {
           line = line.trim();
-
           // القسم الرئيسي
           if (line.startsWith("# ") && !line.includes("الموضوع") && !line.includes("التصنيف")) {
             const categoryMatch = line.match(/^(?:# )+(?:\[[^\]]+\]\s*)?([^\|]+)/);
@@ -141,7 +116,6 @@
               currentLevel = levelMatch ? levelMatch[1] : "";
             }
           }
-
           // القسم الفرعي
           else if (line.startsWith("### ") || line.startsWith("## ")) {
             const subMatch = line.match(/^(?:###? )+(?:\[[^\]]+\]\s*)?([^\|]+)/);
@@ -159,9 +133,8 @@
               currentLevel = levelMatch ? levelMatch[1] : currentLevel || "عام";
             }
           }
-
           // برومبت المبتدئ
-          else if (line.startsWith("- **برومبت المبتدئ**:")) {
+          else if (lang === 'ar' && line.startsWith("- **برومبت المبتدئ**:")) {
             const promptText = line.replace(/^-\s*\*\*برومبت المبتدئ\*\*:\s*"?([^"]+)"?/, "$1").trim();
             if (promptText && currentCategory) {
               const promptId = generatePromptId(promptText, currentCategory, currentSubCategory, "مبتدئ");
@@ -179,9 +152,8 @@
               }
             }
           }
-
           // برومبت المتوسط
-          else if (line.startsWith("- **برومبت المتوسط**:")) {
+          else if (lang === 'ar' && line.startsWith("- **برومبت المتوسط**:")) {
             const promptText = line.replace(/^-\s*\*\*برومبت المتوسط\*\*:\s*"?([^"]+)"?/, "$1").trim();
             if (promptText && currentCategory) {
               const promptId = generatePromptId(promptText, currentCategory, currentSubCategory, "متوسط");
@@ -199,9 +171,8 @@
               }
             }
           }
-
           // برومبت المحترف
-          else if (line.startsWith("- **برومبت المحترف**:")) {
+          else if (lang === 'ar' && line.startsWith("- **برومبت المحترف**:")) {
             const promptText = line.replace(/^-\s*\*\*برومبت المحترف\*\*:\s*"?([^"]+)"?/, "$1").trim();
             if (promptText && currentCategory) {
               const promptId = generatePromptId(promptText, currentCategory, currentSubCategory, "محترف");
@@ -219,31 +190,79 @@
               }
             }
           }
+          // برومبت باللغة الإنجليزية
+          else if (lang === 'en' && line.startsWith("- **Prompt Beginner**:")) {
+            const promptText = line.replace(/^-\s*\*\*Prompt Beginner\*\*:\s*"?([^"]+)"?/, "$1").trim();
+            if (promptText && currentCategory) {
+              const promptId = generatePromptId(promptText, currentCategory, currentSubCategory, "Beginner");
+              const isDuplicate = existingPrompts.some(p => p.id === promptId);
+              if (!isDuplicate) {
+                newPrompts.push({
+                  id: promptId,
+                  text: promptText,
+                  category: currentCategory,
+                  subCategory: currentSubCategory || "General",
+                  level: "Beginner",
+                  tokens: calculateTokens(promptText),
+                  createdAt: new Date().toISOString()
+                });
+              }
+            }
+          }
+          else if (lang === 'en' && line.startsWith("- **Prompt Intermediate**:")) {
+            const promptText = line.replace(/^-\s*\*\*Prompt Intermediate\*\*:\s*"?([^"]+)"?/, "$1").trim();
+            if (promptText && currentCategory) {
+              const promptId = generatePromptId(promptText, currentCategory, currentSubCategory, "Intermediate");
+              const isDuplicate = existingPrompts.some(p => p.id === promptId);
+              if (!isDuplicate) {
+                newPrompts.push({
+                  id: promptId,
+                  text: promptText,
+                  category: currentCategory,
+                  subCategory: currentSubCategory || "General",
+                  level: "Intermediate",
+                  tokens: calculateTokens(promptText),
+                  createdAt: new Date().toISOString()
+                });
+              }
+            }
+          }
+          else if (lang === 'en' && line.startsWith("- **Prompt Advanced**:")) {
+            const promptText = line.replace(/^-\s*\*\*Prompt Advanced\*\*:\s*"?([^"]+)"?/, "$1").trim();
+            if (promptText && currentCategory) {
+              const promptId = generatePromptId(promptText, currentCategory, currentSubCategory, "Advanced");
+              const isDuplicate = existingPrompts.some(p => p.id === promptId);
+              if (!isDuplicate) {
+                newPrompts.push({
+                  id: promptId,
+                  text: promptText,
+                  category: currentCategory,
+                  subCategory: currentSubCategory || "General",
+                  level: "Advanced",
+                  tokens: calculateTokens(promptText),
+                  createdAt: new Date().toISOString()
+                });
+              }
+            }
+          }
         });
-
         const allPrompts = [...existingPrompts, ...newPrompts];
-
         localStorage.setItem("prompts", JSON.stringify(allPrompts));
         localStorage.setItem("categories", JSON.stringify(updatedCategories));
         localStorage.setItem("subCategories", JSON.stringify(updatedSubCategories));
-
         showImportResults(newPrompts.length, lines.filter(l => l.startsWith("- ")).length - newPrompts.length, allPrompts.length, updatedCategories);
-
         button.innerHTML = originalText;
         button.disabled = false;
-
         // إعادة توجيه المستخدم بعد 3 ثوانٍ
         setTimeout(() => {
           window.location.href = "index.html#prompts";
         }, 3000);
       }, 1500); // محاكاة للتحليل
     }
-
     // دالة حساب التوكنات
     function calculateTokens(text) {
       return Math.ceil(text.split(/\s+/).length * 1.25);
     }
-
     // دالة إنشاء ID فريد للبرومبت
     function generatePromptId(text, category, subCategory, level) {
       const str = `${text}-${category}-${subCategory || "عام"}-${level}`;
@@ -255,7 +274,6 @@
       }
       return 'prompt_' + Math.abs(hash).toString(16);
     }
-
     // دالة عرض النتائج
     function showImportResults(added, duplicates, total, categories) {
       let message = `✅ تم استيراد البيانات بنجاح!`;
@@ -270,7 +288,6 @@
       showAlert(message, 'green');
       document.getElementById("markdownInput").value = "";
     }
-
     // دالة العرض
     function showAlert(message, type) {
       const output = document.getElementById("output");
@@ -285,7 +302,6 @@
         output.classList.add("hidden");
       }, 5000);
     }
-
     // دالة مسح البيانات
     function clearData() {
       if (confirm("هل أنت متأكد من مسح جميع البيانات؟")) {
@@ -296,7 +312,6 @@
         document.getElementById("markdownInput").value = "";
       }
     }
-
     // تعيين السنة الحالية في الفوتر
     document.getElementById("currentYear").textContent = new Date().getFullYear();
   </script>
