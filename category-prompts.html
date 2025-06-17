@@ -333,6 +333,13 @@
         container.appendChild(card);
       });
     }
+    
+    function toggleExpand(button) {
+  const card = button.closest('.bg-white');
+  const textElement = card.querySelector('p');
+  expanded = !expanded;
+  textElement.classList.toggle('line-clamp-3', !expanded);
+}
 
     // ✅ دالة نسخ البرومبت
     window.copyPrompt = (text, element) => {
@@ -367,6 +374,13 @@
 
     // تحديث السنة في الفوتر
     document.getElementById("currentYear").textContent = new Date().getFullYear();
+
+    // تعيين عنوان الصفحة أول مرة
+    updatePageTitle();
+
+    // تعيين مكان البحث
+    document.getElementById("searchInput").placeholder = currentTranslation.searchPlaceholder;
+
 
     // تحميل البيانات أول مرة
     window.onload = () => {
