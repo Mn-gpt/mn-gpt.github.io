@@ -262,6 +262,13 @@
     // الحالة الحالية للمستوى
     let currentLevelFilter = level;
 
+   // دالة ترشيح المستوى
+    function filterByLevel(newLevel) {
+      currentLevelFilter = newLevel;
+      const query = document.getElementById("searchInput").value.trim();
+      performSearch(query);
+    }
+
     // دالة البحث الديناميكي المتقدم
     function performSearch(query) {
       let results = [...filteredPrompts];
@@ -364,6 +371,20 @@
       data.forEach(prompt => {
         const card = document.createElement("div");
         card.className = "bg-white p-6 rounded-lg shadow hover:shadow-lg transition-all duration-300";
+
+        // تحديد لون البطاقة حسب المستوى
+        let bgColor = "bg-white";
+        let textColor = "text-gray-700";
+        if (prompt.level === 'مبتدئ') {
+          bgColor = "bg-yellow-50 border-l-4 border-yellow-400";
+          textColor = "text-yellow-800";
+        } else if (prompt.level === 'متوسط') {
+          bgColor = "bg-blue-50 border-l-4 border-blue-400";
+          textColor = "text-blue-800";
+        } else if (prompt.level === 'محترف') {
+          bgColor = "bg-purple-50 border-l-4 border-purple-400";
+          textColor = "text-purple-800";
+        }
 
         // حالة توسيع النص
         let expanded = false;
