@@ -245,10 +245,9 @@
     }
 
     // دالة البحث الديناميكي
-  
-          function searchPrompt(e) {
-      const query = e.target.value.trim().toLowerCase();
+    function performSearch(query) {
       let results = [...filteredPrompts];
+
 
 
       if (query) {
