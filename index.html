@@ -97,25 +97,22 @@ function exportToCSV() {
 }
   </script>
   
-
   <!-- React Code -->
   <script type="text/babel">
     const { useState, useEffect } = React;
-
     function App() {
       // نصوص الترجمة
       const translations = {
         ar: {
           dashboard: "لوحة التحكم",
           managePrompts: "إدارة البرومبتات",
-          manageComments: "إدارة التعليقات",
           addMainCategory: "إضافة قسم رئيسي",
           addSubCategory: "إضافة قسم فرعي",
           addPrompt: "+ إضافة برومبت",
           searchPlaceholder: "🔍 ابحث في البرومبتات أو الأقسام...",
-          commentsTableText: "التعليقات الحالية",
+          promptsTableText: "البرومبتات الحالية",
           hideTable: "👁️ إخفاء الجدول",
-          showTable: "👁️ إظهار الجدول",
+          showTable: "👁️‍🗨️ إظهار الجدول",
           totalPrompts: "عدد البرومبتات",
           totalTokens: "عدد الكلمات (tokens)",
           averageTokens: "متوسط tokens",
@@ -127,16 +124,17 @@ function exportToCSV() {
           copyPrompt: "📋 نسخ",
           editPrompt: "✏️ تعديل",
           deletePrompt: "🗑️ حذف",
-          commentText: "نص التعليق",
-          commentType: "نوع التعليق",
-          commentStatus: "حالة التعليق",
+          promptText: "نص البرومبت",
+          category: "القسم",
+          subCategory: "القسم الفرعي",
+          tokens: "tokens",
           actions: "الإجراءات",
           visitLog: "سجل الزوار",
           date: "التاريخ",
           time: "الوقت",
           copies: "عدد النسخ",
           rating: "التقييم",
-          exportCSV: "📤 تصدير الإحصائيات",
+          exportCSV: "📤 تصدير إلى CSV",
           allCategories: "الكل",
           currentPrompts: "البرومبتات الحالية",
           mainCategories: "الأقسام الحالية",
@@ -147,26 +145,19 @@ function exportToCSV() {
           subCategoryName: "اسم القسم الفرعي الجديد",
           enterPromptText: "أدخل نص البرومبت هنا...",
           tokenCount: "عدد الكلمات (tokens)",
-          saveChanges: "💾 حفظ التعديلات",
+          addPromptSuccess: "+ إضافة برومبت جديد",
+          saveChanges: "💾 حفظ التعديل",
           cancel: "إلغاء",
-          duplicateCategory: "القسم موجود مسبقًا",
-          filterComments: "فلترة التعليقات",
-          viewComments: "عرض التعليقات",
-          noComments: "لا توجد تعليقات بعد",
-          statusPending: "مُعلق",
-          statusApproved: "مقبول",
-          statusRejected: "مرفوض",
-          commentTypes: ["اقتراح", "BUG", "تصميم", "ترجمة", "أخرى"]
+          duplicateCategory: "القسم موجود مسبقًا"
         },
         en: {
           dashboard: "Dashboard",
           managePrompts: "Manage Prompts",
-          manageComments: "Manage Comments",
           addMainCategory: "Add Main Category",
           addSubCategory: "Add Subcategory",
           addPrompt: "+ Add Prompt",
           searchPlaceholder: "🔍 Search in prompts or categories...",
-          commentsTableText: "Current Comments",
+          promptsTableText: "Current Prompts",
           hideTable: "👁️ Hide Table",
           showTable: "👁️ Show Table",
           totalPrompts: "Total Prompts",
@@ -180,88 +171,106 @@ function exportToCSV() {
           copyPrompt: "📋 Copy",
           editPrompt: "✏️ Edit",
           deletePrompt: "🗑️ Delete",
-          commentText: "Comment Text",
-          commentType: "Type",
-          commentStatus: "Status",
+          promptText: "Prompt Text",
+          category: "Category",
+          subCategory: "Subcategory",
+          tokens: "Tokens",
           actions: "Actions",
           visitLog: "Visit Log",
           date: "Date",
           time: "Time",
           copies: "Copies",
           rating: "Rating",
-          exportCSV: "📤 Export Stats",
+          exportCSV: "Exporter au format CSV",
           allCategories: "All",
           currentPrompts: "Current Prompts",
           mainCategories: "Main Categories",
-          deleteCategoryConfirm: "Are you sure to delete",
+          deleteCategoryConfirm: "Are you sure you want to delete",
           promptDeleted: "Deleted!",
           promptCopied: "✅ Copied!",
           categoryName: "New main category name",
           subCategoryName: "New subcategory name",
           enterPromptText: "Enter your prompt text here...",
           tokenCount: "Word count (tokens)",
+          addPromptSuccess: "+ Add New Prompt",
           saveChanges: "💾 Save Changes",
           cancel: "Cancel",
-          duplicateCategory: "Category already exists",
-          filterComments: "Filter Comments",
-          viewComments: "View Comments",
-          noComments: "No comments yet",
-          statusPending: "Pending",
-          statusApproved: "Approved",
-          statusRejected: "Rejected",
-          commentTypes: ["Suggestion", "BUG", "Design", "Translation", "Other"]
+          duplicateCategory: "Category already exists"
         }
       };
       const language = localStorage.getItem('language') || 'ar';
-
       // البيانات الأساسية
       const [activeTab, setActiveTab] = useState('dashboard');
       const [prompts, setPrompts] = useState([]);
+      const [promptLevel, setPromptLevel] = useState('متوسط'); // 👈 هنا نبدأ بالمستوى المتوسط كافتراضي
       const [categories, setCategories] = useState([]);
       const [subCategories, setSubCategories] = useState({});
-      const [comments, setComments] = useState(JSON.parse(localStorage.getItem("comments")) || []);
       const [searchTerm, setSearchTerm] = useState('');
       const isUserAdmin = true;
+      // بيانات إضافة البرومبت
+      const [newMainCategory, setNewMainCategory] = useState('');
+      const [newSubCategory, setNewSubCategory] = useState('');
+      const [selectedMainCategory, setSelectedMainCategory] = useState('');
+      const [promptText, setPromptText] = useState('');
+      const [promptTokens, setPromptTokens] = useState(0);
+      const [editingPrompt, setEditingPrompt] = useState(null);
+      const [editingCategory, setEditingCategory] = useState(null);
+      const [editedCategoryName, setEditedCategoryName] = useState('');
+      const [showAllCategories, setShowAllCategories] = useState(false);
+      // حالة عرض الجداول
+      
+      const [showPromptTable, setShowPromptTable] = useState(false);
+      const [selectedCategoryTab, setSelectedCategoryTab] = useState('all');
+      const [selectedLevel, setSelectedLevel] = useState('all');
 
       // تحميل البيانات من localStorage
       useEffect(() => {
         const savedPrompts = JSON.parse(localStorage.getItem('prompts')) || [];
         const savedCategories = JSON.parse(localStorage.getItem('categories')) || ['عام'];
         const savedSubCategories = JSON.parse(localStorage.getItem('subCategories')) || {};
-        const savedComments = JSON.parse(localStorage.getItem('comments')) || [];
         setPrompts(savedPrompts);
         setCategories(savedCategories);
         setSubCategories(savedSubCategories);
-        setComments(savedComments);
       }, []);
 
-      // دالة حساب التوكنات
-      const calculateTokens = (text) => {
-        return Math.ceil(text.split(/\s+/).length * 1.25);
-      };
+      // استخدام Fuse.js للبحث الذكي
+      const fuse = new Fuse(
+        [...prompts.map(p => ({ ...p, type: 'prompt' })), ...Object.entries(subCategories).flatMap(([cat, subs]) =>
+          subs.map(sub => ({ type: 'subCategory', name: sub, category: cat }))
+        )],
+        { keys: ['text', 'name'] }
+      );
+      const smartSearchResults = searchTerm.trim()
+        ? fuse.search(searchTerm).map(result => result.item)
+        : [];
 
-      // دالة إضافة قسم رئيسي
-      const [newMainCategory, setNewMainCategory] = useState('');
-      const handleAddMainCategory = () => {
-        if (!newMainCategory.trim()) return;
-        if (categories.includes(newMainCategory)) {
-          alert(translations[language].duplicateCategory);
-          return;
-        }
-        const updatedCategories = [...categories, newMainCategory];
-        setCategories(updatedCategories);
-        localStorage.setItem('categories', JSON.stringify(updatedCategories));
-        setNewMainCategory('');
-      };
+      // إضافة قسم رئيسي
+   const handleAddMainCategory = () => {
+  const categoryName = newMainCategory.trim();
+  if (!categoryName) return;
+  if (categories.includes(categoryName)) {
+    alert(`${translations[language].duplicateCategory}!`);
+    return;
+  }
 
-      // دالة إضافة قسم فرعي
-      const [selectedMainCategory, setSelectedMainCategory] = useState('');
-      const [newSubCategory, setNewSubCategory] = useState('');
+  const updatedCategories = [...categories, categoryName];
+  setCategories(updatedCategories);
+  localStorage.setItem('categories', JSON.stringify(updatedCategories));
+
+  // إعادة تعيين الحقول بعد الإضافة
+  setNewMainCategory('');
+};
+
+      // إضافة قسم فرعي
       const handleAddSubCategory = () => {
         if (!selectedMainCategory || !newSubCategory.trim()) return;
         const updatedSubCategories = { ...subCategories };
         if (!updatedSubCategories[selectedMainCategory]) {
           updatedSubCategories[selectedMainCategory] = [];
+        }
+        if (updatedSubCategories[selectedMainCategory].includes(newSubCategory)) {
+          alert("القسم الفرعي موجود بالفعل!");
+          return;
         }
         updatedSubCategories[selectedMainCategory].push(newSubCategory);
         setSubCategories(updatedSubCategories);
@@ -269,424 +278,685 @@ function exportToCSV() {
         setNewSubCategory('');
       };
 
-      // دالة إضافة برومبت جديد
-      const [promptText, setPromptText] = useState('');
-      const [selectedCategory, setSelectedCategory] = useState('');
-      const [selectedSubCategory, setSelectedSubCategory] = useState('');
-      const [promptLevel, setPromptLevel] = useState('متوسط');
-      const handleAddPrompt = () => {
-        if (!promptText.trim() || !selectedCategory) return;
-        const tokens = calculateTokens(promptText);
-        const newPrompt = {
-          id: Date.now(),
-          text: promptText,
-          category: selectedCategory,
-          subCategory: selectedSubCategory || 'عام',
-          level: promptLevel,
-          tokens: tokens,
-          createdAt: new Date().toISOString()
-        };
-        const updatedPrompts = [...prompts, newPrompt];
-        setPrompts(updatedPrompts);
-        localStorage.setItem('prompts', JSON.stringify(updatedPrompts));
-        setPromptText('');
-        setSelectedCategory('');
-        setSelectedSubCategory('');
-        setPromptLevel('متوسط');
+      // حساب عدد الكلمات (tokens)
+      const calculateTokens = (text) => {
+        return Math.ceil(text.split(/\s+/).length * 1.25);
       };
 
-      // إدارة التعليقات
-      const [showCommentsModal, setShowCommentsModal] = useState(false);
-      const [filterCommentType, setFilterCommentType] = useState('all');
-      const [filterCommentStatus, setFilterCommentStatus] = useState('all');
-      const [searchCommentQuery, setSearchCommentQuery] = useState('');
+      // إضافة برومبت جديد
+      // استخدم promptLevel بدلاً من 'متوسط' الثابت
+const handleAddPrompt = () => {
+  if (!promptText.trim() || !selectedMainCategory || !newSubCategory.trim()) return;
+  const tokens = calculateTokens(promptText);
+  const newPrompt = {
+    id: Date.now(),
+    text: promptText,
+    category: selectedMainCategory,
+    subCategory: newSubCategory,
+    level: promptLevel, // ✅ تم استخدام المتغير الصحيح هنا
+    tokens: tokens
+  };
+  const updatedPrompts = [...prompts, newPrompt];
+  setPrompts(updatedPrompts);
+  localStorage.setItem('prompts', JSON.stringify(updatedPrompts));
+  setPromptText('');
+  setPromptTokens(tokens);
+};
 
-      // الفلترة للتعليقات
-      const filteredComments = comments.filter(comment => {
+      // تحديث توكنات أثناء الكتابة
+      const handlePromptTextChange = (e) => {
+        const text = e.target.value;
+        setPromptText(text);
+        if (text.trim()) {
+          const tokens = calculateTokens(text);
+          setPromptTokens(tokens);
+        } else {
+          setPromptTokens(0);
+        }
+      };
+
+      // إحصائيات الأقسام حسب المستوى
+      const getCategoryStats = () => {
+        const stats = {};
+        categories.forEach(category => {
+          const mainCatPrompts = prompts.filter(p => p.category === category);
+          const subCatPrompts = prompts.filter(p => p.subCategory === category);
+          const byLevel = {
+            beginner: [...mainCatPrompts, ...subCatPrompts].filter(p => p.level === 'مبتدئ').length,
+            intermediate: [...mainCatPrompts, ...subCatPrompts].filter(p => p.level === 'متوسط').length,
+            advanced: [...mainCatPrompts, ...subCatPrompts].filter(p => p.level === 'محترف').length,
+          };
+          const total = Object.values(byLevel).reduce((a, b) => a + b, 0);
+          const totalTokens = [...mainCatPrompts, ...subCatPrompts].reduce((sum, p) => sum + p.tokens, 0);
+          stats[category] = {
+            count: total,
+            totalTokens: totalTokens,
+            averageTokens: total ? Math.round(totalTokens / total) : 0,
+            byLevel: byLevel
+          };
+        });
+        return stats;
+      };
+
+      // نسخ البرومبت
+      const copyPromptText = (text) => {
+        navigator.clipboard.writeText(text);
+        alert(translations[language].promptCopied);
+      };
+
+      // حذف القسم الرئيسي
+      const deleteMainCategory = (cat) => {
+        if (!window.confirm(`${translations[language].deleteCategoryConfirm} "${cat}"?`)) return;
+        const updatedCategories = categories.filter(c => c !== cat);
+        setCategories(updatedCategories);
+        localStorage.setItem('categories', JSON.stringify(updatedCategories));
+        const updatedSubCategories = { ...subCategories };
+        delete updatedSubCategories[cat];
+        setSubCategories(updatedSubCategories);
+        localStorage.setItem('subCategories', JSON.stringify(updatedSubCategories));
+        const updatedPrompts = prompts.filter(p => p.category !== cat && p.subCategory !== cat);
+        setPrompts(updatedPrompts);
+        localStorage.setItem('prompts', JSON.stringify(updatedPrompts));
+      };
+
+      // بدء تعديل القسم
+ // عند البدء في التعديل
+const startEditCategory = (cat) => {
+  setEditingCategory(cat);
+  setEditedCategoryName(cat);
+};
+
+// عند إلغاء التعديل
+const cancelEditCategory = () => {
+  setEditingCategory(null);
+  setEditedCategoryName('');
+};
+
+// عند حفظ التعديل
+const saveEditedCategory = () => {
+  const newName = editedCategoryName.trim();
+  if (!newName || !editingCategory) return;
+
+  const updatedCategories = categories.map(c =>
+    c === editingCategory ? newName : c
+  );
+
+  const updatedSubCategories = { ...subCategories };
+  const promptsToUpdate = [...prompts];
+
+  // تحديث الأقسام الفرعية
+  if (updatedSubCategories[editingCategory]) {
+    updatedSubCategories[newName] = updatedSubCategories[editingCategory];
+    delete updatedSubCategories[editingCategory];
+  }
+
+  // تحديث البرومبتات التي تنتمي لهذا القسم
+  const updatedPrompts = promptsToUpdate.map(p =>
+    p.category === editingCategory
+      ? { ...p, category: newName }
+      : p
+  );
+
+  setCategories(updatedCategories);
+  setSubCategories(updatedSubCategories);
+  setPrompts(updatedPrompts);
+
+  localStorage.setItem('categories', JSON.stringify(updatedCategories));
+  localStorage.setItem('subCategories', JSON.stringify(updatedSubCategories));
+  localStorage.setItem('prompts', JSON.stringify(updatedPrompts));
+
+  // إعادة تعيين الحقول
+  setEditingCategory(null);
+  setEditedCategoryName('');
+};
+      // بدء تعديل برومبت
+      const startEditingPrompt = (prompt) => {
+  setEditingPrompt(prompt);
+  setPromptText(prompt.text);
+  setSelectedMainCategory(prompt.category);
+  setNewSubCategory(prompt.subCategory);
+  setPromptLevel(prompt.level); // ✅ استرجاع المستوى المحفوظ
+  setPromptTokens(prompt.tokens);
+};
+
+      // حفظ تعديل برومبت
+    const saveEditedPrompt = () => {
+  if (!promptText.trim() || !selectedMainCategory || !newSubCategory.trim()) return;
+  const updatedPrompts = prompts.map(p =>
+    p.id === editingPrompt.id
+      ? {
+          ...p,
+          text: promptText,
+          category: selectedMainCategory,
+          subCategory: newSubCategory,
+          level: promptLevel, // ✅ تحديث المستوى بناءً على الاختيار
+          tokens: promptTokens
+        }
+      : p
+  );
+  setPrompts(updatedPrompts);
+  localStorage.setItem('prompts', JSON.stringify(updatedPrompts));
+  setEditingPrompt(null);
+  setPromptText('');
+  setPromptTokens(0);
+  setSelectedMainCategory('');
+  setNewSubCategory('');
+  setPromptLevel('متوسط');
+};
+      // سجل الزوار والإحصاءات
+      const visitLog = [
+        { date: "15-10-2023", time: "02:30 م", copies: 5 },
+        { date: "14-10-2023", time: "11:15 ص", copies: 3 },
+        { date: "12-10-2023", time: "05:45 م", copies: 7 }
+      ];
+
+      // تصدير إلى CSV
+      const exportToCSV = () => {
+        let csv = "القسم,المستوى,عدد البرومبتات\n";
+        Object.entries(getCategoryStats()).forEach(([cat, data]) => {
+          csv += `${cat},مبتدئ,${data.byLevel.beginner}\n`;
+          csv += `${cat},متوسط,${data.byLevel.intermediate}\n`;
+          csv += `${cat},محترف,${data.byLevel.advanced}\n`;
+        });
+        const blob = new Blob([csv], { type: 'text/csv' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "stats.csv";
+        a.click();
+        URL.revokeObjectURL(url);
+      };
+
+      // عرض إدارة البرومبتات
+      const renderManagePrompts = () => {
         return (
-          (filterCommentType === 'all' || comment.type === filterCommentType) &&
-          (filterCommentStatus === 'all' || comment.status === filterCommentStatus) &&
-          (searchCommentQuery === '' || comment.text.toLowerCase().includes(searchCommentQuery.toLowerCase()))
-        );
-      });
+          <div className="space-y-6">
+            <h2 className="text-2xl sm:text-3xl font-bold text-gray-800">{translations[language].managePrompts}</h2>
 
-      return (
-        <div className="container mx-auto max-w-4xl">
-          {/* تبويبات الصفحة */}
-          <div className="flex justify-between items-center mb-6">
-            <button 
-              onClick={() => setActiveTab('dashboard')} 
-              className={`py-2 px-4 font-medium ${activeTab === 'dashboard' ? 'border-b-2 border-indigo-500 text-indigo-600' : 'text-gray-600 hover:text-gray-700'}`}
-            >
-              {translations[language].dashboard}
-            </button>
-            {isUserAdmin && (
-              <button 
-                onClick={() => setActiveTab('manage')} 
-                className={`py-2 px-4 font-medium ${activeTab === 'manage' ? 'border-b-2 border-indigo-500 text-indigo-600' : 'text-gray-600 hover:text-gray-700'}`}
-              >
-                {translations[language].managePrompts}
-              </button>
-            )}
-            {isUserAdmin && (
-              <button 
-                onClick={() => setActiveTab('comments')} 
-                className={`py-2 px-4 font-medium ${activeTab === 'comments' ? 'border-b-2 border-indigo-500 text-indigo-600' : 'text-gray-600 hover:text-gray-700'}`}
-              >
-                {translations[language].manageComments}
-              </button>
-            )}
-          </div>
+            {/* اختيار المستوى */}
+            {/* اختيار المستوى */}
+<div className="bg-white p-4 rounded shadow-inner mb-6">
+  <h3 className="font-semibold text-lg mb-3">اختر المستوى:</h3>
+  <div className="flex flex-wrap gap-2">
+    <button onClick={() => setSelectedLevel('all')} 
+            className={`px-3 py-1 text-xs rounded-full transition-all duration-300 ${
+              selectedLevel === 'all' 
+                ? 'bg-indigo-600 text-white' 
+                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+            }`}>
+      🌍 الكل
+    </button>
+    <button onClick={() => setSelectedLevel('مبتدئ')} 
+            className={`px-3 py-1 text-xs rounded-full transition-all duration-300 ${
+              selectedLevel === 'مبتدئ' 
+                ? 'bg-yellow-500 text-white' 
+                : 'bg-yellow-100 text-yellow-800 hover:bg-yellow-200'
+            }`}>
+      🎓 مبتدئ
+    </button>
+    <button onClick={() => setSelectedLevel('متوسط')} 
+            className={`px-3 py-1 text-xs rounded-full transition-all duration-300 ${
+              selectedLevel === 'متوسط' 
+                ? 'bg-blue-500 text-white' 
+                : 'bg-blue-100 text-blue-800 hover:bg-blue-200'
+            }`}>
+      🎯 متوسط
+    </button>
+    <button onClick={() => setSelectedLevel('محترف')} 
+            className={`px-3 py-1 text-xs rounded-full transition-all duration-300 ${
+              selectedLevel === 'محترف' 
+                ? 'bg-purple-500 text-white' 
+                : 'bg-purple-100 text-purple-800 hover:bg-purple-200'
+            }`}>
+      🏆 محترف
+    </button>
+  </div>
+</div>
 
-          {/* محتوى التبويب الحالي */}
-          {activeTab === 'dashboard' && (
-            <div>
-              {/* الإحصائيات الرئيسية */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-                <div className="card">
-                  <div className="flex justify-between items-center">
-                    <h3 className="text-lg font-semibold mb-2">{translations[language].totalPrompts}</h3>
-                    <span className="text-blue-600 text-2xl">📊</span>
-                  </div>
-                  <p className="text-3xl font-bold text-blue-700">{prompts.length}</p>
-                </div>
-                <div className="card">
-                  <div className="flex justify-between items-center">
-                    <h3 className="text-lg font-semibold mb-2">{translations[language].totalTokens}</h3>
-                    <span className="text-green-600 text-2xl">KANJI</span>
-                  </div>
-                  <p className="text-3xl font-bold text-green-700">{prompts.reduce((sum, p) => sum + p.tokens, 0)}</p>
-                </div>
-                <div className="card">
-                  <div className="flex justify-between items-center">
-                    <h3 className="text-lg font-semibold mb-2">{translations[language].averageTokens}</h3>
-                    <span className="text-orange-600 text-2xl">💡</span>
-                  </div>
-                  <p className="text-3xl font-bold text-orange-700">
-                    {prompts.length > 0 
-                      ? Math.round(prompts.reduce((sum, p) => sum + p.tokens, 0) / prompts.length)
-                      : 0}
-                  </p>
-                </div>
-              </div>
-              {/* قائمة الأقسام */}
-              <div className="card mb-6">
-                <h3 className="text-xl font-semibold mb-4">{translations[language].categoriesAvailable}</h3>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          
+{/* إضافة قسم رئيسي */}
+{/* إضافة وتعديل قسم رئيسي */}
+<div className="bg-white p-6 rounded shadow-md mb-6">
+  <h3 className="font-semibold text-lg mb-4">{translations[language].addMainCategory}</h3>
+  <div className="flex flex-wrap gap-4">
+    {/* حقل الإدخال */}
+    <input
+      type="text"
+      placeholder={translations[language].categoryName}
+      value={editingCategory ? editedCategoryName : newMainCategory}
+      onChange={(e) => {
+        if (editingCategory) {
+          setEditedCategoryName(e.target.value);
+        } else {
+          setNewMainCategory(e.target.value);
+        }
+      }}
+      className="flex-1 min-w-[200px] p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
+    />
+
+    {/* زر الحفظ / الإضافة */}
+    <button
+      onClick={() => {
+        if (editingCategory) {
+          saveEditedCategory();
+        } else {
+          handleAddMainCategory();
+        }
+      }}
+      disabled={
+        (editingCategory && !editedCategoryName.trim()) ||
+        (!editingCategory && !newMainCategory.trim())
+      }
+      className={`px-4 py-2 rounded transition-all duration-300 ${
+        (editingCategory ? editedCategoryName.trim() : newMainCategory.trim())
+          ? 'bg-indigo-600 hover:bg-indigo-700 text-white'
+          : 'bg-gray-200 cursor-not-allowed text-gray-500'
+      }`}
+    >
+      {editingCategory
+        ? translations[language].saveChanges
+        : `➕ ${translations[language].addMainCategory}`}
+    </button>
+
+    {/* زر الإلغاء عند التعديل */}
+    {editingCategory && (
+      <button
+        onClick={() => {
+          setEditingCategory(null);
+          setEditedCategoryName('');
+        }}
+        className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded transition-all duration-300"
+      >
+        {translations[language].cancel}
+      </button>
+    )}
+  </div>
+</div>
+
+            {/* إضافة قسم فرعي */}
+            <div className="bg-white p-6 rounded shadow-md mb-6">
+              <h3 className="font-semibold text-lg mb-4">{translations[language].addSubCategory}</h3>
+              <div className="flex flex-wrap gap-4">
+                <select
+                  value={selectedMainCategory}
+                  onChange={(e) => setSelectedMainCategory(e.target.value)}
+                  className="p-3 border border-gray-300 rounded w-full md:w-auto transition-all duration-300"
+                >
+                  <option value="">{translations[language].selectMainCategory}</option>
                   {categories.map(cat => (
-                    <div 
-                      key={cat} 
-                      className="p-4 rounded shadow hover:bg-gray-100 transition"
-                    >
-                      <div className="flex items-center justify-between">
-                        <span className="text-gray-700 font-medium">{cat}</span>
-                        <button 
-                          onClick={() => window.location.href = `category-prompts.html?category=${encodeURIComponent(cat)}&level=all`}
-                          className="text-indigo-600 hover:text-indigo-800 transition"
-                        >
-                          🚀 {translations[language].visitLog}
-                        </button>
-                      </div>
-                      <p className="text-sm text-gray-500">
-                        {translations[language].totalPrompts}: 
-                        {prompts.filter(p => p.category === cat).length}
-                      </p>
-                    </div>
+                    <option key={cat} value={cat}>{cat}</option>
                   ))}
-                  {categories.length === 0 && (
-                    <p className="text-gray-500 text-center py-4 col-span-full">
-                      {translations[language].noCategories}
-                    </p>
-                  )}
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* تبويب إدارة البرومبتات */}
-          {activeTab === 'manage' && (
-            <div className="space-y-6">
-              {/* إضافة قسم رئيسي */}
-              <div className="card">
-                <h3 className="text-xl font-semibold mb-4">{translations[language].addMainCategory}</h3>
+                </select>
                 <input
                   type="text"
-                  placeholder={translations[language].categoryName}
-                  value={newMainCategory}
-                  onChange={(e) => setNewMainCategory(e.target.value)}
-                  className="w-full p-3 border border-gray-300 rounded mb-4 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  placeholder={translations[language].subCategoryName}
+                  value={newSubCategory}
+                  onChange={(e) => setNewSubCategory(e.target.value)}
+                  className="flex-1 min-w-[200px] p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all duration-300"
                 />
-                <button
-                  onClick={handleAddMainCategory}
-                  disabled={!newMainCategory.trim()}
-                  className={`w-full px-4 py-2 rounded-full transition ${newMainCategory.trim() ? 'bg-indigo-600 hover:bg-indigo-700 text-white' : 'bg-gray-200 text-gray-500 cursor-not-allowed'}`}
-                >
-                  ➕ {translations[language].addMainCategory}
-                </button>
-              </div>
-
-              {/* إضافة قسم فرعي */}
-              <div className="card">
-                <h3 className="text-xl font-semibold mb-4">{translations[language].addSubCategory}</h3>
-                <div className="flex flex-col sm:flex-row gap-4 mb-4">
-                  <select
-                    value={selectedMainCategory}
-                    onChange={(e) => setSelectedMainCategory(e.target.value)}
-                    className="p-3 border border-gray-300 rounded w-full sm:w-1/2 focus:outline-none focus:ring-2 focus:ring-purple-500"
-                  >
-                    <option value="">{translations[language].selectMainCategory}</option>
-                    {categories.map(cat => (
-                      <option key={cat} value={cat}>{cat}</option>
-                    ))}
-                  </select>
-                  <input
-                    type="text"
-                    placeholder={translations[language].subCategoryName}
-                    value={newSubCategory}
-                    onChange={(e) => setNewSubCategory(e.target.value)}
-                    className="p-3 border border-gray-300 rounded w-full sm:w-1/2 focus:outline-none focus:ring-2 focus:ring-purple-500"
-                  />
-                </div>
                 <button
                   onClick={handleAddSubCategory}
                   disabled={!selectedMainCategory || !newSubCategory.trim()}
-                  className={`w-full px-4 py-2 rounded-full transition ${selectedMainCategory && newSubCategory.trim() ? 'bg-purple-600 hover:bg-purple-700 text-white' : 'bg-gray-200 text-gray-500 cursor-not-allowed'}`}
+                  className={`px-4 py-2 rounded-full transition-all duration-300 ${
+                    selectedMainCategory && newSubCategory.trim()
+                      ? 'bg-purple-600 hover:bg-purple-700 text-white shadow-sm hover:shadow-md'
+                      : 'bg-gray-200 cursor-not-allowed text-gray-500'
+                  }`}
                 >
                   ➕ {translations[language].addSubCategory}
                 </button>
               </div>
+            </div>
 
-              {/* إضافة برومبت جديد */}
-              <div className="card">
-                <h3 className="text-xl font-semibold mb-4">{translations[language].addPrompt}</h3>
-                <textarea
-                  rows="4"
-                  placeholder={translations[language].enterPromptText}
-                  value={promptText}
-                  onChange={(e) => setPromptText(e.target.value)}
-                  className="w-full p-3 border border-gray-300 rounded mb-4 focus:outline-none focus:ring-2 focus:ring-green-500"
-                />
-                <div className="flex flex-col sm:flex-row gap-4 mb-4">
-                  <select
-                    value={selectedCategory}
-                    onChange={(e) => setSelectedCategory(e.target.value)}
-                    className="p-3 border border-gray-300 rounded w-full sm:w-1/2 focus:outline-none focus:ring-2 focus:ring-green-500"
-                  >
-                    <option value="">{translations[language].selectMainCategory}</option>
-                    {categories.map(cat => (
-                      <option key={cat} value={cat}>{cat}</option>
-                    ))}
-                  </select>
-                  <select
-                    value={selectedSubCategory}
-                    onChange={(e) => setSelectedSubCategory(e.target.value)}
-                    className="p-3 border border-gray-300 rounded w-full sm:w-1/2 focus:outline-none focus:ring-2 focus:ring-green-500"
-                  >
-                    <option value="">{translations[language].selectSubCategory}</option>
-                    {subCategories[selectedCategory]?.map(sub => (
-                      <option key={sub} value={sub}>{sub}</option>
-                    ))}
-                  </select>
-                </div>
-                <div className="flex items-center mb-4">
-                  <span className="text-gray-700 mr-4">{translations[language].level}</span>
-                  <select 
-                    value={promptLevel}
-                    onChange={(e) => setPromptLevel(e.target.value)}
-                    className="p-3 border border-gray-300 rounded w-full focus:outline-none focus:ring-2 focus:ring-green-500"
-                  >
-                    <option value="مبتدئ">🎓 Beginner</option>
-                    <option value="متوسط">🎯 Intermediate</option>
-                    <option value="محترف">🏆 Advanced</option>
-                  </select>
-                </div>
+            {/* إضافة برومبت جديد */}
+            {/* إضافة برومبت جديد */}
+<div className="bg-white p-6 rounded shadow-md mb-6">
+  <h3 className="font-semibold text-lg mb-4">{translations[language].addPromptSuccess}</h3>
+  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+    <select
+      value={selectedMainCategory}
+      onChange={(e) => setSelectedMainCategory(e.target.value)}
+      className="p-3 border border-gray-300 rounded"
+    >
+      <option value="">{translations[language].selectMainCategory}</option>
+      {categories.map(cat => (
+        <option key={cat} value={cat}>{cat}</option>
+      ))}
+    </select>
+    <select
+      value={newSubCategory}
+      onChange={(e) => setNewSubCategory(e.target.value)}
+      className="p-3 border border-gray-300 rounded"
+    >
+      <option value="">{translations[language].selectSubCategory}</option>
+      {subCategories[selectedMainCategory]?.map(sub => (
+        <option key={sub} value={sub}>{sub}</option>
+      ))}
+    </select>
+    <textarea
+      rows="3"
+      placeholder={translations[language].enterPromptText}
+      value={promptText}
+      onChange={handlePromptTextChange}
+      className="col-span-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
+    />
+    <input
+      type="number"
+      placeholder={translations[language].tokenCount}
+      value={promptTokens}
+      readOnly
+      className="p-3 border border-gray-300 rounded bg-gray-100"
+    />
+    
+    {/* زر اختيار المستوى */}
+    <select
+      value={promptLevel}
+      onChange={(e) => setPromptLevel(e.target.value)}
+      className="p-3 border border-gray-300 rounded"
+    >
+      <option value="مبتدئ">🎓 مبتدئ</option>
+      <option value="متوسط">🎯 متوسط</option>
+      <option value="محترف">🏆 محترف</option>
+    </select>
+
+    <button
+      onClick={editingPrompt ? saveEditedPrompt : handleAddPrompt}
+      disabled={!promptText.trim() || !selectedMainCategory || !newSubCategory.trim()}
+      className={`px-4 py-2 rounded transition-all duration-300 ${
+        promptText.trim() && selectedMainCategory && newSubCategory.trim()
+          ? 'bg-green-600 hover:bg-green-700 text-white'
+          : 'bg-gray-200 cursor-not-allowed text-gray-500'
+      }`}
+    >
+      {editingPrompt ? translations[language].saveChanges : `➕ ${translations[language].addPrompt}`}
+    </button>
+  </div>
+</div>
+
+            {/* عرض البرومبتات الحالية */}
+            <div className="bg-white p-6 rounded shadow-md mb-6">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="font-semibold text-lg">{translations[language].currentPrompts}</h3>
                 <button
-                  onClick={handleAddPrompt}
-                  disabled={!promptText.trim() || !selectedCategory}
-                  className={`w-full px-4 py-3 rounded-full transition ${promptText.trim() && selectedCategory ? 'bg-green-600 hover:bg-green-700 text-white' : 'bg-gray-200 text-gray-500 cursor-not-allowed'}`}
+                  onClick={() => setShowPromptTable(!showPromptTable)}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-full transition-all duration-300 shadow-sm hover:shadow-md ${
+                    showPromptTable ? 'bg-red-600 hover:bg-red-700 text-white' : 'bg-green-600 hover:bg-green-700 text-white'
+                  }`}
                 >
-                  {translations[language].addPrompt}
+                  {showPromptTable ? (
+                    <>
+                      <span>{translations[language].hideTable}</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>{translations[language].showTable}</span>
+                    </>
+                  )}
                 </button>
               </div>
-
-              {/* جدول البرومبتات */}
-              <div className="card">
-                <div className="flex justify-between items-center mb-4">
-                  <h3 className="text-xl font-semibold">{translations[language].currentPrompts}</h3>
-                  <button 
-                    onClick={() => setShowPromptTable(!showPromptTable)} 
-                    className="text-indigo-600 hover:text-indigo-800 transition"
-                  >
-                    {showPromptTable ? translations[language].hideTable : translations[language].showTable}
-                  </button>
-                </div>
-                {showPromptTable && (
-                  <table className="min-w-full divide-y divide-gray-200">
-                    <thead className="bg-gray-50">
-                      <tr>
-                        <th className="px-4 py-3 text-right text-xs font-medium text-gray-500">{translations[language].promptText}</th>
-                        <th className="px-4 py-3 text-right text-xs font-medium text-gray-500">{translations[language].category}</th>
-                        <th className="px-4 py-3 text-right text-xs font-medium text-gray-500">{translations[language].subCategory}</th>
-                        <th className="px-4 py-3 text-right text-xs font-medium text-gray-500">{translations[language].level}</th>
-                        <th className="px-4 py-3 text-right text-xs font-medium text-gray-500">{translations[language].tokens}</th>
-                        <th className="px-4 py-3 text-right text-xs font-medium text-gray-500">{translations[language].actions}</th>
-                      </tr>
-                    </thead>
-                    <tbody className="bg-white divide-y divide-gray-200">
-                      {prompts.map(prompt => (
-                        <tr key={prompt.id}>
-                          <td className="px-4 py-4 line-clamp-3 text-gray-700">{prompt.text}</td>
-                          <td className="px-4 py-4 text-gray-500">{prompt.category}</td>
-                          <td className="px-4 py-4 text-gray-500">{prompt.subCategory || 'عام'}</td>
-                          <td className="px-4 py-4 text-gray-500">
-                            {prompt.level === 'مبتدئ' && '🎓'}
-                            {prompt.level === 'متوسط' && '🎯'}
-                            {prompt.level === 'محترف' && '🏆'}
-                            {prompt.level}
-                          </td>
-                          <td className="px-4 py-4 text-gray-500">{prompt.tokens}</td>
-                          <td className="px-4 py-4 text-right">
-                            <button 
-                              onClick={() => startEditingPrompt(prompt)} 
-                              className="text-yellow-600 hover:text-yellow-800 mr-2"
-                            >
-                              {translations[language].editPrompt}
-                            </button>
-                            <button 
-                              onClick={() => {
-                                if (window.confirm(`${translations[language].deleteCategoryConfirm} ${prompt.text}?`)) {
-                                  const updatedPrompts = prompts.filter(p => p.id !== prompt.id);
-                                  setPrompts(updatedPrompts);
-                                  localStorage.setItem('prompts', JSON.stringify(updatedPrompts));
-                                }
-                              }} 
-                              className="text-red-600 hover:text-red-800"
-                            >
-                              {translations[language].deletePrompt}
-                            </button>
-                          </td>
-                        </tr>
+              {/* تبويبات الأقسام */}
+              {showPromptTable && (
+                <>
+                  <div className="mb-4 border-b border-gray-200">
+                    <nav className="flex space-x-4 rtl:space-x-reverse overflow-x-auto pb-1">
+                      <button
+                        onClick={() => setSelectedCategoryTab('all')}
+                        className={`py-2 px-4 font-medium border-b-2 ${
+                          selectedCategoryTab === 'all'
+                            ? 'border-indigo-500 text-indigo-600'
+                            : 'border-transparent text-gray-500 hover:text-gray-700'
+                        } transition-all duration-300`}
+                      >
+                        {translations[language].allCategories}
+                      </button>
+                      {categories.map(cat => (
+                        <button
+                          key={cat}
+                          onClick={() => setSelectedCategoryTab(cat)}
+                          className={`py-2 px-4 font-medium border-b-2 whitespace-nowrap ${
+                            selectedCategoryTab === cat
+                              ? 'border-indigo-500 text-indigo-600'
+                              : 'border-transparent text-gray-500 hover:text-gray-700'
+                          } transition-all duration-300`}
+                        >
+                          {cat}
+                        </button>
                       ))}
-                      {prompts.length === 0 && (
+                    </nav>
+                  </div>
+                  {/* جدول العرض */}
+                  <div className="overflow-x-auto">
+                    <table className="min-w-full divide-y divide-gray-200">
+                      <thead className="bg-gray-50">
                         <tr>
-                          <td colSpan="6" className="text-center text-gray-500 py-4">
-                            لا توجد برومبتات بعد.
-                          </td>
+                          <th scope="col" className="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">النص</th>
+                          <th scope="col" className="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">القسم</th>
+                          <th scope="col" className="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">القسم الفرعي</th>
+                          <th scope="col" className="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">المستوى</th>
+                          <th scope="col" className="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">tokens</th>
+                          <th scope="col" className="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">الإجراءات</th>
                         </tr>
-                      )}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
+                      </thead>
+                      <tbody className="bg-white divide-y divide-gray-200">
+                        {prompts
+                          .filter(prompt =>
+                            (selectedCategoryTab === 'all' ||
+                             prompt.category === selectedCategoryTab ||
+                             prompt.subCategory === selectedCategoryTab) &&
+                            (selectedLevel === 'all' || prompt.level === selectedLevel)
+                          )
+                          .map(prompt => (
+                            <tr key={prompt.id} className="hover:bg-gray-50 transition-colors duration-300">
+                              <td className="px-4 py-4 line-clamp-3">{prompt.text}</td>
+                              <td className="px-4 py-4">{prompt.category}</td>
+                              <td className="px-4 py-4">{prompt.subCategory}</td>
+                              <td className="px-4 py-4">
+                                {prompt.level === 'مبتدئ' && '🎓 مبتدئ'}
+                                {prompt.level === 'متوسط' && '🎯 متوسط'}
+                                {prompt.level === 'محترف' && '🏆 محترف'}
+                              </td>
+                              <td className="px-4 py-4">{prompt.tokens}</td>
+                              <td className="px-4 py-4 whitespace-nowrap space-x-3 rtl:space-x-reverse">
+                                <button
+                                  onClick={() => startEditingPrompt(prompt)}
+                                  className="text-yellow-600 hover:text-yellow-800 transition duration-300"
+                                >{translations[language].editPrompt}</button>
+                                <button
+                                  onClick={() => {
+                                    if (window.confirm("هل أنت متأكد من حذف هذا البرومبت؟")) {
+                                      const updatedPrompts = prompts.filter(p => p.id !== prompt.id);
+                                      setPrompts(updatedPrompts);
+                                      localStorage.setItem('prompts', JSON.stringify(updatedPrompts));
+                                    }
+                                  }}
+                                  className="text-red-600 hover:text-red-800 transition duration-300"
+                                >{translations[language].deletePrompt}</button>
+                                <button
+                                  onClick={() => copyPromptText(prompt.text)}
+                                  className="text-blue-600 hover:text-blue-800 transition duration-300"
+                                >{translations[language].copyPrompt}</button>
+                              </td>
+                            </tr>
+                          ))}
+                        {prompts.length === 0 && (
+                          <tr>
+                            <td colSpan="6" className="px-4 py-4 text-center text-gray-500">لا توجد برومبتات مضافة.</td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </>
+              )}
+            </div>
 
-              {/* زر الاستيراد */}
-              <div className="text-center mb-6">
-                <a 
-                  href="import-data.html" 
-                  className="px-8 py-3 bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white font-semibold rounded-full shadow-lg transition duration-300 ease-in-out focus:outline-none focus:ring-2 focus:ring-purple-500"
-                >
-                  📥 {translations[language].importDataButton}
-                </a>
+            {/* الأقسام الحالية */}
+            <div className="bg-white p-6 rounded shadow-md mb-6">
+              <h3 className="font-semibold text-lg mb-4">{translations[language].mainCategories}</h3>
+              <div className="grid grid-cols-1 gap-3">
+                <div className="overflow-hidden" style={{ maxHeight: showAllCategories ? 'none' : '120px' }}>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                    {categories.map(cat => (
+                      <div key={cat} className="bg-gray-50 p-3 rounded shadow-sm hover:bg-gray-100 flex justify-between items-center transition-all duration-300">
+                        <span className="text-sm font-medium text-indigo-700">{cat}</span>
+                        <div className="space-x-2 rtl:space-x-reverse">
+                          <button
+                            onClick={() => startEditCategory(cat)}
+                            className="text-yellow-600 hover:text-yellow-800 text-xs transition duration-300"
+                          >{translations[language].editPrompt}</button>
+                          <button
+                            onClick={() => deleteMainCategory(cat)}
+                            className="text-red-600 hover:text-red-800 text-xs transition duration-300"
+                          >{translations[language].deletePrompt}</button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                {/* زر عرض المزيد */}
+                {categories.length > 3 && (
+                  <button
+                    onClick={() => setShowAllCategories(!showAllCategories)}
+                    className="mt-3 px-4 py-2 bg-indigo-100 text-indigo-700 hover:bg-indigo-200 text-sm rounded-full transition-all duration-300"
+                  >
+                    {showAllCategories ? 'إخفاء' : 'عرض المزيد'}
+                  </button>
+                )}
               </div>
             </div>
-          )}
 
-          {/* تبويب إدارة التعليقات */}
-          {activeTab === 'comments' && (
-            <div className="space-y-6">
-              {/* شريط الفلترة */}
-              <div className="card flex flex-col sm:flex-row gap-4 mb-4">
-                <select 
-                  value={filterCommentType}
-                  onChange={(e) => setFilterCommentType(e.target.value)}
-                  className="p-3 border border-gray-300 rounded w-full sm:w-1/3 focus:outline-none focus:ring-2 focus:ring-red-500"
-                >
-                  <option value="all">🌍 {translations[language].allCategories}</option>
-                  {translations[language].commentTypes.map(type => (
-                    <option key={type} value={type}>
-                      {type}
-                    </option>
-                  ))}
-                </select>
-                <select 
-                  value={filterCommentStatus}
-                  onChange={(e) => setFilterCommentStatus(e.target.value)}
-                  className="p-3 border border-gray-300 rounded w-full sm:w-1/3 focus:outline-none focus:ring-2 focus:ring-red-500"
-                >
-                  <option value="all">🌍 {translations[language].allCategories}</option>
-                  <option value="pending">{translations[language].statusPending}</option>
-                  <option value="approved">{translations[language].statusApproved}</option>
-                  <option value="rejected">{translations[language].statusRejected}</option>
-                </select>
-                <input 
-                  type="text"
-                  placeholder={translations[language].searchPlaceholder}
-                  value={searchCommentQuery}
-                  onChange={(e) => setSearchCommentQuery(e.target.value)}
-                  className="p-3 border border-gray-300 rounded w-full sm:w-1/3 focus:outline-none focus:ring-2 focus:ring-red-500"
-                />
-              </div>
+            {/* زر الاستيراد */}
+            <div className="mt-4">
+              <a href="import-data.html" className="inline-block px-6 py-3 bg-gradient-to-r from-pink-500 to-purple-600 text-white font-semibold rounded-full shadow hover:from-pink-600 hover:to-purple-700 transition transform hover:scale-105">
+                📥 {translations[language].importDataButton}
+              </a>
+            </div>
 
-              {/* جدول التعليقات */}
-              <div className="card">
-                <h3 className="text-xl font-semibold mb-4">{translations[language].commentsTableText}</h3>
+            {/* سجل الزوار والإحصاءات */}
+            <div className="bg-white p-6 rounded shadow-md mt-6">
+              <h3 className="font-semibold text-lg mb-4">{translations[language].visitLog}</h3>
+              <div className="overflow-x-auto">
                 <table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-gray-50">
                     <tr>
-                      <th className="px-4 py-3 text-right text-xs font-medium text-gray-500">{translations[language].commentText}</th>
-                      <th className="px-4 py-3 text-right text-xs font-medium text-gray-500">{translations[language].commentType}</th>
-                      <th className="px-4 py-3 text-right text-xs font-medium text-gray-500">{translations[language].commentStatus}</th>
-                      <th className="px-4 py-3 text-right text-xs font-medium text-gray-500">{translations[language].actions}</th>
+                      <th scope="col" className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">التاريخ</th>
+                      <th scope="col" className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">الوقت</th>
+                      <th scope="col" className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">عدد النسخ</th>
+                      <th scope="col" className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">التقييم</th>
                     </tr>
                   </thead>
-                  <tbody>
-                    {filteredComments.map(comment => (
-                      <tr key={comment.id}>
-                        <td className="px-4 py-4 text-gray-700">{comment.text}</td>
-                        <td className="px-4 py-4 text-gray-500">{comment.type}</td>
-                        <td className="px-4 py-4 text-gray-500">
-                          {comment.status === 'pending' && <span className="text-yellow-600">⏳ {translations[language].statusPending}</span>}
-                          {comment.status === 'approved' && <span className="text-green-600">✅ {translations[language].statusApproved}</span>}
-                          {comment.status === 'rejected' && <span className="text-red-600">❌ {translations[language].statusRejected}</span>}
-                        </td>
-                        <td className="px-4 py-4 text-right">
-                          <button 
-                            onClick={() => updateCommentStatus(comment.id, 'approved')} 
-                            className="text-green-600 hover:text-green-800 mr-2 transition"
-                          >
-                            ✔️ {translations[language].approve}
-                          </button>
-                          <button 
-                            onClick={() => updateCommentStatus(comment.id, 'rejected')} 
-                            className="text-red-600 hover:text-red-800 transition"
-                          >
-                            ❌ {translations[language].reject}
-                          </button>
-                        </td>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {visitLog.map((log, idx) => (
+                      <tr key={idx}>
+                        <td className="px-4 py-4">{log.date}</td>
+                        <td className="px-4 py-4">{log.time}</td>
+                        <td className="px-4 py-4">{log.copies}</td>
+                        <td className="px-4 py-4">⭐ 4.5</td>
                       </tr>
                     ))}
-                    {comments.length === 0 && (
-                      <tr>
-                        <td colSpan="4" className="text-center text-gray-500 py-4">
-                          {translations[language].noComments}
-                        </td>
-                      </tr>
-                    )}
                   </tbody>
                 </table>
               </div>
+              <button
+                onClick={exportToCSV}
+                className="mt-4 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-full transition-all duration-300"
+              >
+                📤 {translations[language].exportCSV}
+              </button>
+            </div>
+          </div>
+        );
+      };
 
-              {/* زر التصدير */}
-              <div className="text-center mb-6">
-                <button 
-                  onClick={exportToCSV} 
-                  className="px-6 py-3 bg-gradient-to-r from-green-500 to-blue-600 hover:from-green-600 hover:to-blue-700 text-white font-semibold rounded-full shadow-lg transition duration-300 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  📤 {translations[language].exportCSV}
-                </button>
+      // عرض لوحة التحكم
+      const renderDashboard = () => {
+        const stats = getCategoryStats();
+        const totalPrompts = prompts.length;
+        const totalTokens = prompts.reduce((sum, p) => sum + p.tokens, 0);
+        const averageTokens = totalPrompts > 0 ? Math.round(totalTokens / totalPrompts) : 0;
+        return (
+          <div className="space-y-6">
+            <h2 className="text-2xl sm:text-3xl font-bold text-gray-800">{translations[language].dashboard}</h2>
+            {/* Cards */}
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-3 sm:gap-6">
+              <div className="bg-white p-4 sm:p-6 rounded shadow hover:shadow-md transition-all duration-300">
+                <h3 className="text-lg font-semibold text-gray-700 mb-2">{translations[language].totalPrompts}</h3>
+                <p className="text-3xl font-bold text-indigo-600">{totalPrompts}</p>
+              </div>
+              <div className="bg-white p-4 sm:p-6 rounded shadow hover:shadow-md transition-all duration-300">
+                <h3 className="text-lg font-semibold text-gray-700 mb-2">{translations[language].totalTokens}</h3>
+                <p className="text-3xl font-bold text-blue-600">{totalTokens}</p>
+              </div>
+              <div className="bg-white p-4 sm:p-6 rounded shadow hover:shadow-md transition-all duration-300">
+                <h3 className="text-lg font-semibold text-gray-700 mb-2">{translations[language].averageTokens}</h3>
+                <p className="text-3xl font-bold text-green-600">{averageTokens} token</p>
               </div>
             </div>
-          )}
+            {/* شريط البحث */}
+            <div className="mt-6">
+              <input
+                type="text"
+                placeholder={translations[language].searchPlaceholder}
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all duration-300"
+              />
+            </div>
+            {/* قائمة الأقسام */}
+            <div className="mt-6">
+              <h3 className="text-xl font-semibold text-gray-800 mb-4">{translations[language].categoriesAvailable}</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {categories.map(cat => (
+                  <a
+                    key={cat}
+                    href={`category-prompts.html?category=${encodeURIComponent(cat)}&level=all`}
+                    className="bg-white p-4 rounded shadow hover:bg-gray-50 transition-all duration-300 flex justify-between items-center"
+                  >
+                    <span className="font-medium text-indigo-600 text-xs sm:text-sm">{cat}</span>
+                    <svg className="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
+                    </svg>
+                  </a>
+                ))}
+                {categories.length === 0 && (
+                  <p className="text-gray-500 text-center py-4 col-span-full">{translations[language].noCategories}</p>
+                )}
+              </div>
+            </div>
+          </div>
+        );
+      };
+
+      return (
+        <div className="container mx-auto max-w-4xl">
+          {/* Tabs Navigation */}
+          <div className="flex space-x-4 rtl:space-x-reverse mb-4 border-b border-gray-200 pb-2">
+            <button
+              onClick={() => setActiveTab('dashboard')}
+              className={`py-2 px-4 font-medium ${
+                activeTab === 'dashboard'
+                  ? 'border-b-2 border-indigo-600 text-indigo-600'
+                  : 'text-gray-600'
+              } transition-all duration-300`}
+            >
+              {translations[language].dashboard}
+            </button>
+            {isUserAdmin && (
+              <button
+                onClick={() => setActiveTab('prompts')}
+                className={`py-2 px-4 font-medium ${
+                  activeTab === 'prompts'
+                    ? 'border-b-2 border-indigo-600 text-indigo-600'
+                    : 'text-gray-600'
+                } transition-all duration-300`}
+              >
+                {translations[language].managePrompts}
+              </button>
+            )}
+          </div>
+          {/* Tab Content */}
+          {activeTab === 'dashboard' && renderDashboard()}
+          {activeTab === 'prompts' && renderManagePrompts()}
         </div>
       );
     }
