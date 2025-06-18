@@ -82,21 +82,19 @@
   <!-- React Code -->
   <script type="text/babel">
     const { useState, useEffect } = React;
-    
-  function App() {
+    function App() {
       // نصوص الترجمة
       const translations = {
         ar: {
           dashboard: "لوحة التحكم",
           managePrompts: "إدارة البرومبتات",
-          manageComments: "إدارة التعليقات",
           addMainCategory: "إضافة قسم رئيسي",
           addSubCategory: "إضافة قسم فرعي",
           addPrompt: "+ إضافة برومبت",
           searchPlaceholder: "🔍 ابحث في البرومبتات أو الأقسام...",
-          commentsTableText: "التعليقات الحالية",
+          promptsTableText: "البرومبتات الحالية",
           hideTable: "👁️ إخفاء الجدول",
-          showTable: "👁️ إظهار الجدول",
+          showTable: "👁️‍🗨️ إظهار الجدول",
           totalPrompts: "عدد البرومبتات",
           totalTokens: "عدد الكلمات (tokens)",
           averageTokens: "متوسط tokens",
@@ -108,16 +106,17 @@
           copyPrompt: "📋 نسخ",
           editPrompt: "✏️ تعديل",
           deletePrompt: "🗑️ حذف",
-          commentText: "نص التعليق",
-          commentType: "نوع التعليق",
-          commentStatus: "حالة التعليق",
+          promptText: "نص البرومبت",
+          category: "القسم",
+          subCategory: "القسم الفرعي",
+          tokens: "tokens",
           actions: "الإجراءات",
           visitLog: "سجل الزوار",
           date: "التاريخ",
           time: "الوقت",
           copies: "عدد النسخ",
           rating: "التقييم",
-          exportCSV: "📤 تصدير الإحصائيات",
+          exportCSV: "📤 تصدير إلى CSV",
           allCategories: "الكل",
           currentPrompts: "البرومبتات الحالية",
           mainCategories: "الأقسام الحالية",
@@ -128,26 +127,19 @@
           subCategoryName: "اسم القسم الفرعي الجديد",
           enterPromptText: "أدخل نص البرومبت هنا...",
           tokenCount: "عدد الكلمات (tokens)",
-          saveChanges: "💾 حفظ التعديلات",
+          addPromptSuccess: "+ إضافة برومبت جديد",
+          saveChanges: "💾 حفظ التعديل",
           cancel: "إلغاء",
-          duplicateCategory: "القسم موجود مسبقًا",
-          filterComments: "فلترة التعليقات",
-          viewComments: "عرض التعليقات",
-          noComments: "لا توجد تعليقات بعد",
-          statusPending: "مُعلق",
-          statusApproved: "مقبول",
-          statusRejected: "مرفوض",
-          commentTypes: ["اقتراح", "BUG", "تصميم", "ترجمة", "أخرى"]
+          duplicateCategory: "القسم موجود مسبقًا"
         },
         en: {
           dashboard: "Dashboard",
           managePrompts: "Manage Prompts",
-          manageComments: "Manage Comments",
           addMainCategory: "Add Main Category",
           addSubCategory: "Add Subcategory",
           addPrompt: "+ Add Prompt",
           searchPlaceholder: "🔍 Search in prompts or categories...",
-          commentsTableText: "Current Comments",
+          promptsTableText: "Current Prompts",
           hideTable: "👁️ Hide Table",
           showTable: "👁️ Show Table",
           totalPrompts: "Total Prompts",
@@ -161,45 +153,40 @@
           copyPrompt: "📋 Copy",
           editPrompt: "✏️ Edit",
           deletePrompt: "🗑️ Delete",
-          commentText: "Comment Text",
-          commentType: "Type",
-          commentStatus: "Status",
+          promptText: "Prompt Text",
+          category: "Category",
+          subCategory: "Subcategory",
+          tokens: "Tokens",
           actions: "Actions",
           visitLog: "Visit Log",
           date: "Date",
           time: "Time",
           copies: "Copies",
           rating: "Rating",
-          exportCSV: "📤 Export Stats",
+          exportCSV: "Exporter au format CSV",
           allCategories: "All",
           currentPrompts: "Current Prompts",
           mainCategories: "Main Categories",
-          deleteCategoryConfirm: "Are you sure to delete",
+          deleteCategoryConfirm: "Are you sure you want to delete",
           promptDeleted: "Deleted!",
           promptCopied: "✅ Copied!",
           categoryName: "New main category name",
           subCategoryName: "New subcategory name",
           enterPromptText: "Enter your prompt text here...",
           tokenCount: "Word count (tokens)",
+          addPromptSuccess: "+ Add New Prompt",
           saveChanges: "💾 Save Changes",
           cancel: "Cancel",
-          duplicateCategory: "Category already exists",
-          filterComments: "Filter Comments",
-          viewComments: "View Comments",
-          noComments: "No comments yet",
-          statusPending: "Pending",
-          statusApproved: "Approved",
-          statusRejected: "Rejected",
-          commentTypes: ["Suggestion", "BUG", "Design", "Translation", "Other"]
+          duplicateCategory: "Category already exists"
         }
       };
       const language = localStorage.getItem('language') || 'ar';
-       // البيانات الأساسية
+      // البيانات الأساسية
       const [activeTab, setActiveTab] = useState('dashboard');
       const [prompts, setPrompts] = useState([]);
+      const [promptLevel, setPromptLevel] = useState('متوسط'); // 👈 هنا نبدأ بالمستوى المتوسط كافتراضي
       const [categories, setCategories] = useState([]);
       const [subCategories, setSubCategories] = useState({});
-      const [comments, setComments] = useState(JSON.parse(localStorage.getItem("comments")) || []);
       const [searchTerm, setSearchTerm] = useState('');
       const isUserAdmin = true;
       // بيانات إضافة البرومبت
@@ -223,11 +210,9 @@
         const savedPrompts = JSON.parse(localStorage.getItem('prompts')) || [];
         const savedCategories = JSON.parse(localStorage.getItem('categories')) || ['عام'];
         const savedSubCategories = JSON.parse(localStorage.getItem('subCategories')) || {};
-        const savedComments = JSON.parse(localStorage.getItem('comments')) || [];
         setPrompts(savedPrompts);
         setCategories(savedCategories);
         setSubCategories(savedSubCategories);
-        setComments(savedComments);
       }, []);
 
       // استخدام Fuse.js للبحث الذكي
@@ -280,77 +265,25 @@
         return Math.ceil(text.split(/\s+/).length * 1.25);
       };
 
-       // دالة إضافة برومبت جديد
-      const [promptText, setPromptText] = useState('');
-      const [selectedCategory, setSelectedCategory] = useState('');
-      const [selectedSubCategory, setSelectedSubCategory] = useState('');
-      const [promptLevel, setPromptLevel] = useState('متوسط');
-      const handleAddPrompt = () => {
-        if (!promptText.trim() || !selectedCategory) return;
-        const tokens = calculateTokens(promptText);
-        const newPrompt = {
-          id: Date.now(),
-          text: promptText,
-          category: selectedCategory,
-          subCategory: selectedSubCategory || 'عام',
-          level: promptLevel,
-          tokens: tokens,
-          createdAt: new Date().toISOString()
-        };
-        const updatedPrompts = [...prompts, newPrompt];
-        setPrompts(updatedPrompts);
-        localStorage.setItem('prompts', JSON.stringify(updatedPrompts));
-        setPromptText('');
-        setSelectedCategory('');
-        setSelectedSubCategory('');
-        setPromptLevel('متوسط');
-      };
-      // إدارة التعليقات
-      const [showCommentsModal, setShowCommentsModal] = useState(false);
-      const [filterCommentType, setFilterCommentType] = useState('all');
-      const [filterCommentStatus, setFilterCommentStatus] = useState('all');
-      const [searchCommentQuery, setSearchCommentQuery] = useState('');
-
-      // الفلترة للتعليقات
-      const filteredComments = comments.filter(comment => {
-        return (
-          (filterCommentType === 'all' || comment.type === filterCommentType) &&
-          (filterCommentStatus === 'all' || comment.status === filterCommentStatus) &&
-          (searchCommentQuery === '' || comment.text.toLowerCase().includes(searchCommentQuery.toLowerCase()))
-        );
-      });
-
-      return (
-        <div className="container mx-auto max-w-4xl">
-          {/* تبويبات الصفحة */}
-          <div className="flex justify-between items-center mb-6">
-            <button 
-              onClick={() => setActiveTab('dashboard')} 
-              className={`py-2 px-4 font-medium ${activeTab === 'dashboard' ? 'border-b-2 border-indigo-500 text-indigo-600' : 'text-gray-600 hover:text-gray-700'}`}
-            >
-              {translations[language].dashboard}
-            </button>
-            {isUserAdmin && (
-              <button 
-                onClick={() => setActiveTab('manage')} 
-                className={`py-2 px-4 font-medium ${activeTab === 'manage' ? 'border-b-2 border-indigo-500 text-indigo-600' : 'text-gray-600 hover:text-gray-700'}`}
-              >
-                {translations[language].managePrompts}
-              </button>
-            )}
-            {isUserAdmin && (
-              <button 
-                onClick={() => setActiveTab('comments')} 
-                className={`py-2 px-4 font-medium ${activeTab === 'comments' ? 'border-b-2 border-indigo-500 text-indigo-600' : 'text-gray-600 hover:text-gray-700'}`}
-              >
-                {translations[language].manageComments}
-              </button>
-            )}
-          </div>
-
-          {/* محتوى التبويب الحالي */}
-          {activeTab === 'dashboard' && (
-            <div>
+      // إضافة برومبت جديد
+      // استخدم promptLevel بدلاً من 'متوسط' الثابت
+const handleAddPrompt = () => {
+  if (!promptText.trim() || !selectedMainCategory || !newSubCategory.trim()) return;
+  const tokens = calculateTokens(promptText);
+  const newPrompt = {
+    id: Date.now(),
+    text: promptText,
+    category: selectedMainCategory,
+    subCategory: newSubCategory,
+    level: promptLevel, // ✅ تم استخدام المتغير الصحيح هنا
+    tokens: tokens
+  };
+  const updatedPrompts = [...prompts, newPrompt];
+  setPrompts(updatedPrompts);
+  localStorage.setItem('prompts', JSON.stringify(updatedPrompts));
+  setPromptText('');
+  setPromptTokens(tokens);
+};
 
       // تحديث توكنات أثناء الكتابة
       const handlePromptTextChange = (e) => {
@@ -873,92 +806,6 @@ const saveEditedCategory = () => {
                 )}
               </div>
             </div>
-            
-                      {/* تبويب إدارة التعليقات */}
-          {activeTab === 'comments' && (
-            <div className="space-y-6">
-              {/* شريط الفلترة */}
-              <div className="card flex flex-col sm:flex-row gap-4 mb-4">
-                <select 
-                  value={filterCommentType}
-                  onChange={(e) => setFilterCommentType(e.target.value)}
-                  className="p-3 border border-gray-300 rounded w-full sm:w-1/3 focus:outline-none focus:ring-2 focus:ring-red-500"
-                >
-                  <option value="all">🌍 {translations[language].allCategories}</option>
-                  {translations[language].commentTypes.map(type => (
-                    <option key={type} value={type}>
-                      {type}
-                    </option>
-                  ))}
-                </select>
-                <select 
-                  value={filterCommentStatus}
-                  onChange={(e) => setFilterCommentStatus(e.target.value)}
-                  className="p-3 border border-gray-300 rounded w-full sm:w-1/3 focus:outline-none focus:ring-2 focus:ring-red-500"
-                >
-                  <option value="all">🌍 {translations[language].allCategories}</option>
-                  <option value="pending">{translations[language].statusPending}</option>
-                  <option value="approved">{translations[language].statusApproved}</option>
-                  <option value="rejected">{translations[language].statusRejected}</option>
-                </select>
-                <input 
-                  type="text"
-                  placeholder={translations[language].searchPlaceholder}
-                  value={searchCommentQuery}
-                  onChange={(e) => setSearchCommentQuery(e.target.value)}
-                  className="p-3 border border-gray-300 rounded w-full sm:w-1/3 focus:outline-none focus:ring-2 focus:ring-red-500"
-                />
-              </div>
-
-              {/* جدول التعليقات */}
-              <div className="card">
-                <h3 className="text-xl font-semibold mb-4">{translations[language].commentsTableText}</h3>
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th className="px-4 py-3 text-right text-xs font-medium text-gray-500">{translations[language].commentText}</th>
-                      <th className="px-4 py-3 text-right text-xs font-medium text-gray-500">{translations[language].commentType}</th>
-                      <th className="px-4 py-3 text-right text-xs font-medium text-gray-500">{translations[language].commentStatus}</th>
-                      <th className="px-4 py-3 text-right text-xs font-medium text-gray-500">{translations[language].actions}</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filteredComments.map(comment => (
-                      <tr key={comment.id}>
-                        <td className="px-4 py-4 text-gray-700">{comment.text}</td>
-                        <td className="px-4 py-4 text-gray-500">{comment.type}</td>
-                        <td className="px-4 py-4 text-gray-500">
-                          {comment.status === 'pending' && <span className="text-yellow-600">⏳ {translations[language].statusPending}</span>}
-                          {comment.status === 'approved' && <span className="text-green-600">✅ {translations[language].statusApproved}</span>}
-                          {comment.status === 'rejected' && <span className="text-red-600">❌ {translations[language].statusRejected}</span>}
-                        </td>
-                        <td className="px-4 py-4 text-right">
-                          <button 
-                            onClick={() => updateCommentStatus(comment.id, 'approved')} 
-                            className="text-green-600 hover:text-green-800 mr-2 transition"
-                          >
-                            ✔️ {translations[language].approve}
-                          </button>
-                          <button 
-                            onClick={() => updateCommentStatus(comment.id, 'rejected')} 
-                            className="text-red-600 hover:text-red-800 transition"
-                          >
-                            ❌ {translations[language].reject}
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                    {comments.length === 0 && (
-                      <tr>
-                        <td colSpan="4" className="text-center text-gray-500 py-4">
-                          {translations[language].noComments}
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
-              </div>
-
 
             {/* زر الاستيراد */}
             <div className="mt-4">
