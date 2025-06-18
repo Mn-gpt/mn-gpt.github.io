@@ -3,13 +3,15 @@
 <head>
   <meta charset="UTF-8" />
   <title>Promptica - لوحة التحكم</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <!-- React + ReactDOM -->
   <script src="https://unpkg.com/react@18/umd/react.development.js"  crossorigin></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"  crossorigin></script>
-  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script> 
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>  
   <!-- Tailwind CSS -->
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"  rel="stylesheet">
+  <!-- Fuse.js للبحث الذكي -->
+  <script src="https://cdn.jsdelivr.net/npm/fuse.js@6.4.6"></script>  
   <!-- Internal Styles -->
   <style>
     body {
@@ -18,64 +20,40 @@
       color: #1f2937;
       line-height: 1.8;
     }
-    .rounded-full {
-      border-radius: 9999px !important;
+    .line-clamp-3 {
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
     }
-    .card {
-      background-color: white;
-      padding: 1.5rem;
-      border-radius: 10px;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    }
-    .modal-card {
-      max-width: 90%;
-      padding: 2rem;
-      border-radius: 15px;
-    }
-    .button-group {
-      gap: 1rem;
+    @media (max-width: 640px) {
+      html { font-size: 16px; }
+      textarea { font-size: 0.875rem; padding: 0.75rem; }
     }
   </style>
 </head>
-<body class="min-h-screen bg-gray-50 p-6">
+<body class="min-h-screen bg-gray-50 p-4">
+  <!-- Banner -->
+  <div class="mb-6">
+    <img src="Banner2.png" alt="بانير موقع Promptica" class="w-full h-auto rounded-lg shadow-md object-cover max-h-64">
+  </div>
   <!-- Header -->
   <header class="flex justify-between items-center pb-4 border-b border-gray-200 mb-6">
-    <div class="flex items-center">
-      <img src="logo.png" alt="Promptica Logo" class="w-12 h-12 mr-3" />
-      <h1 class="text-2xl sm:text-3xl font-bold text-indigo-700">{translations[language].dashboard}</h1>
-    </div>
+    <h1 class="text-2xl sm:text-3xl font-bold text-indigo-700 flex items-center">Promptica</h1>
     <div class="flex items-center space-x-4 rtl:space-x-reverse">
-      <button 
-        onClick={logout} 
-        class="text-gray-700 hover:text-indigo-600 transition"
-      >
-        🚪 تسجيل الخروج
-      </button>
-      <a 
-        href="welcome.html" 
-        class="text-indigo-600 hover:text-indigo-800 transition"
-      >
-        🌐 {translations[language].welcomeLink}
-      </a>
-      <button 
-        id="langToggle" 
-        class="text-indigo-600 hover:text-indigo-800 transition"
-      >
-        {savedLang === 'ar' ? 'English' : 'عربي'}
-      </button>
+      <a href="#" onclick="logout()" class="text-gray-700 hover:text-indigo-600 transition duration-300">تسجيل الخروج</a>
+      <a href="welcome.html" class="text-indigo-600 hover:text-indigo-800 underline transition duration-300">الترحيب</a>
+      <button id="langToggle" class="text-indigo-600 hover:text-indigo-800 transition duration-300">English</button>
     </div>
   </header>
-
   <!-- Root Div for React App -->
   <div id="root"></div>
-
   <!-- Footer -->
   <footer class="mt-8 pt-4 border-t border-gray-200 text-center text-sm text-gray-500">
     &copy; <span id="year"></span> Promptica. جميع الحقوق محفوظة.
     <script>document.getElementById("year").textContent = new Date().getFullYear();</script>
   </footer>
-
-  <!-- Script -->
+  <!-- Logout Function -->
   <script>
     // تحديد اللغة المحفوظة أو العربية كافتراضية
     const savedLang = localStorage.getItem('language') || 'ar';
