@@ -625,7 +625,7 @@ const saveEditedCategory = () => {
 <div className="mt-4">
   <button
     onClick={() => setShowFeedbackModal(true)}
-      className="p-3 border border-gray-300 rounded"
+    className="inline-block px-6 py-3 bg-gradient-to-r from-green-500 to-blue-600 text-white font-semibold rounded-full shadow hover:from-green-600 hover:to-blue-700 transition transform hover:scale-105"
   >
     💬 عرض التعليقات
   </button>
@@ -945,7 +945,7 @@ const saveEditedCategory = () => {
             </div>
 
             {/* زر الاستيراد */}
-          className="p-3 border border-gray-300 rounded"
+            <div className="mt-4">
               <a href="import-data.html" className="inline-block px-6 py-3 bg-gradient-to-r from-pink-500 to-purple-600 text-white font-semibold rounded-full shadow hover:from-pink-600 hover:to-purple-700 transition transform hover:scale-105">
                 📥 {translations[language].importDataButton}
               </a>
@@ -978,7 +978,7 @@ const saveEditedCategory = () => {
               </div>
               <button
                 onClick={exportToCSV}
-               className="p-3 border border-gray-300 rounded"
+                className="mt-4 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-full transition-all duration-300"
               >
                 📤 {translations[language].exportCSV}
               </button>
