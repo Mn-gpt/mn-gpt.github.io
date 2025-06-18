@@ -55,12 +55,21 @@
   </footer>
   <!-- Logout Function -->
   <script>
+    function logout() {
+      localStorage.removeItem("loggedInUser");
+      alert("تم تسجيل الخروج.");
+      window.location.href = "login.html";
+    }
     // تحديد اللغة المحفوظة أو العربية كافتراضية
     const savedLang = localStorage.getItem('language') || 'ar';
     document.documentElement.setAttribute('lang', savedLang);
     document.documentElement.setAttribute('dir', savedLang === 'ar' ? 'rtl' : 'ltr');
-
-    // دالة تبديل اللغة
+    if (savedLang === 'en') {
+      document.getElementById('langToggle').innerText = 'عربي';
+    } else {
+      document.getElementById('langToggle').innerText = 'English';
+    }
+    // تبديل اللغة
     function toggleLanguage() {
       const newLang = savedLang === 'ar' ? 'en' : 'ar';
       document.documentElement.setAttribute('lang', newLang);
@@ -69,38 +78,49 @@
       location.reload();
     }
     document.getElementById("langToggle").addEventListener("click", toggleLanguage);
-    // تحديث حالة التعليق
-function updateCommentStatus(commentId, newStatus) {
-  const updatedComments = comments.map(c => 
-    c.id === commentId ? { ...c, status: newStatus } : c
-  );
-  setComments(updatedComments);
-  localStorage.setItem('comments', JSON.stringify(updatedComments));
-}
-
-// تصدير الإحصائيات إلى CSV
-function exportToCSV() {
-  const stats = getCategoryStats();
-  let csv = "Category,Level,Count\n";
-  Object.entries(stats).forEach(([cat, data]) => {
-    csv += `${cat},مبتدئ,${data.byLevel.beginner}\n`;
-    csv += `${cat},متوسط,${data.byLevel.intermediate}\n`;
-    csv += `${cat},محترف,${data.byLevel.advanced}\n`;
-  });
-  const blob = new Blob([csv], { type: 'text/csv' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = "prompt_stats.csv";
-  a.click();
-  URL.revokeObjectURL(url);
-}
   </script>
-  
   <!-- React Code -->
   <script type="text/babel">
     const { useState, useEffect } = React;
     function App() {
+    const [showFeedbackModal, setShowFeedbackModal] = useState(false);
+const [feedbackList, setFeedbackList] = useState([]);
+const [feedbackFilter, setFeedbackFilter] = useState("all");
+const [newFeedback, setNewFeedback] = useState("");
+
+useEffect(() => {
+  const savedFeedback = JSON.parse(localStorage.getItem('feedback')) || [];
+  setFeedbackList(savedFeedback);
+}, []);
+
+// دالة إضافة تعليق
+const handleAddFeedback = () => {
+  if (!newFeedback.trim()) return;
+  const newEntry = {
+    id: Date.now(),
+    user: "مستخدم",
+    text: newFeedback,
+    compliant: false
+  };
+  const updated = [...feedbackList, newEntry];
+  setFeedbackList(updated);
+  localStorage.setItem('feedback', JSON.stringify(updated));
+  setNewFeedback("");
+};
+
+// دالة حذف تعليق
+const handleDeleteFeedback = (id) => {
+  const updated = feedbackList.filter(c => c.id !== id);
+  setFeedbackList(updated);
+  localStorage.setItem('feedback', JSON.stringify(updated));
+};
+
+// فلترة التعليقات
+const filteredFeedback = feedbackList.filter(comment => {
+  if (feedbackFilter === "compliant") return comment.compliant;
+  if (feedbackFilter === "non-compliant") return !comment.compliant;
+  return true;
+});
       // نصوص الترجمة
       const translations = {
         ar: {
@@ -302,23 +322,6 @@ const handleAddPrompt = () => {
   setPromptText('');
   setPromptTokens(tokens);
 };
-
-      // إدارة التعليقات
-      const [showCommentsModal, setShowCommentsModal] = useState(false);
-      const [filterCommentType, setFilterCommentType] = useState('all');
-      const [filterCommentStatus, setFilterCommentStatus] = useState('all');
-      const [searchCommentQuery, setSearchCommentQuery] = useState('');
-
-      // الفلترة للتعليقات
-      const filteredComments = comments.filter(comment => {
-        return (
-          (filterCommentType === 'all' || comment.type === filterCommentType) &&
-          (filterCommentStatus === 'all' || comment.status === filterCommentStatus) &&
-          (searchCommentQuery === '' || comment.text.toLowerCase().includes(searchCommentQuery.toLowerCase()))
-        );
-      });
-
-
 
       // تحديث توكنات أثناء الكتابة
       const handlePromptTextChange = (e) => {
@@ -528,6 +531,15 @@ const saveEditedCategory = () => {
       🏆 محترف
     </button>
   </div>
+  {/* زر عرض التعليقات */}
+<div className="mt-4">
+  <button
+    onClick={() => setShowFeedbackModal(true)}
+    className="inline-block px-6 py-3 bg-gradient-to-r from-green-500 to-blue-600 text-white font-semibold rounded-full shadow hover:from-green-600 hover:to-blue-700 transition transform hover:scale-105"
+  >
+    💬 عرض التعليقات
+  </button>
+</div>
 </div>
 
           
@@ -909,8 +921,6 @@ const saveEditedCategory = () => {
                 <p className="text-3xl font-bold text-green-600">{averageTokens} token</p>
               </div>
             </div>
-            
-            
             {/* شريط البحث */}
             <div className="mt-6">
               <input
