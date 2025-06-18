@@ -955,6 +955,94 @@ const saveEditedCategory = () => {
           </div>
         );
       };
+      {/* نافذة التعليقات */}
+{showFeedbackModal && (
+  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+    <div className="bg-white w-full max-w-2xl p-6 rounded-lg shadow-lg relative">
+      <h3 className="text-xl font-bold mb-4">التعليقات</h3>
+      <button
+        onClick={() => setShowFeedbackModal(false)}
+        className="absolute top-3 right-3 text-gray-500 hover:text-gray-800 text-2xl"
+      >&times;</button>
+
+      {/* إضافة تعليق جديد */}
+      <div className="mb-4">
+        <textarea
+          rows="3"
+          placeholder="أدخل تعليقك هنا..."
+          value={newFeedback}
+          onChange={(e) => setNewFeedback(e.target.value)}
+          className="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
+        />
+        <button
+          onClick={handleAddFeedback}
+          disabled={!newFeedback.trim()}
+          className={`mt-2 px-4 py-2 rounded ${newFeedback.trim() ? 'bg-indigo-600 hover:bg-indigo-700 text-white' : 'bg-gray-200 cursor-not-allowed text-gray-500'}`}
+        >
+          ➕ إضافة تعليق
+        </button>
+      </div>
+
+      {/* تصفية التعليقات */}
+      <div className="mb-4 flex space-x-4 rtl:space-x-reverse">
+        <button
+          onClick={() => setFeedbackFilter("all")}
+          className={`px-3 py-1 rounded-full ${feedbackFilter === "all" ? "bg-gray-200" : "bg-gray-100"}`}
+        >
+          الكل
+        </button>
+        <button
+          onClick={() => setFeedbackFilter("compliant")}
+          className={`px-3 py-1 rounded-full ${feedbackFilter === "compliant" ? "bg-green-200" : "bg-green-50"}`}
+        >
+          ✅ مطابق
+        </button>
+        <button
+          onClick={() => setFeedbackFilter("non-compliant")}
+          className={`px-3 py-1 rounded-full ${feedbackFilter === "non-compliant" ? "bg-red-200" : "bg-red-50"}`}
+        >
+          ❌ غير مطابق
+        </button>
+      </div>
+
+      {/* عرض التعليقات */}
+      <div className="max-h-96 overflow-y-auto pr-2">
+        {filteredFeedback.length === 0 ? (
+          <p className="text-gray-500 text-center py-4">لا توجد تعليقات</p>
+        ) : (
+          filteredFeedback.map(comment => (
+            <div key={comment.id} className={`p-4 mb-3 rounded shadow-sm ${comment.compliant ? 'border-l-4 border-green-500 bg-green-50' : 'border-l-4 border-red-500 bg-red-50'}`}>
+              <div className="flex justify-between items-start">
+                <p className="text-gray-800">{comment.text}</p>
+                <div className="flex items-center space-x-3 rtl:space-x-reverse">
+                  <button
+                    onClick={() => handleDeleteFeedback(comment.id)}
+                    className="text-red-500 hover:text-red-700"
+                  >🗑️</button>
+                  <button
+                    onClick={() => {
+                      const updated = feedbackList.map(c =>
+                        c.id === comment.id ? { ...c, compliant: !c.compliant } : c
+                      );
+                      setFeedbackList(updated);
+                      localStorage.setItem("feedback", JSON.stringify(updated));
+                    }}
+                    className="text-indigo-600 hover:text-indigo-800"
+                  >
+                    {comment.compliant ? "❌ إلغاء التصنيف" : "✅ تصنيف مطابق"}
+                  </button>
+                </div>
+              </div>
+              <p className="mt-2 text-xs text-gray-500">
+                {comment.user} - {new Date(comment.id).toLocaleString()}
+              </p>
+            </div>
+          ))
+        )}
+      </div>
+    </div>
+  </div>
+)}
 
       return (
         <div className="container mx-auto max-w-4xl">
