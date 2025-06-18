@@ -82,17 +82,46 @@
   <!-- React Code -->
   <script type="text/babel">
     const { useState, useEffect } = React;
+    
     function App() {
     const [showFeedbackModal, setShowFeedbackModal] = useState(false);
 const [feedbackList, setFeedbackList] = useState([]);
 const [feedbackFilter, setFeedbackFilter] = useState("all");
 const [newFeedback, setNewFeedback] = useState("");
-
+ // إضافة دعم الإضافة الجماعية
+      const [bulkPromptText, setBulkPromptText] = useState('');
+      const [addedCount, setAddedCount] = useState(0);
+           // دالة فرز البرومبتات من النص
+      const parsePrompts = (text) => {
+        const regex = /(\*\*.+?\*\*)\s*(\S[\s\S]*?(?=\*\*|\z))/g;
+        const matches = [...text.matchAll(regex)];
+        return matches.map(match => ({
+          title: match[1].trim().replace(/^\*\*|\*\*$/g, ''),
+          content: match[2].trim()
+        }));
+      };
 useEffect(() => {
   const savedFeedback = JSON.parse(localStorage.getItem('feedback')) || [];
   setFeedbackList(savedFeedback);
 }, []);
 
+// دالة إضافة برومبتات جماعية
+      const handleAddBulkPrompts = () => {
+        if (!bulkPromptText.trim() || !selectedMainCategory || !newSubCategory.trim()) return;
+
+        const promptsData = parsePrompts(bulkPromptText);
+        const newPrompts = promptsData.map(promptData => ({
+          id: generatePromptId(promptData.content),
+          text: promptData.content,
+          category: selectedMainCategory,
+          subCategory: newSubCategory,
+          level: promptLevel, // المستوي المحدد في النموذج
+          tokens: calculateTokens(promptData.content),
+          createdAt: new Date().toISOString()
+        }));
+          // تجنب التكرار
+        const existingIds = new Set(prompts.map(p => p.id));
+        const validPrompts = newPrompts.filter(p => !existingIds.has(p.id));
 
 // دالة إضافة تعليق
 const handleAddFeedback = () => {
@@ -254,6 +283,10 @@ const filteredFeedback = feedbackList.filter(comment => {
 
       // تحميل البيانات من localStorage
       useEffect(() => {
+        // حفظ في localStorage
+        const updatedPrompts = [...prompts, ...validPrompts];
+        setPrompts(updatedPrompts);
+        localStorage.setItem('prompts', JSON.stringify(updatedPrompts));
         const savedPrompts = JSON.parse(localStorage.getItem('prompts')) || [];
         const savedCategories = JSON.parse(localStorage.getItem('categories')) || ['عام'];
         const savedSubCategories = JSON.parse(localStorage.getItem('subCategories')) || {};
@@ -261,6 +294,10 @@ const filteredFeedback = feedbackList.filter(comment => {
         setCategories(savedCategories);
         setSubCategories(savedSubCategories);
       }, []);
+       // رسالة نجاح
+        setAddedCount(validPrompts.length);
+        setTimeout(() => setAddedCount(0), 3000);
+      };
 
       // استخدام Fuse.js للبحث الذكي
       const fuse = new Fuse(
@@ -775,7 +812,55 @@ const saveEditedCategory = () => {
       readOnly
       className="p-3 border border-gray-300 rounded bg-gray-100"
     />
-    
+        {/* إضافة برومبتات جماعية */}
+            <div className="bg-white p-6 rounded shadow-md mb-6">
+              <h3 className="font-semibold text-lg mb-4">إضافة برومبتات جماعية</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                <select
+                  value={selectedMainCategory}
+                  onChange={(e) => setSelectedMainCategory(e.target.value)}
+                  className="p-3 border border-gray-300 rounded"
+                >
+                  <option value="">{translations[language].selectMainCategory}</option>
+                  {categories.map(cat => (
+                    <option key={cat} value={cat}>{cat}</option>
+                  ))}
+                </select>
+                <select
+                  value={newSubCategory}
+                  onChange={(e) => setNewSubCategory(e.target.value)}
+                  className="p-3 border border-gray-300 rounded"
+                >
+                  <option value="">{translations[language].selectSubCategory}</option>
+                  {subCategories[selectedMainCategory]?.map(sub => (
+                    <option key={sub} value={sub}>{sub}</option>
+                  ))}
+                </select>
+                <textarea
+                  rows="5"
+                  placeholder={translations[language].enterPromptText + ' (استخدم **عنوان** للتقسيم)'}
+                  value={bulkPromptText}
+                  onChange={(e) => setBulkPromptText(e.target.value)}
+                  className="col-span-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                />
+                <button
+                  onClick={handleAddBulkPrompts}
+                  disabled={!bulkPromptText.trim() || !selectedMainCategory || !newSubCategory.trim()}
+                  className={`px-4 py-2 rounded transition-colors ${
+                    bulkPromptText.trim() && selectedMainCategory && newSubCategory.trim()
+                      ? 'bg-green-600 hover:bg-green-700 text-white'
+                      : 'bg-gray-200 cursor-not-allowed text-gray-500'
+                  }`}
+                >
+                  ➕ إضافة جماعية
+                </button>
+              </div>
+              {addedCount > 0 && (
+                <div className="bg-green-100 text-green-700 p-3 rounded mt-4">
+                  ✅ {translations[language].promptCopied.replace("!", `: ${addedCount} ${addedCount === 1 ? "برومبت" : "برومبتات"}`)}
+                </div>
+              )}
+            </div>
     {/* زر اختيار المستوى */}
     <select
       value={promptLevel}
