@@ -78,6 +78,32 @@
       location.reload();
     }
     document.getElementById("langToggle").addEventListener("click", toggleLanguage);
+    // تحديث حالة التعليق
+function updateCommentStatus(commentId, newStatus) {
+  const updatedComments = comments.map(c => 
+    c.id === commentId ? { ...c, status: newStatus } : c
+  );
+  setComments(updatedComments);
+  localStorage.setItem('comments', JSON.stringify(updatedComments));
+}
+
+// تصدير الإحصائيات إلى CSV
+function exportToCSV() {
+  const stats = getCategoryStats();
+  let csv = "Category,Level,Count\n";
+  Object.entries(stats).forEach(([cat, data]) => {
+    csv += `${cat},مبتدئ,${data.byLevel.beginner}\n`;
+    csv += `${cat},متوسط,${data.byLevel.intermediate}\n`;
+    csv += `${cat},محترف,${data.byLevel.advanced}\n`;
+  });
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "prompt_stats.csv";
+  a.click();
+  URL.revokeObjectURL(url);
+}
   </script>
   <!-- React Code -->
   <script type="text/babel">
