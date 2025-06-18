@@ -280,25 +280,77 @@
         return Math.ceil(text.split(/\s+/).length * 1.25);
       };
 
-      // إضافة برومبت جديد
-      // استخدم promptLevel بدلاً من 'متوسط' الثابت
-const handleAddPrompt = () => {
-  if (!promptText.trim() || !selectedMainCategory || !newSubCategory.trim()) return;
-  const tokens = calculateTokens(promptText);
-  const newPrompt = {
-    id: Date.now(),
-    text: promptText,
-    category: selectedMainCategory,
-    subCategory: newSubCategory,
-    level: promptLevel, // ✅ تم استخدام المتغير الصحيح هنا
-    tokens: tokens
-  };
-  const updatedPrompts = [...prompts, newPrompt];
-  setPrompts(updatedPrompts);
-  localStorage.setItem('prompts', JSON.stringify(updatedPrompts));
-  setPromptText('');
-  setPromptTokens(tokens);
-};
+       // دالة إضافة برومبت جديد
+      const [promptText, setPromptText] = useState('');
+      const [selectedCategory, setSelectedCategory] = useState('');
+      const [selectedSubCategory, setSelectedSubCategory] = useState('');
+      const [promptLevel, setPromptLevel] = useState('متوسط');
+      const handleAddPrompt = () => {
+        if (!promptText.trim() || !selectedCategory) return;
+        const tokens = calculateTokens(promptText);
+        const newPrompt = {
+          id: Date.now(),
+          text: promptText,
+          category: selectedCategory,
+          subCategory: selectedSubCategory || 'عام',
+          level: promptLevel,
+          tokens: tokens,
+          createdAt: new Date().toISOString()
+        };
+        const updatedPrompts = [...prompts, newPrompt];
+        setPrompts(updatedPrompts);
+        localStorage.setItem('prompts', JSON.stringify(updatedPrompts));
+        setPromptText('');
+        setSelectedCategory('');
+        setSelectedSubCategory('');
+        setPromptLevel('متوسط');
+      };
+      // إدارة التعليقات
+      const [showCommentsModal, setShowCommentsModal] = useState(false);
+      const [filterCommentType, setFilterCommentType] = useState('all');
+      const [filterCommentStatus, setFilterCommentStatus] = useState('all');
+      const [searchCommentQuery, setSearchCommentQuery] = useState('');
+
+      // الفلترة للتعليقات
+      const filteredComments = comments.filter(comment => {
+        return (
+          (filterCommentType === 'all' || comment.type === filterCommentType) &&
+          (filterCommentStatus === 'all' || comment.status === filterCommentStatus) &&
+          (searchCommentQuery === '' || comment.text.toLowerCase().includes(searchCommentQuery.toLowerCase()))
+        );
+      });
+
+      return (
+        <div className="container mx-auto max-w-4xl">
+          {/* تبويبات الصفحة */}
+          <div className="flex justify-between items-center mb-6">
+            <button 
+              onClick={() => setActiveTab('dashboard')} 
+              className={`py-2 px-4 font-medium ${activeTab === 'dashboard' ? 'border-b-2 border-indigo-500 text-indigo-600' : 'text-gray-600 hover:text-gray-700'}`}
+            >
+              {translations[language].dashboard}
+            </button>
+            {isUserAdmin && (
+              <button 
+                onClick={() => setActiveTab('manage')} 
+                className={`py-2 px-4 font-medium ${activeTab === 'manage' ? 'border-b-2 border-indigo-500 text-indigo-600' : 'text-gray-600 hover:text-gray-700'}`}
+              >
+                {translations[language].managePrompts}
+              </button>
+            )}
+            {isUserAdmin && (
+              <button 
+                onClick={() => setActiveTab('comments')} 
+                className={`py-2 px-4 font-medium ${activeTab === 'comments' ? 'border-b-2 border-indigo-500 text-indigo-600' : 'text-gray-600 hover:text-gray-700'}`}
+              >
+                {translations[language].manageComments}
+              </button>
+            )}
+          </div>
+
+          {/* محتوى التبويب الحالي */}
+          {activeTab === 'dashboard' && (
+            <div>
 
       // تحديث توكنات أثناء الكتابة
       const handlePromptTextChange = (e) => {
