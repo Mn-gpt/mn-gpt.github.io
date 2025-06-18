@@ -160,7 +160,7 @@
   <script src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script> 
   <script>
     // تهيئة EmailJS ← استبدل هذه القيم بمعلومات حسابك
-    emailjs.init("YOUR_USER_ID"); // ← ضع هنا User ID من حسابك في EmailJS
+    emailjs.init("qTN652aGlDuG_GHW8"); // ← ضع هنا User ID من حسابك في EmailJS
 
     // دالة إرسال التعليقات عبر EmailJS
     document.getElementById("feedbackForm").addEventListener("submit", function(e) {
@@ -177,7 +177,7 @@
       };
 
       // إرسال البريد
-      emailjs.send("YOUR_SERVICE_ID", "YOUR_TEMPLATE_ID", templateParams).then(() => {
+      emailjs.send("service_1zryckl", "template_su31gvu", templateParams).then(() => {
         alert("✅ تم إرسال التعليق بنجاح!");
         form.reset();
         document.getElementById("feedbackModal").classList.add("hidden");
