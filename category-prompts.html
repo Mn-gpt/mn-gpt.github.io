@@ -155,7 +155,7 @@
   <script src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script> 
   <script>
     // EmailJS Configuration (Replace with your credentials)
-    emailjs.init("YOUR_USER_ID"); 
+    emailjs.init("qTN652aGlDuG_GHW8"); 
 
     // Feedback Form Handling
     document.getElementById("feedbackForm").addEventListener("submit", function(e) {
@@ -184,7 +184,7 @@
       localStorage.setItem('feedback', JSON.stringify(existingFeedback));
 
       // Send via EmailJS
-      emailjs.send("YOUR_SERVICE_ID", "YOUR_TEMPLATE_ID", templateParams).then(() => {
+      emailjs.send("service_1zryckl", "template_su31gvu", templateParams).then(() => {
         alert("✅ تم إرسال التعليق بنجاح!");
         form.reset();
         document.getElementById('feedbackModal').classList.add('hidden');
