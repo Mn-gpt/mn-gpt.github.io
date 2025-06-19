@@ -654,11 +654,15 @@ const saveEditedCategory = () => {
       {editingPrompt ? translations[language].saveChanges : `➕ ${translations[language].addPrompt}`}
     </button>
   </div>
+  
+ 
+  
 <div className="bg-white p-6 rounded shadow-md mb-6">
   <h3 className="font-semibold text-lg mb-4">إضافة مجموعة برومبتات</h3>
   <button
     onClick={() => window.open('add-prompts.html', '_blank', 'width=800,height=600')}
-    className="px-6 py-3 bg-orange-600 hover:bg-orange-700 text-white font-semibold rounded shadow-md transition transform hover:scale-105"
+      class="px-6 py-3 bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 
+            text-white font-semibold rounded shadow-md transition transform hover:scale-95">
   >
     📥 تحميل نص لمجموعة برومبتات
   </button>
