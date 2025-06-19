@@ -191,24 +191,21 @@
       const [subCategories, setSubCategories] = useState({});
       const [searchTerm, setSearchTerm] = useState('');
       const isUserAdmin = true;
-     // حالة الإضافة الفردية
+      // بيانات إضافة البرومبت
       const [newMainCategory, setNewMainCategory] = useState('');
       const [newSubCategory, setNewSubCategory] = useState('');
       const [selectedMainCategory, setSelectedMainCategory] = useState('');
       const [promptText, setPromptText] = useState('');
       const [promptTokens, setPromptTokens] = useState(0);
-      // حالة الإضافة الجماعية
-      const [bulkPromptText, setBulkPromptText] = useState('');
-      const [bulkAddedCount, setBulkAddedCount] = useState(0);
-      // حالة عرض الجداول
-      const [showPromptTable, setShowPromptTable] = useState(false);
-      const [selectedCategoryTab, setSelectedCategoryTab] = useState('all');
-      const [selectedLevel, setSelectedLevel] = useState('all');
-      // حالة التعديل
       const [editingPrompt, setEditingPrompt] = useState(null);
       const [editingCategory, setEditingCategory] = useState(null);
       const [editedCategoryName, setEditedCategoryName] = useState('');
-
+      const [showAllCategories, setShowAllCategories] = useState(false);
+      // حالة عرض الجداول
+      
+      const [showPromptTable, setShowPromptTable] = useState(false);
+      const [selectedCategoryTab, setSelectedCategoryTab] = useState('all');
+      const [selectedLevel, setSelectedLevel] = useState('all');
 
       // تحميل البيانات من localStorage
       useEffect(() => {
@@ -289,6 +286,46 @@ const handleAddPrompt = () => {
   setPromptText('');
   setPromptTokens(tokens);
 };
+
+      // إضافة برومبتات جماعية
+      const handleAddBulkPrompts = () => {
+        if (!bulkPromptText.trim() || !selectedMainCategory || !newSubCategory.trim()) return;
+        
+        const parsedPrompts = parseBulkPrompts(bulkPromptText);
+        const validPrompts = parsedPrompts.filter(p => p.text.trim() !== '');
+        
+        const updatedPrompts = [...prompts, ...validPrompts];
+        setPrompts(updatedPrompts);
+        localStorage.setItem('prompts', JSON.stringify(updatedPrompts));
+        
+        setBulkPromptText('');
+        setBulkAddedCount(validPrompts.length);
+        setTimeout(() => setBulkAddedCount(0), 3000);
+      };
+      // تحليل النص الجماعي
+      const parseBulkPrompts = (text) => {
+        const regex = /(\*\*.+?\*\*)\s*(\S[\s\S]*?(?=\*\*|\z))/g;
+        const matches = [...text.matchAll(regex)];
+        return matches.map(match => ({
+          id: Date.now() + Math.random(),
+          text: match[2].trim(),
+          category: selectedMainCategory,
+          subCategory: newSubCategory,
+          level: 'متوسط',
+          tokens: calculateTokens(match[2].trim()),
+          createdAt: new Date().toISOString()
+        }));
+      };
+      // عرض النتائج للإضافة الجماعية
+      const showBulkResult = () => {
+        if (bulkAddedCount > 0) {
+          return (
+            <div className="bg-green-100 text-green-700 p-3 rounded mt-4">
+              ✅ {translations[language].promptCopied.replace('!', ` ${bulkAddedCount} ${bulkAddedCount === 1 ? 'برومبت' : 'برومبتات'}`)}
+            </div>
+          );
+        }
+      };
 
       // تحديث توكنات أثناء الكتابة
       const handlePromptTextChange = (e) => {
