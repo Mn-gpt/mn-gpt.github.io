@@ -191,21 +191,24 @@
       const [subCategories, setSubCategories] = useState({});
       const [searchTerm, setSearchTerm] = useState('');
       const isUserAdmin = true;
-      // بيانات إضافة البرومبت
+     // حالة الإضافة الفردية
       const [newMainCategory, setNewMainCategory] = useState('');
       const [newSubCategory, setNewSubCategory] = useState('');
       const [selectedMainCategory, setSelectedMainCategory] = useState('');
       const [promptText, setPromptText] = useState('');
       const [promptTokens, setPromptTokens] = useState(0);
-      const [editingPrompt, setEditingPrompt] = useState(null);
-      const [editingCategory, setEditingCategory] = useState(null);
-      const [editedCategoryName, setEditedCategoryName] = useState('');
-      const [showAllCategories, setShowAllCategories] = useState(false);
+      // حالة الإضافة الجماعية
+      const [bulkPromptText, setBulkPromptText] = useState('');
+      const [bulkAddedCount, setBulkAddedCount] = useState(0);
       // حالة عرض الجداول
-      
       const [showPromptTable, setShowPromptTable] = useState(false);
       const [selectedCategoryTab, setSelectedCategoryTab] = useState('all');
       const [selectedLevel, setSelectedLevel] = useState('all');
+      // حالة التعديل
+      const [editingPrompt, setEditingPrompt] = useState(null);
+      const [editingCategory, setEditingCategory] = useState(null);
+      const [editedCategoryName, setEditedCategoryName] = useState('');
+
 
       // تحميل البيانات من localStorage
       useEffect(() => {
@@ -267,25 +270,63 @@
         return Math.ceil(text.split(/\s+/).length * 1.25);
       };
 
-      // إضافة برومبت جديد
-      // استخدم promptLevel بدلاً من 'متوسط' الثابت
-const handleAddPrompt = () => {
-  if (!promptText.trim() || !selectedMainCategory || !newSubCategory.trim()) return;
-  const tokens = calculateTokens(promptText);
-  const newPrompt = {
-    id: Date.now(),
-    text: promptText,
-    category: selectedMainCategory,
-    subCategory: newSubCategory,
-    level: promptLevel, // ✅ تم استخدام المتغير الصحيح هنا
-    tokens: tokens
-  };
-  const updatedPrompts = [...prompts, newPrompt];
-  setPrompts(updatedPrompts);
-  localStorage.setItem('prompts', JSON.stringify(updatedPrompts));
-  setPromptText('');
-  setPromptTokens(tokens);
-};
+/ إضافة برومبت فردي
+      const handleAddSinglePrompt = () => {
+        if (!promptText.trim() || !selectedMainCategory || !newSubCategory.trim()) return;
+        const newPrompt = {
+          id: Date.now(),
+          text: promptText,
+          category: selectedMainCategory,
+          subCategory: newSubCategory,
+          level: 'متوسط',
+          tokens: promptTokens
+        };
+        setPrompts([...prompts, newPrompt]);
+        localStorage.setItem('prompts', JSON.stringify([...prompts, newPrompt]));
+        setPromptText('');
+        setPromptTokens(0);
+        setSelectedMainCategory('');
+        setNewSubCategory('');
+      };
+      // إضافة برومبتات جماعية
+      const handleAddBulkPrompts = () => {
+        if (!bulkPromptText.trim() || !selectedMainCategory || !newSubCategory.trim()) return;
+        
+        const parsedPrompts = parseBulkPrompts(bulkPromptText);
+        const validPrompts = parsedPrompts.filter(p => p.text.trim() !== '');
+        
+        const updatedPrompts = [...prompts, ...validPrompts];
+        setPrompts(updatedPrompts);
+        localStorage.setItem('prompts', JSON.stringify(updatedPrompts));
+        
+        setBulkPromptText('');
+        setBulkAddedCount(validPrompts.length);
+        setTimeout(() => setBulkAddedCount(0), 3000);
+      };
+      // تحليل النص الجماعي
+      const parseBulkPrompts = (text) => {
+        const regex = /(\*\*.+?\*\*)\s*(\S[\s\S]*?(?=\*\*|\z))/g;
+        const matches = [...text.matchAll(regex)];
+        return matches.map(match => ({
+          id: Date.now() + Math.random(),
+          text: match[2].trim(),
+          category: selectedMainCategory,
+          subCategory: newSubCategory,
+          level: 'متوسط',
+          tokens: calculateTokens(match[2].trim()),
+          createdAt: new Date().toISOString()
+        }));
+      };
+      // عرض النتائج للإضافة الجماعية
+      const showBulkResult = () => {
+        if (bulkAddedCount > 0) {
+          return (
+            <div className="bg-green-100 text-green-700 p-3 rounded mt-4">
+              ✅ {translations[language].promptCopied.replace('!', ` ${bulkAddedCount} ${bulkAddedCount === 1 ? 'برومبت' : 'برومبتات'}`)}
+            </div>
+          );
+        }
+      };
 
       // تحديث توكنات أثناء الكتابة
       const handlePromptTextChange = (e) => {
@@ -451,51 +492,130 @@ const saveEditedCategory = () => {
         URL.revokeObjectURL(url);
       };
 
-      // عرض إدارة البرومبتات
+         // نموذج إدارة البرومبتات
       const renderManagePrompts = () => {
         return (
           <div className="space-y-6">
-            <h2 className="text-2xl sm:text-3xl font-bold text-gray-800">{translations[language].managePrompts}</h2>
+            <h2 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-4">{translations[language].managePrompts}</h2>
+            {/* تبويبات الإضافة */}
+            <div className="flex space-x-4 rtl:space-x-reverse">
+              <button 
+                className={`px-4 py-2 rounded-lg ${selectedAddType === 'single' ? 'bg-indigo-600 text-white' : 'bg-gray-200 text-gray-700'}`}
+                onClick={() => setSelectedAddType('single')}
+              >
+                {translations[language].addPrompt}
+              </button>
+              <button 
+                className={`px-4 py-2 rounded-lg ${selectedAddType === 'bulk' ? 'bg-indigo-600 text-white' : 'bg-gray-200 text-gray-700'}`}
+                onClick={() => setSelectedAddType('bulk')}
+              >
+                {translations[language].bulkAddPrompt}
+              </button>
+            </div>
+            {/* إضافة فردية */}
+            {selectedAddType === 'single' && (
+              <div className="bg-white p-6 rounded shadow-md mt-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  <select
+                    value={selectedMainCategory}
+                    onChange={(e) => setSelectedMainCategory(e.target.value)}
+                    className="p-3 border border-gray-300 rounded"
+                  >
+                    <option value="">{translations[language].selectMainCategory}</option>
+                    {categories.map(cat => (
+                      <option key={cat} value={cat}>{cat}</option>
+                    ))}
+                  </select>
+                  <select
+                    value={newSubCategory}
+                    onChange={(e) => setNewSubCategory(e.target.value)}
+                    className="p-3 border border-gray-300 rounded"
+                  >
+                    <option value="">{translations[language].selectSubCategory}</option>
+                    {subCategories[selectedMainCategory]?.map(sub => (
+                      <option key={sub} value={sub}>{sub}</option>
+                    ))}
+                  </select>
+                  <textarea
+                    rows="3"
+                    placeholder={translations[language].enterPromptText}
+                    value={promptText}
+                    onChange={(e) => {
+                      setPromptText(e.target.value);
+                      setPromptTokens(calculateTokens(e.target.value));
+                    }}
+                    className="col-span-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  />
+                  <input
+                    type="number"
+                    placeholder={translations[language].tokenCount}
+                    value={promptTokens}
+                    readOnly
+                    className="p-3 border border-gray-300 rounded bg-gray-100"
+                  />
+                  <button
+                    onClick={handleAddSinglePrompt}
+                    disabled={!promptText.trim() || !selectedMainCategory || !newSubCategory.trim()}
+                    className={`px-4 py-2 rounded transition-colors ${
+                      promptText.trim() && selectedMainCategory && newSubCategory.trim()
+                        ? 'bg-green-600 hover:bg-green-700 text-white'
+                        : 'bg-gray-200 cursor-not-allowed text-gray-500'
+                    }`}
+                  >
+                    {translations[language].addPrompt}
+                  </button>
+                </div>
+              </div>
+            )}
+            {/* إضافة جماعية */}
+            {selectedAddType === 'bulk' && (
+              <div className="bg-white p-6 rounded shadow-md mt-4">
+                <div className="space-y-4">
+                  <div className="flex flex-col sm:flex-row gap-4">
+                    <select
+                      value={selectedMainCategory}
+                      onChange={(e) => setSelectedMainCategory(e.target.value)}
+                      className="p-3 border border-gray-300 rounded w-full sm:w-1/3"
+                    >
+                      <option value="">{translations[language].selectMainCategory}</option>
+                      {categories.map(cat => (
+                        <option key={cat} value={cat}>{cat}</option>
+                      ))}
+                    </select>
+                    <select
+                      value={newSubCategory}
+                      onChange={(e) => setNewSubCategory(e.target.value)}
+                      className="p-3 border border-gray-300 rounded w-full sm:w-1/3"
+                    >
+                      <option value="">{translations[language].selectSubCategory}</option>
+                      {subCategories[selectedMainCategory]?.map(sub => (
+                        <option key={sub} value={sub}>{sub}</option>
+                      ))}
+                    </select>
+                    <button
+                      onClick={handleAddBulkPrompts}
+                      disabled={!bulkPromptText.trim() || !selectedMainCategory || !newSubCategory.trim()}
+                      className={`px-4 py-2 rounded transition-colors ${
+                        bulkPromptText.trim() && selectedMainCategory && newSubCategory.trim()
+                          ? 'bg-green-600 hover:bg-green-700 text-white'
+                          : 'bg-gray-200 cursor-not-allowed text-gray-500'
+                      }`}
+                    >
+                      {translations[language].bulkAddPrompt}
+                    </button>
+                  </div>
+                  <textarea
+                    rows="10"
+                    placeholder={translations[language].bulkAddInstructions}
+                    value={bulkPromptText}
+                    onChange={(e) => setBulkPromptText(e.target.value)}
+                    className="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  />
+                  {showBulkResult()}
+                </div>
+              </div>
+            )}
 
-            {/* اختيار المستوى */}
-            {/* اختيار المستوى */}
-<div className="bg-white p-4 rounded shadow-inner mb-6">
-  <h3 className="font-semibold text-lg mb-3">اختر المستوى:</h3>
-  <div className="flex flex-wrap gap-2">
-    <button onClick={() => setSelectedLevel('all')} 
-            className={`px-3 py-1 text-xs rounded-full transition-all duration-300 ${
-              selectedLevel === 'all' 
-                ? 'bg-indigo-600 text-white' 
-                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-            }`}>
-      🌍 الكل
-    </button>
-    <button onClick={() => setSelectedLevel('مبتدئ')} 
-            className={`px-3 py-1 text-xs rounded-full transition-all duration-300 ${
-              selectedLevel === 'مبتدئ' 
-                ? 'bg-yellow-500 text-white' 
-                : 'bg-yellow-100 text-yellow-800 hover:bg-yellow-200'
-            }`}>
-      🎓 مبتدئ
-    </button>
-    <button onClick={() => setSelectedLevel('متوسط')} 
-            className={`px-3 py-1 text-xs rounded-full transition-all duration-300 ${
-              selectedLevel === 'متوسط' 
-                ? 'bg-blue-500 text-white' 
-                : 'bg-blue-100 text-blue-800 hover:bg-blue-200'
-            }`}>
-      🎯 متوسط
-    </button>
-    <button onClick={() => setSelectedLevel('محترف')} 
-            className={`px-3 py-1 text-xs rounded-full transition-all duration-300 ${
-              selectedLevel === 'محترف' 
-                ? 'bg-purple-500 text-white' 
-                : 'bg-purple-100 text-purple-800 hover:bg-purple-200'
-            }`}>
-      🏆 محترف
-    </button>
-  </div>
-</div>
 
           
 {/* إضافة قسم رئيسي */}
