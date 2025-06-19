@@ -25,6 +25,11 @@
 </head>
 <body class="min-h-screen bg-gray-50 p-4">
 
+  <!-- Banner -->
+  <div class="mb-6">
+    <img src="ToolBar1.png" alt="بانير موقع Promptica" class="w-full h-auto rounded-lg shadow-md object-cover max-h-64">
+  </div>
+
   <!-- Header -->
   <header class="mb-6 flex justify-between items-center rtl:space-x-reverse space-x-4">
     <button onclick="goBack()" class="flex items-center gap-2 px-4 py-2 bg-white hover:bg-gray-100 text-gray-700 rounded-full shadow transition-all duration-300">
@@ -70,6 +75,51 @@
       </div>
     </div>
   </section>
+  
+   <!-- Feedback Modal -->
+  <div id="feedbackModal" class="fixed inset-0 z-50 flex items-center justify-center hidden bg-black bg-opacity-50">
+    <div class="bg-white w-full max-w-md p-6 rounded-lg shadow-lg relative">
+      <h3 class="text-xl font-bold mb-4">إضافة تعليق</h3>
+      <button 
+        onclick="document.getElementById('feedbackModal').classList.add('hidden')"
+        class="absolute top-3 right-3 text-gray-500 hover:text-gray-800 text-2xl">&times;</button>
+
+      <form id="feedbackForm" class="space-y-4 mt-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700">اسمك (اختياري)</label>
+          <input type="text" name="name" placeholder="أدخل اسمك..." class="w-full border border-gray-300 p-2 rounded"/>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700">بريدك الإلكتروني (اختياري)</label>
+          <input type="email" name="email" placeholder="example@email.com" class="w-full border border-gray-300 p-2 rounded"/>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700">نوع التعليق</label>
+          <select name="type" class="w-full border border-gray-300 p-2 rounded">
+            <option value="suggestion">اقتراح تحسين</option>
+            <option value="bug">ابلاغ عن خطأ</option>
+            <option value="design">ملاحظات على التصميم</option>
+            <option value="translation">ملاحظات على الترجمة</option>
+            <option value="other">أخرى</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700">محتوى التعليق</label>
+          <textarea name="message" rows="4" placeholder="اكتب تعليقك هنا..." class="w-full border border-gray-300 p-2 rounded"></textarea>
+        </div>
+        <div class="flex justify-end space-x-2">
+          <button 
+            type="button" 
+            onclick="document.getElementById('feedbackModal').classList.add('hidden')" 
+            class="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded">إلغاء</button>
+          <button 
+            type="submit" 
+            class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded">إرسال</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
 
   <!-- Level Statistics Cards -->
   <section class="mb-6 max-w-4xl mx-auto">
@@ -84,14 +134,64 @@
   <!-- Cards Container -->
   <main class="max-w-4xl mx-auto space-y-4" id="prompts-container">
   </main>
-
   <!-- Footer -->
+
   <footer class="mt-12 text-center text-sm text-gray-500">
+      <!-- Feedback Button -->
+  <section class="mb-6 max-w-4xl mx-auto">
+    <div class="text-center">
+      <button 
+        onclick="document.getElementById('feedbackModal').classList.remove('hidden')"
+        class="px-4 py-2 bg-green-100 text-green-700 hover:bg-green-200 rounded-full transition"
+      >
+        💬 إضافة تعليق
+      </button>
+    </div>
+  </section>
     &copy; <span id="currentYear"></span> Promptica. جميع الحقوق محفوظة.
   </footer>
 
-  <!-- Script -->
+  <!-- EmailJS Script -->
+  <script src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script> 
   <script>
+    // EmailJS Configuration (Replace with your credentials)
+    emailjs.init("qTN652aGlDuG_GHW8"); 
+
+    // Feedback Form Handling
+    document.getElementById("feedbackForm").addEventListener("submit", function(e) {
+      e.preventDefault();
+      const form = e.target;
+      const data = new FormData(form);
+      const templateParams = {
+        from_name: data.get("name"),
+        from_email: data.get("email"),
+        comment_type: data.get("type"),
+        message: data.get("message"),
+        reply_to: data.get("email")
+      };
+
+      // Save to localStorage for admin view
+      const feedback = {
+        id: Date.now(),
+        user: data.get("name") || "مجهول",
+        email: data.get("email"),
+        type: data.get("type"),
+        message: data.get("message"),
+        compliant: null
+      };
+      let existingFeedback = JSON.parse(localStorage.getItem('feedback')) || [];
+      existingFeedback.push(feedback);
+      localStorage.setItem('feedback', JSON.stringify(existingFeedback));
+
+      // Send via EmailJS
+      emailjs.send("service_1zryckl", "template_su31gvu", templateParams).then(() => {
+        alert("✅ تم إرسال التعليق بنجاح!");
+        form.reset();
+        document.getElementById('feedbackModal').classList.add('hidden');
+      }, (err) => {
+        alert("❌ خطأ في الإرسال: " + err.text);
+      });
+    });
     // Language Setup
     const savedLang = localStorage.getItem('language') || 'ar';
     document.documentElement.setAttribute('lang', savedLang);
