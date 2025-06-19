@@ -270,6 +270,7 @@
       // إضافة برومبت جديد
       // استخدم promptLevel بدلاً من 'متوسط' الثابت
 const handleAddPrompt = () => {
+	const handleAddPrompt = () => {
   if (!promptText.trim() || !selectedMainCategory || !newSubCategory.trim()) return;
   const tokens = calculateTokens(promptText);
   const newPrompt = {
@@ -280,7 +281,8 @@ const handleAddPrompt = () => {
     level: selectedLevel, // <<<<<<< هنا
     tokens: tokens
   };
-
+  // ... (باقي الكود)
+};
   if (!promptText.trim() || !selectedMainCategory || !newSubCategory.trim()) return;
   const tokens = calculateTokens(promptText);
   const newPrompt = {
