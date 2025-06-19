@@ -78,6 +78,9 @@
       location.reload();
     }
     document.getElementById("langToggle").addEventListener("click", toggleLanguage);
+    const [comments, setComments] = useState(JSON.parse(localStorage.getItem('comments')) || []);
+const [filter, setFilter] = useState('all');
+const [showCommentsModal, setShowCommentsModal] = useState(false);
   </script>
   <!-- React Code -->
   	
@@ -552,7 +555,7 @@ const saveEditedCategory = () => {
      📝 عرض التعليقات
    </button>
  </div>
-</div>
+</div> 
  {/* النافذة المنبثقة لعرض التعليقات */}
  {showFeedbackModal && (
    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
