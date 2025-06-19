@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <title>إضافة مجموعة برومبتات - Promptica</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"  rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f9fafb;
+      color: #1f2937;
+      line-height: 1.6;
+    }
+    .line-clamp-3 {
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    @media (max-width: 640px) {
+      html { font-size: 16px; }
+    }
+  </style>
+</head>
+<body class="min-h-screen bg-gray-50 p-4 flex items-center justify-center">
+
+  <!-- Modal Container -->
+  <div class="bg-white w-full max-w-3xl p-8 rounded-lg shadow-lg">
+    <h2 class="text-2xl font-bold text-gray-800 mb-6">إضافة مجموعة برومبتات</h2>
+
+    <!-- Form -->
+    <form id="bulkAddForm" class="space-y-6">
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-2">القسم الرئيسي:</label>
+        <select id="mainCategory" class="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500">
+          <option value="">اختر القسم الرئيسي...</option>
+          <!-- الأقسام ستُضاف هنا -->
+        </select>
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-2">القسم الفرعي:</label>
+        <select id="subCategory" class="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500">
+          <option value="">اختر القسم الفرعي...</option>
+        </select>
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-2">نص البرومبتات:</label>
+        <textarea
+          id="promptsTextArea"
+          rows="15"
+          placeholder="**عنوان البرومبت الأول**  
+نص البرومبت الأول...  
+
+**عنوان البرومبت الثاني**  
+نص البرومبت الثاني..."
+          class="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
+        ></textarea>
+        <p class="text-sm text-gray-500 mt-1">
+          التنسيق:  
+          <br/>
+          <strong>**عنوان البرومبت**</strong> يليه النص على سطر منفصل.
+        </p>
+      </div>
+
+      <div class="flex justify-end">
+        <button
+          type="submit"
+          class="px-6 py-3 bg-green-600 hover:bg-green-700 text-white font-semibold rounded shadow-md transition transform hover:scale-105"
+        >
+          ➕ إضافة البرومبتات
+        </button>
+        <button
+          onclick="window.close()"
+          class="px-6 py-3 bg-gray-200 hover:bg-gray-300 text-gray-700 ml-3 rounded transition"
+        >
+          إلغاء
+        </button>
+      </div>
+    </form>
+
+    <!-- Feedback -->
+    <div id="feedback" class="hidden mt-4 p-3 rounded-lg text-white">
+    </div>
+  </div>
+
+  <!-- Script -->
+  <script>
+    // إحضار الأقسام من localStorage
+    const categories = JSON.parse(localStorage.getItem('categories')) || [];
+    const subCategories = JSON.parse(localStorage.getItem('subCategories')) || {};
+
+    // ملء القسم الرئيسي
+    const mainCategorySelect = document.getElementById("mainCategory");
+    categories.forEach(cat => {
+      const option = document.createElement("option");
+      option.value = cat;
+      option.textContent = cat;
+      mainCategorySelect.appendChild(option);
+    });
+
+    // تحديث القسم الفرعي عند اختيار القسم الرئيسي
+    mainCategorySelect.addEventListener("change", function() {
+      const subSelect = document.getElementById("subCategory");
+      subSelect.innerHTML = '<option value="">اختر القسم الفرعي...</option>';
+      const selectedMain = this.value;
+      if (selectedMain && subCategories[selectedMain]) {
+        subCategories[selectedMain].forEach(sub => {
+          const option = document.createElement("option");
+          option.value = sub;
+          option.textContent = sub;
+          subSelect.appendChild(option);
+        });
+      }
+    });
+
+    // دالة الإضافة
+    document.getElementById("bulkAddForm").addEventListener("submit", function(e) {
+      e.preventDefault();
+      const mainCategory = document.getElementById("mainCategory").value;
+      const subCategory = document.getElementById("subCategory").value;
+      const promptsText = document.getElementById("promptsTextArea").value.trim();
+
+      if (!mainCategory || !subCategory || !promptsText) {
+        showError("يرجى ملء جميع الحقول");
+        return;
+      }
+
+      // فرز البرومبتات
+      const regex = /(\*\*.+?\*\*)\s*(\S[\s\S]*?(?=\*\*|\z))/g;
+      const matches = [...promptsText.matchAll(regex)];
+      const newPrompts = matches.map(match => ({
+        id: generatePromptId(match[2].trim()),
+        text: match[2].trim(),
+        category: mainCategory,
+        subCategory: subCategory,
+        level: 'متوسط',
+        tokens: calculateTokens(match[2].trim()),
+        createdAt: new Date().toISOString()
+      }));
+
+      // التحقق من التكرار
+      const existingPrompts = JSON.parse(localStorage.getItem('prompts')) || [];
+      const filteredPrompts = newPrompts.filter(newP => 
+        !existingPrompts.some(p => p.text === newP.text)
+      );
+
+      // حفظ في localStorage
+      const updatedPrompts = [...existingPrompts, ...filteredPrompts];
+      localStorage.setItem('prompts', JSON.stringify(updatedPrompts));
+
+      // إظهار النتائج
+      showSuccess(
+        `تمت إضافة ${filteredPrompts.length} برومبتات جديدة (لم تُضف ${newPrompts.length - filteredPrompts.length} بسبب التكرار)`
+      );
+    });
+
+    // دالة حساب التوكنات
+    function calculateTokens(text) {
+      return Math.ceil(text.split(/\s+/).length * 1.25);
+    }
+
+    // إنشاء ID فريد
+    function generatePromptId(text) {
+      let hash = 0;
+      for (let i = 0; i < text.length; i++) {
+        hash = (hash << 5) - hash + text.charCodeAt(i);
+      }
+      return 'prompt_' + Math.abs(hash).toString(16);
+    }
+
+    // عرض الرسائل
+    function showSuccess(message) {
+      const feedback = document.getElementById("feedback");
+      feedback.className = "mt-4 p-3 rounded-lg bg-green-500 text-white";
+      feedback.textContent = message;
+      feedback.classList.remove("hidden");
+    }
+
+    function showError(message) {
+      const feedback = document.getElementById("feedback");
+      feedback.className = "mt-4 p-3 rounded-lg bg-red-500 text-white";
+      feedback.textContent = message;
+      feedback.classList.remove("hidden");
+    }
+  </script>
+</body>
+</html>
