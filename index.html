@@ -270,63 +270,25 @@
         return Math.ceil(text.split(/\s+/).length * 1.25);
       };
 
-      // إضافة برومبت فردي
-      const handleAddSinglePrompt = () => {
-        if (!promptText.trim() || !selectedMainCategory || !newSubCategory.trim()) return;
-        const newPrompt = {
-          id: Date.now(),
-          text: promptText,
-          category: selectedMainCategory,
-          subCategory: newSubCategory,
-          level: 'متوسط',
-          tokens: promptTokens
-        };
-        setPrompts([...prompts, newPrompt]);
-        localStorage.setItem('prompts', JSON.stringify([...prompts, newPrompt]));
-        setPromptText('');
-        setPromptTokens(0);
-        setSelectedMainCategory('');
-        setNewSubCategory('');
-      };
-      // إضافة برومبتات جماعية
-      const handleAddBulkPrompts = () => {
-        if (!bulkPromptText.trim() || !selectedMainCategory || !newSubCategory.trim()) return;
-        
-        const parsedPrompts = parseBulkPrompts(bulkPromptText);
-        const validPrompts = parsedPrompts.filter(p => p.text.trim() !== '');
-        
-        const updatedPrompts = [...prompts, ...validPrompts];
-        setPrompts(updatedPrompts);
-        localStorage.setItem('prompts', JSON.stringify(updatedPrompts));
-        
-        setBulkPromptText('');
-        setBulkAddedCount(validPrompts.length);
-        setTimeout(() => setBulkAddedCount(0), 3000);
-      };
-      // تحليل النص الجماعي
-      const parseBulkPrompts = (text) => {
-        const regex = /(\*\*.+?\*\*)\s*(\S[\s\S]*?(?=\*\*|\z))/g;
-        const matches = [...text.matchAll(regex)];
-        return matches.map(match => ({
-          id: Date.now() + Math.random(),
-          text: match[2].trim(),
-          category: selectedMainCategory,
-          subCategory: newSubCategory,
-          level: 'متوسط',
-          tokens: calculateTokens(match[2].trim()),
-          createdAt: new Date().toISOString()
-        }));
-      };
-      // عرض النتائج للإضافة الجماعية
-      const showBulkResult = () => {
-        if (bulkAddedCount > 0) {
-          return (
-            <div className="bg-green-100 text-green-700 p-3 rounded mt-4">
-              ✅ {translations[language].promptCopied.replace('!', ` ${bulkAddedCount} ${bulkAddedCount === 1 ? 'برومبت' : 'برومبتات'}`)}
-            </div>
-          );
-        }
-      };
+      // إضافة برومبت جديد
+      // استخدم promptLevel بدلاً من 'متوسط' الثابت
+const handleAddPrompt = () => {
+  if (!promptText.trim() || !selectedMainCategory || !newSubCategory.trim()) return;
+  const tokens = calculateTokens(promptText);
+  const newPrompt = {
+    id: Date.now(),
+    text: promptText,
+    category: selectedMainCategory,
+    subCategory: newSubCategory,
+    level: promptLevel, // ✅ تم استخدام المتغير الصحيح هنا
+    tokens: tokens
+  };
+  const updatedPrompts = [...prompts, newPrompt];
+  setPrompts(updatedPrompts);
+  localStorage.setItem('prompts', JSON.stringify(updatedPrompts));
+  setPromptText('');
+  setPromptTokens(tokens);
+};
 
       // تحديث توكنات أثناء الكتابة
       const handlePromptTextChange = (e) => {
