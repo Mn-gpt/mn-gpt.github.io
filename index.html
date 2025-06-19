@@ -84,7 +84,30 @@
   <script type="text/babel">
     const { useState, useEffect } = React;
     function App() {
+ const [showFeedbackModal, setShowFeedbackModal] = useState(false);
+ const [feedbackFilter, setFeedbackFilter] = useState('all');
+ const [feedbackList, setFeedbackList] = useState([]);
 
+ useEffect(() => {
+   const savedFeedback = JSON.parse(localStorage.getItem('feedback')) || [];
+   setFeedbackList(savedFeedback);
+ }, []);
+
+ // دالة الفلترة
+ const filteredFeedback = feedbackList.filter(comment => {
+   if (feedbackFilter === 'compliant') return comment.compliant === true;
+   if (feedbackFilter === 'non_compliant') return comment.compliant === false;
+   return true;
+ });
+
+ // دالة التصنيف
+ const classifyComment = (id, compliant) => {
+   const updatedFeedback = feedbackList.map(c => 
+     c.id === id ? { ...c, compliant } : c
+   );
+   setFeedbackList(updatedFeedback);
+   localStorage.setItem('feedback', JSON.stringify(updatedFeedback));
+ };
       // نصوص الترجمة
       const translations = {
         ar: {
@@ -520,7 +543,69 @@ const saveEditedCategory = () => {
       🏆 محترف
     </button>
   </div>      
+   {/* تبويب إدارة التعليقات */}
+ <div className="bg-white p-6 rounded shadow-md mb-6">
+   <h3 className="font-semibold text-lg mb-4">التعليقات الواردة</h3>
+   <button 
+     onClick={() => setShowFeedbackModal(true)}
+     className="px-4 py-2 bg-yellow-500 text-white hover:bg-yellow-600 rounded transition">
+     📝 عرض التعليقات
+   </button>
+ </div>
 </div>
+ {/* النافذة المنبثقة لعرض التعليقات */}
+ {showFeedbackModal && (
+   <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+     <div className="bg-white w-full max-w-2xl p-6 rounded-lg shadow-lg relative">
+       <h3 className="text-xl font-bold mb-4">التصنيف: التعليقات الواردة</h3>
+       <button 
+         onClick={() => setShowFeedbackModal(false)}
+         className="absolute top-3 right-3 text-gray-500 hover:text-gray-800 text-2xl">&times;</button>
+       
+       {/* الفلترة حسب الحالة */}
+       <div className="mb-4 flex space-x-4 rtl:space-x-reverse">
+         <button 
+           onClick={() => setFeedbackFilter('all')}
+           className={`px-3 py-1 rounded-full ${feedbackFilter === 'all' ? 'bg-gray-200 text-gray-800' : 'bg-gray-100 text-gray-600'}`}
+         >
+           الكل
+         </button>
+         <button 
+           onClick={() => setFeedbackFilter('compliant')}
+           className={`px-3 py-1 rounded-full ${feedbackFilter === 'compliant' ? 'bg-green-200 text-green-800' : 'bg-green-100 text-green-600'}`}
+         >
+           ✅ مطابق
+         </button>
+         <button 
+           onClick={() => setFeedbackFilter('non_compliant')}
+           className={`px-3 py-1 rounded-full ${feedbackFilter === 'non_compliant' ? 'bg-red-200 text-red-800' : 'bg-red-100 text-red-600'}`}
+         >
+           ❌ غير مطابق
+         </button>
+       </div>
+
+       {/* عرض التعليقات */}
+       <div className="max-h-96 overflow-y-auto pr-2">
+         {filteredFeedback.map(comment => (
+           <div key={comment.id} className={`p-4 mb-3 border rounded ${comment.compliant === null ? 'bg-white' : comment.compliant ? 'bg-green-100 border-green-200' : 'bg-red-100 border-red-200'}`}>
+             <p className="text-gray-700">{comment.text}</p>
+             <div className="flex justify-end mt-2 space-x-2 rtl:space-x-reverse">
+               <button 
+                 onClick={() => classifyComment(comment.id, true)}
+                 className="text-green-600 hover:text-green-800"
+               >✅ مطابق</button>
+               <button 
+                 onClick={() => classifyComment(comment.id, false)}
+                 className="text-red-600 hover:text-red-800"
+               >❌ غير مطابق</button>
+             </div>
+           </div>
+         ))}
+       </div>
+     </div>
+   </div>
+ )}
+
 
 {/* إضافة قسم رئيسي */}
 {/* إضافة وتعديل قسم رئيسي */}
