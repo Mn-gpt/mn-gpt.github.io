@@ -1,3 +1,4 @@
+<!-- edit-comments.html -->
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -25,6 +26,10 @@
       padding: 2rem;
       max-width: 600px;
     }
+    .replies {
+      padding-left: 2rem;
+      border-left: 2px dashed #e2e8f0;
+    }
   </style>
 </head>
 <body class="min-h-screen bg-gray-50 p-6">
@@ -36,32 +41,32 @@
       </svg>
       العودة
     </button>
-    <h1 class="text-2xl font-bold text-indigo-600">إدارة التعليقات</h1>
+    <h1 class="text-2xl font-bold text-indigo-600">التعليقات الواردة</h1>
   </header>
 
-  <!-- Filter Section -->
-  <div class="mb-6">
+  <!-- Filters -->
+  <div class="mb-6 flex space-x-3">
     <button 
-      onclick="filterComments('all')" 
+      onclick="filter('all')" 
       class="px-4 py-2 rounded-full bg-gray-200 text-gray-700 hover:bg-gray-300 transition"
     >
       🌍 الكل
     </button>
     <button 
-      onclick="filterComments('compliant')" 
+      onclick="filter('compliant')" 
       class="px-4 py-2 rounded-full bg-green-200 text-green-700 hover:bg-green-300 transition"
     >
       ✅ مطابق
     </button>
     <button 
-      onclick="filterComments('non_compliant')" 
+      onclick="filter('non_compliant')" 
       class="px-4 py-2 rounded-full bg-red-200 text-red-700 hover:bg-red-300 transition"
     >
       ❌ غير مطابق
     </button>
   </div>
 
-  <!-- Search Bar -->
+  <!-- Search -->
   <div class="mb-6">
     <input 
       type="text" 
@@ -71,7 +76,7 @@
     />
   </div>
 
-  <!-- Comments Table -->
+  <!-- Table -->
   <div class="table-container">
     <table class="min-w-full divide-y divide-gray-200">
       <thead class="bg-gray-50">
@@ -85,15 +90,14 @@
         </tr>
       </thead>
       <tbody class="bg-white divide-y divide-gray-200" id="comments-table">
-        <!-- Rows will be dynamically added here -->
       </tbody>
     </table>
   </div>
 
   <!-- Reply Modal -->
-  <div id="replyModal" class="fixed inset-0 hidden bg-black bg-opacity-50 flex items-center justify-center">
+  <div id="replyModal" class="fixed inset-0 hidden bg-black bg-opacity-50">
     <div class="bg-white p-6 rounded-lg shadow-lg reply-modal">
-      <h3 class="text-lg font-bold mb-4">إضافة رد</h3>
+      <h3 class="text-lg font-bold mb-4">إضافة رد على: ${selectedComment?.user}</h3>
       <textarea 
         id="replyText" 
         placeholder="اكتب ردك هنا..." 
@@ -110,7 +114,6 @@
 
   <!-- Scripts -->
   <script>
-    // Language Setup
     const savedLang = localStorage.getItem('language') || 'ar';
     const translations = {
       ar: {
@@ -139,165 +142,115 @@
       }
     };
 
-    // Initialize Data
-    const [comments, setComments] = useState([]);
-    const [filteredComments, setFilteredComments] = useState([]);
-    const [searchTerm, setSearchTerm] = useState('');
-    const [selectedComment, setSelectedComment] = useState(null);
+    let comments = JSON.parse(localStorage.getItem('comments')) || [];
+    let filtered = comments;
+    let searchTerm = '';
+    let selectedComment = null;
 
-    useEffect(() => {
-      const loadComments = () => {
-        const savedComments = JSON.parse(localStorage.getItem('comments')) || [];
-        setComments(savedComments);
-        setFilteredComments(savedComments);
-      };
-      loadComments();
-    }, []);
-
-    // Filter Comments
-    const filterComments = (filterType) => {
-      let filtered = [...comments];
-      if (filterType === 'compliant') {
-        filtered = comments.filter(c => c.compliant === 'compliant');
-      } else if (filterType === 'non_compliant') {
-        filtered = comments.filter(c => c.compliant === 'non_compliant');
-      }
-      setFilteredComments(filtered);
-      setSearchTerm('');
-    };
-
-    // Search Comments
-    const handleSearch = (e) => {
-      const term = e.target.value.toLowerCase();
-      setSearchTerm(term);
-      const filtered = comments.filter(comment => 
-        comment.user.toLowerCase().includes(term) || 
-        comment.message.toLowerCase().includes(term)
-      );
-      setFilteredComments(filtered);
-    };
-
-    // Toggle Comment Status
-    const toggleStatus = (commentId, status) => {
-      const updatedComments = comments.map(c => 
-        c.id === commentId ? { ...c, compliant: status } : c
-      );
-      setComments(updatedComments);
-      setFilteredComments(updatedComments);
-      localStorage.setItem('comments', JSON.stringify(updatedComments));
-    };
-
-    // Send Reply
-    const sendReply = () => {
-      if (!selectedComment || !document.getElementById('replyText').value.trim()) return;
-      const replyText = document.getElementById('replyText').value.trim();
-      const updatedComments = comments.map(c => {
-        if (c.id === selectedComment.id) {
-          return { 
-            ...c, 
-            replies: [...(c.replies || []), {
-              text: replyText,
-              timestamp: new Date().toISOString()
-            }]
-          };
-        }
-        return c;
+    // Render Table
+    function renderTable() {
+      const tbody = document.getElementById('comments-table');
+      tbody.innerHTML = '';
+      filtered.forEach(comment => {
+        const row = `
+          <tr>
+            <td class="px-4 py-4 text-right">${comment.user || '-'}</td>
+            <td class="px-4 py-4 text-right">${comment.email || '-'}</td>
+            <td class="px-4 py-4 text-right line-clamp-3">${comment.message}</td>
+            <td class="px-4 py-4 text-right">
+              <button 
+                onclick="toggleStatus('${comment.id}', 'compliant')"
+                class="${comment.compliant === 'compliant' ? 'bg-green-400 text-white' : 'bg-gray-200'} px-3 py-1 rounded"
+              >
+                ✅ مطابق
+              </button>
+              <button 
+                onclick="toggleStatus('${comment.id}', 'non_compliant')"
+                class="${comment.compliant === 'non_compliant' ? 'bg-red-400 text-white' : 'bg-gray-200'} px-3 py-1 rounded"
+              >
+                ❌ غير مطابق
+              </button>
+            </td>
+            <td class="px-4 py-4 text-right">
+              ${comment.replies?.length || 0}
+            </td>
+            <td class="px-4 py-4 text-right whitespace-nowrap space-x-3 rtl:space-x-reverse">
+              <button 
+                onclick="openReplyModal('${comment.id}')"
+                class="text-blue-600 hover:text-blue-800 transition duration-300"
+              >
+                📩 رد
+              </button>
+              <button 
+                onclick="confirmDelete('${comment.id}')"
+                class="text-red-600 hover:text-red-800 transition duration-300"
+              >
+                🗑️ حذف
+              </button>
+            </td>
+          </tr>
+        `;
+        tbody.innerHTML += row;
       });
-      setComments(updatedComments);
-      setFilteredComments(updatedComments);
-      localStorage.setItem('comments', JSON.stringify(updatedComments));
-      setSelectedComment(null);
-      document.getElementById('replyModal').classList.add('hidden');
-      document.getElementById('replyText').value = '';
-    };
-
-    // Render Comments Table
-    const renderComments = () => {
-      const filtered = filteredComments.filter(c => 
-        (searchTerm === '' || 
-          c.user.toLowerCase().includes(searchTerm) || 
-          c.message.toLowerCase().includes(searchTerm))
-      );
-      const rows = filtered.map(comment => (
-        <tr key={comment.id}>
-          <td class="px-4 py-4 text-right">{comment.user || '-'}</td>
-          <td class="px-4 py-4 text-right">{comment.email || '-'}</td>
-          <td class="px-4 py-4 text-right line-clamp-3">{comment.message}</td>
-          <td class="px-4 py-4 text-right">
-            <button 
-              onclick={() => toggleStatus(comment.id, 'compliant')}
-              class={`px-3 py-1 rounded ${comment.compliant === 'compliant' ? 'bg-green-400 text-white' : 'bg-gray-200'}`}
-            >
-              ✅ {translations[savedLang].compliant}
-            </button>
-            <button 
-              onclick={() => toggleStatus(comment.id, 'non_compliant')}
-              class={`px-3 py-1 rounded ${comment.compliant === 'non_compliant' ? 'bg-red-400 text-white' : 'bg-gray-200'}`}
-            >
-              ❌ {translations[savedLang].non_compliant}
-            </button>
-          </td>
-          <td class="px-4 py-4 text-right">
-            <button 
-              onclick={() => {
-                setSelectedComment(comment);
-                document.getElementById('replyModal').classList.remove('hidden');
-              }}
-              class="text-blue-600 hover:text-blue-800 transition duration-300"
-            >
-              📩 {translations[savedLang].reply}
-            </button>
-          </td>
-          <td class="px-4 py-4 text-right whitespace-nowrap space-x-3 rtl:space-x-reverse">
-            <button 
-              onclick={() => confirmDelete(comment)}
-              class="text-red-600 hover:text-red-800 transition duration-300"
-            >
-              🗑️ {translations[savedLang].deleteComment}
-            </button>
-          </td>
-        </tr>
-      ));
-      return rows.length > 0 ? rows : <tr><td colSpan="6" class="text-center text-gray-500">{translations[savedLang].noComments}</td></tr>;
-    };
-
-    // Delete Comment
-    const confirmDelete = (comment) => {
-      if (!window.confirm('هل أنت متأكد من حذف هذا التعليق؟')) return;
-      const filtered = comments.filter(c => c.id !== comment.id);
-      setComments(filtered);
-      setFilteredComments(filtered);
-      localStorage.setItem('comments', JSON.stringify(filtered));
-    };
-
-    // Render Replies
-    const renderReplies = (comment) => {
-      if (!comment.replies || comment.replies.length === 0) return;
-      return comment.replies.map(reply => (
-        <div class="pl-6 border-l border-gray-200">
-          <p class="mb-1 text-sm text-gray-700">رد من الإدارة:</p>
-          <p class="text-gray-600">{reply.text}</p>
-          <p class="text-xs text-gray-500">{new Date(reply.timestamp).toLocaleString()}</p>
-        </div>
-      ));
-    };
-
-    // Go Back Function
-    function goBack() {
-      window.close();
     }
 
-    // Initialize Data
-    const comments = JSON.parse(localStorage.getItem('comments')) || [];
-    const filteredComments = comments;
-    const searchTerm = '';
-    const selectedComment = null;
+    // Toggle Status
+    function toggleStatus(id, status) {
+      const updated = comments.map(c => 
+        c.id === id ? { ...c, compliant: status } : c
+      );
+      localStorage.setItem('comments', JSON.stringify(updated));
+      comments = updated;
+      filtered = comments;
+      renderTable();
+    }
 
-    // Render the table
-    document.getElementById('comments-table').innerHTML = renderComments();
+    // Filter Comments
+    function filter(type) {
+      filtered = type === 'all' 
+        ? comments 
+        : comments.filter(c => c.compliant === type);
+      renderTable();
+    }
 
-    // Event Listeners
-    document.getElementById('searchInput').addEventListener('input', handleSearch);
-  </script>
-</body>
-</html>
+    // Handle Search
+    document.getElementById('searchInput').addEventListener('input', (e) => {
+      searchTerm = e.target.value.trim().toLowerCase();
+      filtered = comments.filter(c => 
+        c.user.toLowerCase().includes(searchTerm) || 
+        c.message.toLowerCase().includes(searchTerm)
+      );
+      renderTable();
+    });
+
+    // Open Reply Modal
+    function openReplyModal(id) {
+      selectedComment = comments.find(c => c.id === id);
+      document.getElementById('replyModal').classList.remove('hidden');
+    }
+
+    // Send Reply
+    function sendReply() {
+      if (!selectedComment || !document.getElementById('replyText').value.trim()) return;
+      const reply = {
+        text: document.getElementById('replyText').value.trim(),
+        timestamp: new Date().toISOString()
+      };
+      const updated = comments.map(c => 
+        c.id === selectedComment.id 
+          ? { ...c, replies: [...(c.replies || []), reply] } 
+          : c
+      );
+      localStorage.setItem('comments', JSON.stringify(updated));
+      comments = updated;
+      filtered = comments;
+      renderTable();
+      document.getElementById('replyModal').classList.add('hidden');
+      document.getElementById('replyText').value = '';
+    }
+
+    // Delete Comment
+    function confirmDelete(id) {
+      if (!window.confirm('هل أنت متأكد من حذف هذا التعليق؟')) return;
+      comments = comments.filter(c => c.id !== id);
+      localStorage.setItem('comments', JSON.stringify(comments
