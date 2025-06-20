@@ -166,31 +166,25 @@
     emailjs.init("qTN652aGlDuG_GHW8"); 
 
     // Feedback Form Handling
-    document.getElementById("feedbackForm").addEventListener("submit", function(e) {
-      e.preventDefault();
-      const form = e.target;
-      const data = new FormData(form);
-      const templateParams = {
-        from_name: data.get("name"),
-        from_email: data.get("email"),
-        comment_type: data.get("type"),
-        message: data.get("message"),
-        reply_to: data.get("email")
-      };
-
-      // Save to localStorage for admin view
-      const feedback = {
-        id: Date.now(),
-        user: data.get("name") || "مجهول",
-        email: data.get("email"),
-        type: data.get("type"),
-        message: data.get("message"),
-        compliant: null
-      };
-      let existingFeedback = JSON.parse(localStorage.getItem('feedback')) || [];
-      existingFeedback.push(feedback);
-      localStorage.setItem('feedback', JSON.stringify(existingFeedback));
-
+      // إضافة التعليقات إلى localStorage
+  document.getElementById("feedbackForm").addEventListener("submit", function(e) {
+    e.preventDefault();
+    const form = e.target;
+    const data = new FormData(form);
+    
+    // حفظ التعليق
+    const newComment = {
+      id: Date.now(),
+      user: data.get("name") || "مجهول",
+      email: data.get("email") || "غير محدد",
+      type: data.get("type"),
+      message: data.get("message").trim(),
+      compliant: null
+    };
+    
+    let existingComments = JSON.parse(localStorage.getItem('comments')) || [];
+    existingComments.push(newComment);
+    localStorage.setItem('comments', JSON.stringify(existingComments));
       // Send via EmailJS
       emailjs.send("service_1zryckl", "template_su31gvu", templateParams).then(() => {
         alert("✅ تم إرسال التعليق بنجاح!");
