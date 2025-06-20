@@ -166,29 +166,36 @@
     emailjs.init("qTN652aGlDuG_GHW8"); 
 
     // Feedback Form Handling
-      // في نموذج التعليقات (feedbackForm) في category-prompts.html
-document.getElementById("feedbackForm").addEventListener("submit", function(e) {
-  e.preventDefault();
-  const form = e.target;
-  const data = new FormData(form);
-  
-  const newComment = {
-    id: Date.now(),
-    user: data.get("name") || "مجهول",
-    email: data.get("email") || "",
-    type: data.get("type"),
-    message: data.get("message").trim(),
-    compliant: null, // حالة الالتزام (غير محددة)
-    replies: [] // قائمة بالردود
-  };
+      // إضافة التعليقات إلى localStorage
+  document.getElementById("feedbackForm").addEventListener("submit", function(e) {
+    e.preventDefault();
+    const form = e.target;
+    const data = new FormData(form);
+    
+        // إرسال عبر EmailJS (إذا كنت تريد)
+    const templateParams = {
+      from_name: data.get("name"),
+      from_email: data.get("email"),
+      comment_type: data.get("type"),
+      message: data.get("message")
+    };
 
-  // حفظ التعليق في localStorage
-  let existingComments = JSON.parse(localStorage.getItem('comments')) || [];
-  existingComments.push(newComment);
-  localStorage.setItem('comments', JSON.stringify(existingComments));
-
-  // إرسال عبر البريد (اختياري)
-  // Send via EmailJS
+    
+    // حفظ التعليق
+    const newComment = {
+      id: Date.now(),
+      user: data.get("name") || "مجهول",
+      email: data.get("email") || "غير محدد",
+      type: data.get("type"),
+      message: data.get("message").trim(),
+      compliant: null
+    };
+    
+    let existingComments = JSON.parse(localStorage.getItem('comments')) || [];
+    existingComments.push(newComment);
+    localStorage.setItem('comments', JSON.stringify(existingComments));
+    
+      // Send via EmailJS
       emailjs.send("service_1zryckl", "template_su31gvu", templateParams).then(() => {
         alert("✅ تم إرسال التعليق بنجاح!");
         form.reset();
@@ -197,14 +204,6 @@ document.getElementById("feedbackForm").addEventListener("submit", function(e) {
         alert("❌ خطأ في الإرسال: " + err.text);
       });
     });
-  // ...
-
-  // إغلاق النموذج
-  document.getElementById('feedbackModal').classList.add('hidden');
-  form.reset();
-});
-    
-    
     // Language Setup
     const savedLang = localStorage.getItem('language') || 'ar';
     document.documentElement.setAttribute('lang', savedLang);
@@ -256,16 +255,7 @@ document.getElementById("feedbackForm").addEventListener("submit", function(e) {
     const category = decodeURIComponent(params.get('category') || '');
     const subCategory = decodeURIComponent(params.get('subCategory') || '');
     const level = decodeURIComponent(params.get('level') || 'all');
-// في نموذج التعليقات (category-prompts.html)
-const newComment = {
-  id: Date.now(),
-  user: data.get("name") || "مجهول",
-  email: data.get("email") || "",
-  type: data.get("type"),
-  message: data.get("message").trim(),
-  compliant: null, // حالة الالتزام (غير محددة)
-  replies: [] // قائمة بالردود
-};
+
     // Theme Setup
     const selectedTheme = themeMap[subCategory] || themeMap[category] || themeMap.default;
     document.body.className = `min-h-screen ${selectedTheme.bgColor} p-4`;
