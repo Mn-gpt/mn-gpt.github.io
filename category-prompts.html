@@ -168,24 +168,10 @@
     // Feedback Form Handling
       // إضافة التعليقات إلى localStorage
   document.getElementById("feedbackForm").addEventListener("submit", function(e) {
-      e.preventDefault();
-      const form = e.target;
-      const data = new FormData(form);
-      const newComment = {
-        id: Date.now(),
-        user: data.get("name") || "مجهول",
-        email: data.get("email") || "",
-        type: data.get("type"),
-        message: data.get("message").trim(),
-        compliant: null,
-        replies: []
-      };
-      let existingComments = JSON.parse(localStorage.getItem('comments')) || [];
-      existingComments.push(newComment);
-      localStorage.setItem('comments', JSON.stringify(existingComments));
-      form.reset();
-      document.getElementById('feedbackModal').classList.add('hidden');
-    });
+    e.preventDefault();
+    const form = e.target;
+    const data = new FormData(form);
+    
         // إرسال عبر EmailJS (إذا كنت تريد)
     const templateParams = {
       from_name: data.get("name"),
@@ -196,16 +182,15 @@
 
     
     // حفظ التعليق
-    // في نموذج التعليقات (category-prompts.html)
-const newComment = {
-  id: Date.now(),
-  user: data.get("name") || "مجهول",
-  email: data.get("email") || "",
-  type: data.get("type"),
-  message: data.get("message").trim(),
-  compliant: null, // حالة الالتزام (غير محددة)
-  replies: [] // قائمة بالردود
-};
+    const newComment = {
+      id: Date.now(),
+      user: data.get("name") || "مجهول",
+      email: data.get("email") || "غير محدد",
+      type: data.get("type"),
+      message: data.get("message").trim(),
+      compliant: null
+    };
+    
     let existingComments = JSON.parse(localStorage.getItem('comments')) || [];
     existingComments.push(newComment);
     localStorage.setItem('comments', JSON.stringify(existingComments));
