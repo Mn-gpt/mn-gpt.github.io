@@ -32,38 +32,36 @@
   </style>
 </head>
 <body class="min-h-screen bg-gray-50 p-6">
-   <!-- Banner -->
-  <div class="mb-6">
-    <img src="ToolBar1.png" alt="بانير موقع Promptica" class="w-full h-auto rounded-lg shadow-md object-cover max-h-64">
-  </div>
-
   <!-- Header -->
-  <header class="mb-6 flex justify-between items-center rtl:space-x-reverse space-x-4">
-    <button onclick="goBack()" class="flex items-center gap-2 px-4 py-2 bg-white hover:bg-gray-100 text-gray-700 rounded-full shadow transition-all duration-300">
+  <header class="flex justify-between items-center mb-6">
+    <button 
+      onclick="goBack()" 
+      class="flex items-center gap-2 px-4 py-2 bg-white hover:bg-gray-100 text-gray-700 rounded-full shadow transition-all duration-300"
+    >
       <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
       </svg>
       العودة
     </button>
-  
+    <h1 class="text-2xl font-bold text-indigo-600">التعليقات الواردة</h1>
   </header>
 
   <!-- Filters -->
-  <div class="mb-6 flex space-x-3">
+  <div class="mb-6 flex space-x-4">
     <button 
-      onclick="filter('all')" 
+      onclick="filterComments('all')" 
       class="px-4 py-2 rounded-full bg-gray-200 text-gray-700 hover:bg-gray-300 transition"
     >
       🌍 الكل
     </button>
     <button 
-      onclick="filter('compliant')" 
+      onclick="filterComments('compliant')" 
       class="px-4 py-2 rounded-full bg-green-200 text-green-700 hover:bg-green-300 transition"
     >
       ✅ مطابق
     </button>
     <button 
-      onclick="filter('non_compliant')" 
+      onclick="filterComments('non_compliant')" 
       class="px-4 py-2 rounded-full bg-red-200 text-red-700 hover:bg-red-300 transition"
     >
       ❌ غير مطابق
@@ -100,8 +98,8 @@
 
   <!-- Reply Modal -->
   <div id="replyModal" class="fixed inset-0 hidden bg-black bg-opacity-50">
-    <div class="bg-white p-6 rounded-lg shadow-lg reply-modal">
-      <h3 class="text-lg font-bold mb-4">إضافة رد</h3>
+    <div class="bg-white p-6 rounded-lg shadow-lg reply-modal max-w-lg mx-auto">
+      <h3 class="text-lg font-bold mb-4">إضافة رد على: <span id="reply-username"></span></h3>
       <textarea 
         id="replyText" 
         placeholder="اكتب ردك هنا..." 
@@ -118,15 +116,7 @@
 
   <!-- Scripts -->
   <script>
-  	  // دالة العودة للصفحة السابقة
-  function goBack() {
-    if (window.history.length > 1) {
-      window.history.back();
-    } else {
-      window.location.href = 'index.html';
-    }
-  }
-    // ترجمة النصوص
+    // Language Setup
     const savedLang = localStorage.getItem('language') || 'ar';
     const translations = {
       ar: {
@@ -156,34 +146,47 @@
     // Initialize Data
     let comments = JSON.parse(localStorage.getItem('comments')) || [];
     let filteredComments = comments;
+    let searchTerm = '';
     let selectedComment = null;
+    let filter = 'all';
 
     // Render Table
-    function renderTable() {
-      const tbody = document.getElementById('comments-table');
-      tbody.innerHTML = '';
+    const renderTable = () => {
+      const tableBody = document.getElementById('comments-table');
+      tableBody.innerHTML = '';
+
       filteredComments.forEach(comment => {
+        const repliesHtml = comment.replies?.map(reply => (
+          `<div class="pl-4 mt-2 border-l border-gray-200">
+            <p class="text-gray-700 mb-1">رد من الإدارة:</p>
+            <p class="text-gray-600">${reply.text}</p>
+            <p class="text-xs text-gray-500">${new Date(reply.timestamp).toLocaleString()}</p>
+          </div>`
+        )).join('') || '-';
+
+        const statusBtns = `
+          <button 
+            onclick="toggleStatus('${comment.id}', 'compliant')"
+            class="${comment.compliant === 'compliant' ? 'bg-green-400 text-white' : 'bg-gray-200'} px-3 py-1 rounded mr-2"
+          >
+            ✅ ${translations[savedLang].compliant}
+          </button>
+          <button 
+            onclick="toggleStatus('${comment.id}', 'non_compliant')"
+            class="${comment.compliant === 'non_compliant' ? 'bg-red-400 text-white' : 'bg-gray-200'} px-3 py-1 rounded"
+          >
+            ❌ ${translations[savedLang].non_compliant}
+          </button>
+        `;
+
         const row = `
           <tr>
             <td class="px-4 py-4">${comment.user || '-'}</td>
             <td class="px-4 py-4">${comment.email || '-'}</td>
             <td class="px-4 py-4 line-clamp-3">${comment.message}</td>
-            <td class="px-4 py-4">
-              <button 
-                onclick="toggleStatus('${comment.id}', 'compliant')"
-                class="${comment.compliant === 'compliant' ? 'bg-green-400 text-white' : 'bg-gray-200'} px-3 py-1 rounded"
-              >
-                ✅ ${translations[savedLang].compliant}
-              </button>
-              <button 
-                onclick="toggleStatus('${comment.id}', 'non_compliant')"
-                class="${comment.compliant === 'non_compliant' ? 'bg-red-400 text-white' : 'bg-gray-200'} px-3 py-1 rounded"
-              >
-                ❌ ${translations[savedLang].non_compliant}
-              </button>
-            </td>
-            <td class="px-4 py-4">${comment.replies.length}</td>
-            <td class="px-4 py-4 whitespace-nowrap">
+            <td class="px-4 py-4">${statusBtns}</td>
+            <td class="px-4 py-4">${repliesHtml}</td>
+            <td class="px-4 py-4 whitespace-nowrap space-x-3 rtl:space-x-reverse">
               <button 
                 onclick="openReplyModal('${comment.id}')"
                 class="text-blue-600 hover:text-blue-800 transition duration-300"
@@ -199,77 +202,114 @@
             </td>
           </tr>
         `;
-        tbody.innerHTML += row;
+        tableBody.innerHTML += row;
       });
-    }
 
-    // Toggle Status
-    function toggleStatus(id, status) {
+      // Empty state
+      if (filteredComments.length === 0) {
+        tableBody.innerHTML = `
+          <tr>
+            <td colspan="6" class="px-4 py-4 text-center text-gray-500">
+              ${translations[savedLang].noComments}
+            </td>
+          </tr>
+        `;
+      }
+    };
+
+    // Toggle Comment Status
+    const toggleStatus = (id, status) => {
       comments = comments.map(c => 
         c.id === id ? { ...c, compliant: status } : c
       );
       localStorage.setItem('comments', JSON.stringify(comments));
-      filteredComments = comments;
+      filteredComments = filter === 'all' 
+        ? comments 
+        : comments.filter(c => c.compliant === filter);
       renderTable();
-    }
+    };
 
     // Filter Comments
-    function filter(type) {
+    const filterComments = (type) => {
+      filter = type;
       filteredComments = type === 'all' 
         ? comments 
         : comments.filter(c => c.compliant === type);
       renderTable();
-    }
+    };
 
-    // Handle Search
+    // Search Comments
     document.getElementById('searchInput').addEventListener('input', (e) => {
-      const term = e.target.value.toLowerCase();
+      searchTerm = e.target.value.toLowerCase();
       filteredComments = comments.filter(c => 
-        c.user.toLowerCase().includes(term) || 
-        c.message.toLowerCase().includes(term)
+        c.user.toLowerCase().includes(searchTerm) || 
+        c.message.toLowerCase().includes(searchTerm)
       );
       renderTable();
     });
 
     // Open Reply Modal
-    function openReplyModal(id) {
+    const openReplyModal = (id) => {
       selectedComment = comments.find(c => c.id === id);
+      document.getElementById('reply-username').textContent = selectedComment.user;
       document.getElementById('replyModal').classList.remove('hidden');
-    }
+    };
 
     // Send Reply
-    function sendReply() {
+    const sendReply = () => {
       if (!selectedComment || !document.getElementById('replyText').value.trim()) return;
+
+      const replyText = document.getElementById('replyText').value.trim();
       const reply = {
-        text: document.getElementById('replyText').value.trim(),
+        text: replyText,
         timestamp: new Date().toISOString(),
         fromAdmin: true
       };
+
       comments = comments.map(c => 
         c.id === selectedComment.id 
-          ? { ...c, replies: [...c.replies, reply] } 
+          ? { ...c, replies: [...(c.replies || []), reply] } 
           : c
       );
       localStorage.setItem('comments', JSON.stringify(comments));
-      selectedComment = null;
+      filteredComments = filter === 'all' 
+        ? comments 
+        : comments.filter(c => c.compliant === filter);
+      renderTable();
+
+      // Close modal
       document.getElementById('replyModal').classList.add('hidden');
       document.getElementById('replyText').value = '';
-      renderTable();
-    }
+    };
 
     // Delete Comment
-    function confirmDelete(id) {
+    const confirmDelete = (id) => {
       if (!window.confirm('هل أنت متأكد من حذف هذا التعليق؟')) return;
       comments = comments.filter(c => c.id !== id);
       localStorage.setItem('comments', JSON.stringify(comments));
-      filteredComments = comments;
+      filteredComments = filter === 'all' 
+        ? comments 
+        : comments.filter(c => c.compliant === filter);
       renderTable();
+    };
+
+    // Go Back Function
+    function goBack() {
+      window.close();
     }
 
     // Initialize on Load
     window.onload = () => {
+      comments = JSON.parse(localStorage.getItem('comments')) || [];
+      filteredComments = comments;
       renderTable();
     };
   </script>
+
+  <!-- Footer -->
+  <footer class="mt-8 pt-4 border-t border-gray-200 text-center text-sm text-gray-500">
+    &copy; <span id="year"></span> Promptica. جميع الحقوق محفوظة.
+    <script>document.getElementById("year").textContent = new Date().getFullYear();</script>
+  </footer>
 </body>
 </html>
