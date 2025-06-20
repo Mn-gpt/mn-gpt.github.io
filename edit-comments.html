@@ -1,4 +1,3 @@
-<!-- edit-comments.html -->
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -66,7 +65,7 @@
     </button>
   </div>
 
-  <!-- Search -->
+  <!-- Search Bar -->
   <div class="mb-6">
     <input 
       type="text" 
@@ -76,7 +75,7 @@
     />
   </div>
 
-  <!-- Table -->
+  <!-- Comments Table -->
   <div class="table-container">
     <table class="min-w-full divide-y divide-gray-200">
       <thead class="bg-gray-50">
@@ -97,7 +96,7 @@
   <!-- Reply Modal -->
   <div id="replyModal" class="fixed inset-0 hidden bg-black bg-opacity-50">
     <div class="bg-white p-6 rounded-lg shadow-lg reply-modal">
-      <h3 class="text-lg font-bold mb-4">إضافة رد على: ${selectedComment?.user}</h3>
+      <h3 class="text-lg font-bold mb-4">إضافة رد</h3>
       <textarea 
         id="replyText" 
         placeholder="اكتب ردك هنا..." 
@@ -114,6 +113,7 @@
 
   <!-- Scripts -->
   <script>
+    // ترجمة النصوص
     const savedLang = localStorage.getItem('language') || 'ar';
     const translations = {
       ar: {
@@ -121,7 +121,6 @@
         non_compliant: 'غير مطابق',
         reply: 'رد',
         deleteComment: 'حذف التعليق',
-        deleteReply: 'حذف الرد',
         noComments: 'لا توجد تعليقات بعد.',
         search: 'البحث',
         actions: 'الإجراءات',
@@ -133,7 +132,6 @@
         non_compliant: 'Non-compliant',
         reply: 'Reply',
         deleteComment: 'Delete Comment',
-        deleteReply: 'Delete Reply',
         noComments: 'No comments yet.',
         search: 'Search',
         actions: 'Actions',
@@ -142,50 +140,48 @@
       }
     };
 
+    // Initialize Data
     let comments = JSON.parse(localStorage.getItem('comments')) || [];
-    let filtered = comments;
-    let searchTerm = '';
+    let filteredComments = comments;
     let selectedComment = null;
 
     // Render Table
     function renderTable() {
       const tbody = document.getElementById('comments-table');
       tbody.innerHTML = '';
-      filtered.forEach(comment => {
+      filteredComments.forEach(comment => {
         const row = `
           <tr>
-            <td class="px-4 py-4 text-right">${comment.user || '-'}</td>
-            <td class="px-4 py-4 text-right">${comment.email || '-'}</td>
-            <td class="px-4 py-4 text-right line-clamp-3">${comment.message}</td>
-            <td class="px-4 py-4 text-right">
+            <td class="px-4 py-4">${comment.user || '-'}</td>
+            <td class="px-4 py-4">${comment.email || '-'}</td>
+            <td class="px-4 py-4 line-clamp-3">${comment.message}</td>
+            <td class="px-4 py-4">
               <button 
                 onclick="toggleStatus('${comment.id}', 'compliant')"
                 class="${comment.compliant === 'compliant' ? 'bg-green-400 text-white' : 'bg-gray-200'} px-3 py-1 rounded"
               >
-                ✅ مطابق
+                ✅ ${translations[savedLang].compliant}
               </button>
               <button 
                 onclick="toggleStatus('${comment.id}', 'non_compliant')"
                 class="${comment.compliant === 'non_compliant' ? 'bg-red-400 text-white' : 'bg-gray-200'} px-3 py-1 rounded"
               >
-                ❌ غير مطابق
+                ❌ ${translations[savedLang].non_compliant}
               </button>
             </td>
-            <td class="px-4 py-4 text-right">
-              ${comment.replies?.length || 0}
-            </td>
-            <td class="px-4 py-4 text-right whitespace-nowrap space-x-3 rtl:space-x-reverse">
+            <td class="px-4 py-4">${comment.replies.length}</td>
+            <td class="px-4 py-4 whitespace-nowrap">
               <button 
                 onclick="openReplyModal('${comment.id}')"
                 class="text-blue-600 hover:text-blue-800 transition duration-300"
               >
-                📩 رد
+                📩 ${translations[savedLang].reply}
               </button>
               <button 
                 onclick="confirmDelete('${comment.id}')"
                 class="text-red-600 hover:text-red-800 transition duration-300"
               >
-                🗑️ حذف
+                🗑️ ${translations[savedLang].deleteComment}
               </button>
             </td>
           </tr>
@@ -196,18 +192,17 @@
 
     // Toggle Status
     function toggleStatus(id, status) {
-      const updated = comments.map(c => 
+      comments = comments.map(c => 
         c.id === id ? { ...c, compliant: status } : c
       );
-      localStorage.setItem('comments', JSON.stringify(updated));
-      comments = updated;
-      filtered = comments;
+      localStorage.setItem('comments', JSON.stringify(comments));
+      filteredComments = comments;
       renderTable();
     }
 
     // Filter Comments
     function filter(type) {
-      filtered = type === 'all' 
+      filteredComments = type === 'all' 
         ? comments 
         : comments.filter(c => c.compliant === type);
       renderTable();
@@ -215,10 +210,10 @@
 
     // Handle Search
     document.getElementById('searchInput').addEventListener('input', (e) => {
-      searchTerm = e.target.value.trim().toLowerCase();
-      filtered = comments.filter(c => 
-        c.user.toLowerCase().includes(searchTerm) || 
-        c.message.toLowerCase().includes(searchTerm)
+      const term = e.target.value.toLowerCase();
+      filteredComments = comments.filter(c => 
+        c.user.toLowerCase().includes(term) || 
+        c.message.toLowerCase().includes(term)
       );
       renderTable();
     });
@@ -234,23 +229,34 @@
       if (!selectedComment || !document.getElementById('replyText').value.trim()) return;
       const reply = {
         text: document.getElementById('replyText').value.trim(),
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
+        fromAdmin: true
       };
-      const updated = comments.map(c => 
+      comments = comments.map(c => 
         c.id === selectedComment.id 
-          ? { ...c, replies: [...(c.replies || []), reply] } 
+          ? { ...c, replies: [...c.replies, reply] } 
           : c
       );
-      localStorage.setItem('comments', JSON.stringify(updated));
-      comments = updated;
-      filtered = comments;
-      renderTable();
+      localStorage.setItem('comments', JSON.stringify(comments));
+      selectedComment = null;
       document.getElementById('replyModal').classList.add('hidden');
       document.getElementById('replyText').value = '';
+      renderTable();
     }
 
     // Delete Comment
     function confirmDelete(id) {
       if (!window.confirm('هل أنت متأكد من حذف هذا التعليق؟')) return;
       comments = comments.filter(c => c.id !== id);
-      localStorage.setItem('comments', JSON.stringify(comments
+      localStorage.setItem('comments', JSON.stringify(comments));
+      filteredComments = comments;
+      renderTable();
+    }
+
+    // Initialize on Load
+    window.onload = () => {
+      renderTable();
+    };
+  </script>
+</body>
+</html>
