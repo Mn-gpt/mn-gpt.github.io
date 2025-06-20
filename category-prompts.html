@@ -182,14 +182,16 @@
 
     
     // حفظ التعليق
-    const newComment = {
-      id: Date.now(),
-      user: data.get("name") || "مجهول",
-      email: data.get("email") || "غير محدد",
-      type: data.get("type"),
-      message: data.get("message").trim(),
-      compliant: null
-    };
+  // في نموذج التعليقات (category-prompts.html)
+const newComment = {
+  id: Date.now(),
+  user: data.get("name") || "مجهول",
+  email: data.get("email") || "",
+  type: data.get("type"),
+  message: data.get("message").trim(),
+  compliant: null, // حالة الالتزام (غير محددة)
+  replies: [] // قائمة بالردود
+};
     
     let existingComments = JSON.parse(localStorage.getItem('comments')) || [];
     existingComments.push(newComment);
