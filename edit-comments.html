@@ -106,7 +106,7 @@
   <button 
     onclick="toggleShowAll()" 
     id="showMoreBtn" 
-    class="mt-4 px-4 py-2 bg-gradient-to-r from-orange-500 to-yellow-500 hover:bg-yellow-600 text-white rounded shadow transition duration-300"
+    class="mt-4 px-4 py-2 bg-gradient-to-r from-indigo-500 to-purple-600 hover:bg-purple-700 text-white rounded shadow transition duration-300"
   >
     👁️ عرض جميع التعليقات
   </button>
@@ -130,6 +130,7 @@
   </div>
 
   <script>
+    // ترجمة النصوص
     const savedLang = localStorage.getItem('language') || 'ar';
     const translations = {
       ar: {
@@ -156,9 +157,11 @@
       }
     };
 
+    // البيانات
     let comments = JSON.parse(localStorage.getItem('comments')) || [];
     let filteredComments = comments;
     let searchTerm = '';
+    let selectedComment = null;
     let filter = 'all';
     let showAll = false;
 
@@ -167,7 +170,7 @@
       const tableBody = document.getElementById('comments-table');
       tableBody.innerHTML = '';
       const maxRows = showAll ? filteredComments.length : 5;
-
+      
       for (let i = 0; i < maxRows; i++) {
         const comment = filteredComments[i];
         if (!comment) break;
@@ -223,17 +226,21 @@
         tableBody.innerHTML += row;
       }
 
-      // Show Empty State
-      if (filteredComments.length === 0) {
-        tableBody.innerHTML = `
-          <tr>
-            <td colspan="6" class="px-4 py-4 text-center text-gray-500">
-              ${translations[savedLang].noComments}
-            </td>
-          </tr>
-        `;
-      }
+      // Show "Show More" button if there are more comments
+      const showMoreBtn = document.getElementById('showMoreBtn');
+      showMoreBtn.style.display = filteredComments.length > 5 && !showAll 
+        ? 'block' 
+        : 'none';
+      showMoreBtn.textContent = showAll 
+        ? 'إخفاء التعليقات' 
+        : 'عرض جميع التعليقات';
     };
+
+    // Toggle Show All
+    function toggleShowAll() {
+      showAll = !showAll;
+      renderTable();
+    }
 
     // Toggle Status
     function toggleStatus(id, status) {
@@ -257,12 +264,6 @@
       renderTable();
     }
 
-    // Toggle Show All
-    function toggleShowAll() {
-      showAll = !showAll;
-      renderTable();
-    }
-
     // Handle Search
     document.getElementById('searchInput').addEventListener('input', (e) => {
       searchTerm = e.target.value.toLowerCase();
@@ -279,7 +280,6 @@
       selectedComment = comments.find(c => c.id === id);
       document.getElementById('reply-username').textContent = selectedComment.user;
       document.getElementById('replyModal').classList.remove('hidden');
-      document.getElementById('replyText').value = '';
     }
 
     // Send Reply
@@ -291,6 +291,7 @@
         timestamp: new Date().toISOString(),
         fromAdmin: true
       };
+
       comments = comments.map(c => 
         c.id === selectedComment.id 
           ? { ...c, replies: [...(c.replies || []), reply] } 
@@ -315,12 +316,7 @@
       renderTable();
     }
 
-    // Go Back
-    function goBack() {
-      window.close();
-    }
-
-    // Initialize
+    // Initialize on Load
     window.onload = () => {
       comments = JSON.parse(localStorage.getItem('comments')) || [];
       filteredComments = comments;
@@ -328,6 +324,7 @@
     };
   </script>
 
+  <!-- Footer -->
   <footer class="mt-8 pt-4 border-t border-gray-200 text-center text-sm text-gray-500">
     &copy; <span id="year"></span> Promptica. جميع الحقوق محفوظة.
     <script>document.getElementById("year").textContent = new Date().getFullYear();</script>
