@@ -28,6 +28,12 @@
     .replies {
       padding-left: 2rem;
       border-left: 2px dashed #e2e8f0;
+      margin-top: 1rem;
+    }
+    .show-more-btn {
+      margin-top: 1rem;
+      background: linear-gradient(to right, #ff7e5f, #feb47b);
+      color: white;
     }
   </style>
 </head>
@@ -49,20 +55,20 @@
   <!-- Filters -->
   <div class="mb-6 flex space-x-4">
     <button 
-      onclick="filterComments('all')" 
-      class="px-4 py-2 rounded-full bg-gray-200 text-gray-700 hover:bg-gray-300 transition"
+      onclick="filter('all')" 
+      class={`px-4 py-2 rounded ${filter === 'all' ? 'bg-gray-200 text-gray-700' : 'bg-white text-gray-900'}`}
     >
       🌍 الكل
     </button>
     <button 
-      onclick="filterComments('compliant')" 
-      class="px-4 py-2 rounded-full bg-green-200 text-green-700 hover:bg-green-300 transition"
+      onclick="filter('compliant')" 
+      class={`px-4 py-2 rounded ${filter === 'compliant' ? 'bg-green-200 text-green-700' : 'bg-white text-gray-900'}`}
     >
       ✅ مطابق
     </button>
     <button 
-      onclick="filterComments('non_compliant')" 
-      class="px-4 py-2 rounded-full bg-red-200 text-red-700 hover:bg-red-300 transition"
+      onclick="filter('non_compliant')" 
+      class={`px-4 py-2 rounded ${filter === 'non_compliant' ? 'bg-red-200 text-red-700' : 'bg-white text-gray-900'}`}
     >
       ❌ غير مطابق
     </button>
@@ -96,10 +102,19 @@
     </table>
   </div>
 
+  <!-- Show More Button -->
+  <button 
+    onclick="toggleShowAll()" 
+    id="showMoreBtn" 
+    class="mt-4 px-4 py-2 bg-gradient-to-r from-orange-500 to-yellow-500 hover:bg-yellow-600 text-white rounded shadow transition duration-300"
+  >
+    👁️ عرض جميع التعليقات
+  </button>
+
   <!-- Reply Modal -->
   <div id="replyModal" class="fixed inset-0 hidden bg-black bg-opacity-50">
-    <div class="bg-white p-6 rounded-lg shadow-lg reply-modal max-w-lg mx-auto">
-      <h3 class="text-lg font-bold mb-4">إضافة رد على: <span id="reply-username"></span></h3>
+    <div class="bg-white p-6 rounded-lg shadow-lg reply-modal max-w-md mx-auto">
+      <h3 class="text-lg font-bold mb-4">رد على: <span id="reply-username"></span></h3>
       <textarea 
         id="replyText" 
         placeholder="اكتب ردك هنا..." 
@@ -114,9 +129,7 @@
     </div>
   </div>
 
-  <!-- Scripts -->
   <script>
-    // Language Setup
     const savedLang = localStorage.getItem('language') || 'ar';
     const translations = {
       ar: {
@@ -143,21 +156,24 @@
       }
     };
 
-    // Initialize Data
     let comments = JSON.parse(localStorage.getItem('comments')) || [];
     let filteredComments = comments;
     let searchTerm = '';
-    let selectedComment = null;
     let filter = 'all';
+    let showAll = false;
 
     // Render Table
     const renderTable = () => {
       const tableBody = document.getElementById('comments-table');
       tableBody.innerHTML = '';
+      const maxRows = showAll ? filteredComments.length : 5;
 
-      filteredComments.forEach(comment => {
+      for (let i = 0; i < maxRows; i++) {
+        const comment = filteredComments[i];
+        if (!comment) break;
+
         const repliesHtml = comment.replies?.map(reply => (
-          `<div class="pl-4 mt-2 border-l border-gray-200">
+          `<div class="replies">
             <p class="text-gray-700 mb-1">رد من الإدارة:</p>
             <p class="text-gray-600">${reply.text}</p>
             <p class="text-xs text-gray-500">${new Date(reply.timestamp).toLocaleString()}</p>
@@ -165,47 +181,49 @@
         )).join('') || '-';
 
         const statusBtns = `
-          <button 
-            onclick="toggleStatus('${comment.id}', 'compliant')"
-            class="${comment.compliant === 'compliant' ? 'bg-green-400 text-white' : 'bg-gray-200'} px-3 py-1 rounded mr-2"
-          >
-            ✅ ${translations[savedLang].compliant}
-          </button>
-          <button 
-            onclick="toggleStatus('${comment.id}', 'non_compliant')"
-            class="${comment.compliant === 'non_compliant' ? 'bg-red-400 text-white' : 'bg-gray-200'} px-3 py-1 rounded"
-          >
-            ❌ ${translations[savedLang].non_compliant}
-          </button>
+          <div class="flex space-x-2">
+            <button 
+              onclick="toggleStatus('${comment.id}', 'compliant')"
+              class="${comment.compliant === 'compliant' ? 'bg-green-400 text-white' : 'bg-gray-200'} px-3 py-1 rounded text-sm"
+            >
+              ✅ ${translations[savedLang].compliant}
+            </button>
+            <button 
+              onclick="toggleStatus('${comment.id}', 'non_compliant')"
+              class="${comment.compliant === 'non_compliant' ? 'bg-red-400 text-white' : 'bg-gray-200'} px-3 py-1 rounded text-sm"
+            >
+              ❌ ${translations[savedLang].non_compliant}
+            </button>
+          </div>
         `;
 
         const row = `
           <tr>
-            <td class="px-4 py-4">${comment.user || '-'}</td>
-            <td class="px-4 py-4">${comment.email || '-'}</td>
-            <td class="px-4 py-4 line-clamp-3">${comment.message}</td>
+            <td class="px-4 py-4 text-right">${comment.user || '-'}</td>
+            <td class="px-4 py-4 text-right">${comment.email || '-'}</td>
+            <td class="px-4 py-4 text-right line-clamp-3">${comment.message}</td>
             <td class="px-4 py-4">${statusBtns}</td>
             <td class="px-4 py-4">${repliesHtml}</td>
-            <td class="px-4 py-4 whitespace-nowrap space-x-3 rtl:space-x-reverse">
+            <td class="px-4 py-4 whitespace-nowrap">
               <button 
                 onclick="openReplyModal('${comment.id}')"
-                class="text-blue-600 hover:text-blue-800 transition duration-300"
+                class="text-blue-600 hover:text-blue-800 transition duration-300 text-sm"
               >
-                📩 ${translations[savedLang].reply}
+                📩 رد
               </button>
               <button 
                 onclick="confirmDelete('${comment.id}')"
-                class="text-red-600 hover:text-red-800 transition duration-300"
+                class="text-red-600 hover:text-red-800 transition duration-300 text-sm"
               >
-                🗑️ ${translations[savedLang].deleteComment}
+                🗑️ حذف
               </button>
             </td>
           </tr>
         `;
         tableBody.innerHTML += row;
-      });
+      }
 
-      // Empty state
+      // Show Empty State
       if (filteredComments.length === 0) {
         tableBody.innerHTML = `
           <tr>
@@ -217,8 +235,8 @@
       }
     };
 
-    // Toggle Comment Status
-    const toggleStatus = (id, status) => {
+    // Toggle Status
+    function toggleStatus(id, status) {
       comments = comments.map(c => 
         c.id === id ? { ...c, compliant: status } : c
       );
@@ -227,78 +245,82 @@
         ? comments 
         : comments.filter(c => c.compliant === filter);
       renderTable();
-    };
+    }
 
     // Filter Comments
-    const filterComments = (type) => {
+    function filter(type) {
       filter = type;
       filteredComments = type === 'all' 
         ? comments 
         : comments.filter(c => c.compliant === type);
+      showAll = false;
       renderTable();
-    };
+    }
 
-    // Search Comments
+    // Toggle Show All
+    function toggleShowAll() {
+      showAll = !showAll;
+      renderTable();
+    }
+
+    // Handle Search
     document.getElementById('searchInput').addEventListener('input', (e) => {
       searchTerm = e.target.value.toLowerCase();
       filteredComments = comments.filter(c => 
         c.user.toLowerCase().includes(searchTerm) || 
         c.message.toLowerCase().includes(searchTerm)
       );
+      showAll = false;
       renderTable();
     });
 
     // Open Reply Modal
-    const openReplyModal = (id) => {
+    function openReplyModal(id) {
       selectedComment = comments.find(c => c.id === id);
       document.getElementById('reply-username').textContent = selectedComment.user;
       document.getElementById('replyModal').classList.remove('hidden');
-    };
+      document.getElementById('replyText').value = '';
+    }
 
     // Send Reply
-    const sendReply = () => {
+    function sendReply() {
       if (!selectedComment || !document.getElementById('replyText').value.trim()) return;
-
       const replyText = document.getElementById('replyText').value.trim();
       const reply = {
         text: replyText,
         timestamp: new Date().toISOString(),
         fromAdmin: true
       };
-
       comments = comments.map(c => 
         c.id === selectedComment.id 
           ? { ...c, replies: [...(c.replies || []), reply] } 
           : c
       );
       localStorage.setItem('comments', JSON.stringify(comments));
-      filteredComments = filter === 'all' 
-        ? comments 
-        : comments.filter(c => c.compliant === filter);
-      renderTable();
-
-      // Close modal
+      selectedComment = null;
       document.getElementById('replyModal').classList.add('hidden');
       document.getElementById('replyText').value = '';
-    };
+      renderTable();
+    }
 
     // Delete Comment
-    const confirmDelete = (id) => {
+    function confirmDelete(id) {
       if (!window.confirm('هل أنت متأكد من حذف هذا التعليق؟')) return;
       comments = comments.filter(c => c.id !== id);
       localStorage.setItem('comments', JSON.stringify(comments));
       filteredComments = filter === 'all' 
         ? comments 
         : comments.filter(c => c.compliant === filter);
+      showAll = false;
       renderTable();
-    };
+    }
 
-    // Go Back Function
+    // Go Back
     function goBack() {
       window.close();
     }
 
-    // Initialize on Load
+    // Initialize
     window.onload = () => {
       comments = JSON.parse(localStorage.getItem('comments')) || [];
       filteredComments = comments;
@@ -306,7 +328,6 @@
     };
   </script>
 
-  <!-- Footer -->
   <footer class="mt-8 pt-4 border-t border-gray-200 text-center text-sm text-gray-500">
     &copy; <span id="year"></span> Promptica. جميع الحقوق محفوظة.
     <script>document.getElementById("year").textContent = new Date().getFullYear();</script>
