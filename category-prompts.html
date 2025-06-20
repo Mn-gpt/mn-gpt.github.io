@@ -172,6 +172,15 @@
     const form = e.target;
     const data = new FormData(form);
     
+        // إرسال عبر EmailJS (إذا كنت تريد)
+    const templateParams = {
+      from_name: data.get("name"),
+      from_email: data.get("email"),
+      comment_type: data.get("type"),
+      message: data.get("message")
+    };
+
+    
     // حفظ التعليق
     const newComment = {
       id: Date.now(),
@@ -185,6 +194,7 @@
     let existingComments = JSON.parse(localStorage.getItem('comments')) || [];
     existingComments.push(newComment);
     localStorage.setItem('comments', JSON.stringify(existingComments));
+    
       // Send via EmailJS
       emailjs.send("service_1zryckl", "template_su31gvu", templateParams).then(() => {
         alert("✅ تم إرسال التعليق بنجاح!");
