@@ -33,31 +33,17 @@
   <!-- Header -->
 
 <!-- في قسم الهيدر -->
-<header class="mb-6 flex justify-between items-center rtl:space-x-reverse space-x-4">
-  <button 
-    onclick="goBack()" 
-    class="flex items-center gap-2 px-4 py-2 bg-white hover:bg-gray-100 text-gray-700 rounded-full shadow transition-all duration-300"
-  >
-    <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
-    </svg>
-    العودة
-  </button>
-  <button id="langToggle" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-full shadow-md hover:shadow-lg transition transform hover:scale-105 focus:outline-none">
-    English
-  </button>
-</header>
-
-<script>
-  // في السكريبت:
-  window.goBack = function() {
-    if (window.opener) { // إذا كانت نافذة منبثقة
-      window.close();
-    } else {
-      window.history.back();
-    }
-  };
-</script>
+ <header class="mb-6 flex justify-between items-center rtl:space-x-reverse space-x-4">
+    <button onclick="goBack()" class="flex items-center gap-2 px-4 py-2 bg-white hover:bg-gray-100 text-gray-700 rounded-full shadow transition-all duration-300">
+      <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
+      </svg>
+      العودة
+    </button>
+    <button id="langToggle" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-full shadow-md hover:shadow-lg transition transform hover:scale-105 focus:outline-none">
+      English
+    </button>
+  </header>
   <!-- Page Title -->
   <h1 id="page-title" class="text-3xl sm:text-4xl font-bold flex justify-center items-center gap-3 mb-6"></h1>
 
