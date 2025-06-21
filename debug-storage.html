@@ -6,102 +6,194 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"  rel="stylesheet">
   <style>
-    body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background-color: #f9fafb;
+    body { 
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+      background-color: #f9fafb; 
       padding: 2rem;
     }
-    .storage-view {
-      height: 400px;
-      overflow-y: auto;
-      margin-bottom: 1rem;
+    .storage-section {
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 1rem;
+      margin-bottom: 2rem;
+    }
+    .storage-title {
+      font-size: 1.25rem;
+      font-weight: bold;
+      color: #1f2937;
+    }
+    .storage-input {
+      width: 100%;
+      min-height: 200px;
+      padding: 1rem;
+      border: 1px solid #e2e8f0;
+      border-radius: 4px;
+      margin-top: 1rem;
     }
   </style>
 </head>
-<body class="min-h-screen bg-gray-50">
+<body>
   <h1 class="text-3xl font-bold text-indigo-600 mb-4">إدارة تخزين localStorage</h1>
 
-  <!-- Buttons -->
+  <!-- زر العودة -->
+  <button 
+    onclick="goBack()" 
+    class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded transition duration-300 mb-4"
+  >
+    🔙 عودة إلى الصفحة الرئيسية
+  </button>
+
+  <!-- أداة البحث -->
   <div class="mb-4">
+    <input 
+      type="text" 
+      id="searchKey" 
+      placeholder="ابحث عن مفتاح (مثال: categories)..."
+      class="w-full p-3 border rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
+    />
     <button 
-      onclick="showStorageData()" 
-      class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded transition duration-300"
+      onclick="showSelectedData()" 
+      class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded ml-2"
     >
-      📂 عرض البيانات الحالية
+      🔍 عرض مفتاح محدد
     </button>
+  </div>
+
+  <!-- الأقسام الرئيسية -->
+  <div class="storage-section">
+    <h2 class="storage-title">الأقسام الرئيسية:</h2>
+    <textarea 
+      id="categories" 
+      class="storage-input"
+      placeholder="[]"
+    ></textarea>
+    <button 
+      onclick="saveSection('categories')" 
+      class="mt-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded"
+    >
+      ✅ حفظ الأقسام
+    </button>
+  </div>
+
+  <!-- الأقسام الفرعية -->
+  <div class="storage-section">
+    <h2 class="storage-title">الأقسام الفرعية:</h2>
+    <textarea 
+      id="subCategories" 
+      class="storage-input"
+      placeholder="{}"
+    ></textarea>
+    <button 
+      onclick="saveSection('subCategories')" 
+      class="mt-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded"
+    >
+      ✅ حفظ الأقسام الفرعية
+    </button>
+  </div>
+
+  <!-- البرومبتات -->
+  <div class="storage-section">
+    <h2 class="storage-title">البرومبتات:</h2>
+    <textarea 
+      id="prompts" 
+      class="storage-input"
+      placeholder="[]"
+    ></textarea>
+    <button 
+      onclick="saveSection('prompts')" 
+      class="mt-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded"
+    >
+      ✅ حفظ البرومبتات
+    </button>
+  </div>
+
+  <!-- التعليقات -->
+  <div class="storage-section">
+    <h2 class="storage-title">التعليقات:</h2>
+    <textarea 
+      id="comments" 
+      class="storage-input"
+      placeholder="[]"
+    ></textarea>
+    <button 
+      onclick="saveSection('comments')" 
+      class="mt-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded"
+    >
+      ✅ حفظ التعليقات
+    </button>
+  </div>
+
+  <!-- مسح البيانات -->
+  <div class="mt-4">
     <button 
       onclick="clearStorage()" 
       class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded transition duration-300"
     >
-      ❌ مسح التخزين
+      🗑️ مسح جميع البيانات
     </button>
-    <button 
-      onclick="saveChanges()" 
-      class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded transition duration-300"
-    >
-      💾 حفظ التعديلات
-    </button>
-  </div>
-
-  <!-- Storage Viewer -->
-  <textarea 
-    id="storageData" 
-    class="w-full h-64 p-3 border border-gray-300 rounded shadow focus:outline-none focus:ring-2 focus:ring-indigo-500"
-    placeholder="سيظهر محتوى localStorage هنا..."
-    readonly
-  ></textarea>
-
-  <!-- Editing Area -->
-  <div class="mt-4">
-    <h3 class="text-lg font-medium text-gray-800 mb-2">تعديل البيانات (كود JSON):</h3>
-    <textarea 
-      id="editedData" 
-      class="w-full h-64 p-3 border border-gray-300 rounded shadow focus:outline-none focus:ring-2 focus:ring-indigo-500"
-      placeholder="أدخل البيانات المُعدّلة هنا..."
-    ></textarea>
   </div>
 
   <script>
-    // دالة عرض البيانات
-    function showStorageData() {
-      const storageData = {};
-      const keysToIgnore = ['__debug__', 'sessionStorage']; // تجاهل مفاتيح غير مهمة
-
-      for (const key of Object.keys(localStorage)) {
-        if (!keysToIgnore.includes(key)) {
-          try {
-            storageData[key] = JSON.parse(localStorage.getItem(key));
-          } catch (e) {
-            storageData[key] = localStorage.getItem(key);
-          }
-        }
-      }
-
-      const displayArea = document.getElementById('storageData');
-      displayArea.value = JSON.stringify(storageData, null, 2);
-      displayArea.removeAttribute('readonly'); // إزالة التحرير بعد العرض
+    // دالة تحميل البيانات في المربعات النصية
+    function loadStorageSections() {
+      document.getElementById('categories').value = 
+        JSON.stringify(localStorage.getItem('categories'), null, 2) || '[]';
+      document.getElementById('subCategories').value = 
+        JSON.stringify(localStorage.getItem('subCategories'), null, 2) || '{}';
+      document.getElementById('prompts').value = 
+        JSON.stringify(localStorage.getItem('prompts'), null, 2) || '[]';
+      document.getElementById('comments').value = 
+        JSON.stringify(localStorage.getItem('comments'), null, 2) || '[]';
     }
 
-    // دالة حفظ التعديلات
-    function saveChanges() {
-      const editedJson = document.getElementById('editedData').value;
+    // دالة حفظ قسم معين
+    function saveSection(key) {
+      const value = document.getElementById(key).value;
       try {
-        const newData = JSON.parse(editedJson);
-        for (const key in newData) {
-          localStorage.setItem(key, JSON.stringify(newData[key]));
-        }
-        alert('✅ البيانات تم تحديثها!');
+        const parsed = JSON.parse(value);
+        localStorage.setItem(key, JSON.stringify(parsed));
+        alert(`✅ ${key} تم تحديثها بنجاح!`);
+        loadStorageSections(); // تحديث المربع بعد الحفظ
       } catch (e) {
-        alert('❌ خطأ في تنسيق JSON! الرجاء التأكد من الصياغة الصحيحة.');
+        alert(`❌ خطأ في تنسيق JSON لمفتاح ${key}`);
       }
     }
 
-    // دالة مسح التخزين
+    // دالة عرض مفتاح محدد
+    function showSelectedData() {
+      const key = document.getElementById('searchKey').value.trim();
+      if (!key) return;
+      const data = localStorage.getItem(key);
+      if (data) {
+        alert(`محتوى المفتاح ${key}:\n\n${data}`);
+      } else {
+        alert(`❌ المفتاح ${key} غير موجود.`);
+      }
+    }
+
+    // دالة العودة
+    function goBack() {
+      window.close(); // إذا كانت نافذة منبثقة
+      // أو window.location.href = 'index.html'; إذا كانت صفحة رئيسية
+    }
+
+    // دالة مسح البيانات
     function clearStorage() {
       if (!confirm('هل أنت متأكد من مسح جميع البيانات؟')) return;
       localStorage.clear();
-      alert('تم المسح!');
+      alert('🗑️ تم مسح البيانات.');
+      loadStorageSections();
     }
+
+    // تحميل البيانات عند التحميل
+    window.onload = () => {
+      loadStorageSections();
+    };
   </script>
+
+  <footer class="mt-8 pt-4 border-t border-gray-200 text-center text-sm text-gray-500">
+    &copy; <span id="year"></span> Promptica. جميع الحقوق محفوظة.
+    <script>document.getElementById("year").textContent = new Date().getFullYear();</script>
+  </footer>
 </body>
 </html>
